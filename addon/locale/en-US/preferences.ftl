@@ -1,0 +1,19 @@
+pref-title = ZotWanglele Settings
+pref-open-dashboard =
+    .label = Dashboard
+pref-ai-profiles-title = API Profiles (★ = current; select then click "Set as Current" to switch; double-click to edit)
+pref-ai-profile-use =
+    .label = Set as Current
+pref-ai-profile-add =
+    .label = Add
+pref-ai-profile-edit =
+    .label = Edit
+pref-ai-profile-delete =
+    .label = Delete
+pref-ai-profile-up =
+    .label = Move Up
+pref-ai-profile-down =
+    .label = Move Down
+pref-ai-profile-confirm-delete = Are you sure you want to delete this profile? This cannot be undone.
+pref-ai-profile-cannot-delete-last = At least one profile must remain
+pref-help = { $name } Build { $version } { $time }

@@ -1,0 +1,60 @@
+<linkset>
+  <html:link rel="localization" href="__addonRef__-preferences.ftl" />
+</linkset>
+<groupbox
+  onload="Zotero.__addonInstance__.hooks.onPrefsEvent('load', { window })"
+>
+  <hbox align="center">
+    <label
+      ><html:h2 data-l10n-id="pref-title" style="margin: 0; flex: 1"></html:h2
+    ></label>
+    <button
+      id="zotero-prefpane-__addonRef__-open-dashboard"
+      data-l10n-id="pref-open-dashboard"
+    />
+  </hbox>
+
+  <!-- 配置档列表 -->
+  <vbox flex="1" style="margin-top: 8px">
+    <html:label data-l10n-id="pref-ai-profiles-title" />
+    <richlistbox
+      id="zotero-prefpane-__addonRef__-profile-list"
+      flex="1"
+      rows="6"
+      style="min-height: 200px; margin-top: 4px"
+    />
+    <hbox align="center" style="margin-top: 8px">
+      <button
+        id="zotero-prefpane-__addonRef__-profile-use"
+        data-l10n-id="pref-ai-profile-use"
+      />
+      <button
+        id="zotero-prefpane-__addonRef__-profile-add"
+        data-l10n-id="pref-ai-profile-add"
+      />
+      <button
+        id="zotero-prefpane-__addonRef__-profile-edit"
+        data-l10n-id="pref-ai-profile-edit"
+      />
+      <button
+        id="zotero-prefpane-__addonRef__-profile-delete"
+        data-l10n-id="pref-ai-profile-delete"
+      />
+      <html:span style="flex: 1" />
+      <button
+        id="zotero-prefpane-__addonRef__-profile-up"
+        data-l10n-id="pref-ai-profile-up"
+      />
+      <button
+        id="zotero-prefpane-__addonRef__-profile-down"
+        data-l10n-id="pref-ai-profile-down"
+      />
+    </hbox>
+  </vbox>
+</groupbox>
+<vbox>
+  <html:label
+    data-l10n-id="pref-help"
+    data-l10n-args='{"time": "__buildTime__","name": "__addonName__","version":"__buildVersion__"}'
+  ></html:label>
+</vbox>

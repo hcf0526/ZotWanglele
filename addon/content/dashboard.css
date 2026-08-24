@@ -1,0 +1,231 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+}
+
+.zwl-overview {
+  height: 100%;
+  overflow: auto;
+  padding: 18px 20px;
+  box-sizing: border-box;
+}
+
+.zwl-overview h3,
+.zwl-prompts-toolbar h3 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.zwl-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+  gap: 10px;
+  margin: 18px 0 22px;
+}
+
+.zwl-metric {
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, Canvas 96%, #167d68 4%);
+}
+
+.zwl-metric-label,
+.zwl-metric small {
+  display: block;
+  color: color-mix(in srgb, currentColor 62%, transparent);
+  overflow-wrap: anywhere;
+}
+
+.zwl-metric strong {
+  display: block;
+  margin: 7px 0 3px;
+  overflow: hidden;
+  font-size: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zwl-workflows {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding-top: 18px;
+  border-top: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+}
+
+.zwl-workflow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.zwl-workflow h4 {
+  margin: 0;
+}
+
+.zwl-workflow h4 {
+  font-size: 15px;
+}
+
+.zwl-workflow button,
+.zwl-prompts-toolbar button,
+.zwl-editor-actions button {
+  min-height: 30px;
+  padding: 4px 12px;
+}
+
+#zotwanglele-dashboard-prompts-list {
+  height: 100%;
+  padding: 16px 18px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.zwl-prompts-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  height: 42px;
+}
+
+.zwl-prompts-workspace {
+  display: grid;
+  grid-template-columns: minmax(210px, 30%) minmax(0, 1fr);
+  height: calc(100% - 50px);
+  margin-top: 8px;
+  border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.zwl-prompt-list {
+  overflow-y: auto;
+  padding: 10px 12px 10px 0;
+}
+
+.zwl-prompt-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.zwl-prompt-row:hover,
+.zwl-prompt-row.is-selected {
+  border-color: color-mix(in srgb, #167d68 42%, transparent);
+  background: color-mix(in srgb, Canvas 91%, #167d68 9%);
+}
+
+.zwl-prompt-row strong,
+.zwl-prompt-row small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zwl-prompt-row span {
+  color: #167d68;
+  font-size: 11px;
+}
+
+.zwl-prompt-row small {
+  grid-column: 1 / -1;
+  margin-top: 3px;
+  color: color-mix(in srgb, currentColor 58%, transparent);
+}
+
+.zwl-prompt-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 0 0 18px;
+  border-left: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.zwl-field-row {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.zwl-field-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.zwl-field-grow {
+  flex: 1;
+  min-height: 120px;
+}
+
+.zwl-field-row input,
+.zwl-field-stack textarea {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.zwl-field-stack textarea {
+  resize: vertical;
+  font:
+    12px/1.5 ui-monospace,
+    monospace;
+}
+
+.zwl-field-grow textarea {
+  flex: 1;
+}
+
+.zwl-editor-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+#zwl-prompt-status {
+  flex: 1;
+  color: #167d68;
+  font-size: 12px;
+}
+
+#zwl-prompt-status.is-error {
+  color: #b42318;
+}
+
+@media (max-width: 760px) {
+  .zwl-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .zwl-workflows {
+    grid-template-columns: 1fr;
+  }
+
+  .zwl-prompts-workspace {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+
+  .zwl-prompt-list {
+    max-height: 180px;
+  }
+
+  .zwl-prompt-editor {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  }
+}
