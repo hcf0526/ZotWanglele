@@ -34,8 +34,6 @@ export function registerDashboardToolbarButton(win: Window) {
         class: "zotero-tb-button",
         tooltiptext: "ZotWanglele 仪表盘",
         image: icon,
-        width: "24",
-        height: "24",
         flex: "0",
       },
       styles: {
@@ -43,8 +41,6 @@ export function registerDashboardToolbarButton(win: Window) {
         height: "24px",
         minWidth: "24px",
         minHeight: "24px",
-        maxWidth: "24px",
-        maxHeight: "24px",
         listStyleImage: `url(${icon})`,
       },
       listeners: [

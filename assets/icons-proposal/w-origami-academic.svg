@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradA" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19"/>
+      <stop offset="50%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+
+    <linearGradient id="borderGradA" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#818cf8" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#c084fc" stop-opacity="0.5"/>
+    </linearGradient>
+
+    <linearGradient id="stroke1A" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+
+    <linearGradient id="stroke2A" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+
+    <linearGradient id="stroke3A" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </linearGradient>
+
+    <linearGradient id="stroke4A" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9333ea"/>
+      <stop offset="100%" stop-color="#f472b6"/>
+    </linearGradient>
+
+    <filter id="shadowA" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#4f46e5" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- 背景底板 -->
+  <rect width="128" height="128" rx="28" fill="url(#bgGradA)"/>
+  <rect x="0.75" y="0.75" width="126.5" height="126.5" rx="27.25" fill="none" stroke="url(#borderGradA)" stroke-width="1.5"/>
+
+  <!-- 字母 W (折纸书页风) -->
+  <g filter="url(#shadowA)">
+    <!-- 左一柱 (下沉主笔) -->
+    <path d="M26 36 L44 92 H56 L38 36 Z" fill="url(#stroke1A)"/>
+    <!-- 左二折面 (上扬反折) -->
+    <path d="M44 92 L64 48 H54 L36 88 Z" fill="url(#stroke2A)" opacity="0.9"/>
+    <!-- 右二折面 (中脊交叠) -->
+    <path d="M64 48 L74 48 L92 92 H80 L64 54 Z" fill="url(#stroke3A)"/>
+    <!-- 右一柱 (末笔扬起) -->
+    <path d="M82 92 L100 36 H88 L72 86 Z" fill="url(#stroke4A)"/>
+    <!-- 顶部学术高光点 -->
+    <circle cx="64" cy="46" r="3.5" fill="#e0e7ff"/>
+    <circle cx="27" cy="36" r="2.5" fill="#38bdf8"/>
+    <circle cx="100" cy="36" r="2.5" fill="#f472b6"/>
+  </g>
+</svg>

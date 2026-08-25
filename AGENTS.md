@@ -12,19 +12,19 @@ AI 调用采用 OpenAI 兼容协议。PDF 翻译采用 PDFMathTranslate 系列�
 
 ## 当前状态
 
-| 模块      | 状态   | 说明                                         |
-| --------- | ------ | -------------------------------------------- |
-| 项目骨架  | 已实现 | 启动、关闭、偏好设置注册和本地化             |
-| AI 配置档 | 已实现 | 多配置档、编辑器、排序、当前配置与连通性检测 |
-| AI 客户端 | 已实现 | Chat Completions、Responses、SSE 和重试      |
-| PDF 精读  | 基础版 | 索引文本、单轮生成、子笔记和串行批处理       |
-| PDF 翻译  | 基础版 | 子进程、服务端、任务列表和结果附件           |
-| 仪表盘    | 已实现 | 概览、翻译任务、提示词管理与高级设置         |
-| 文献综述  | 基础版 | 多条目上下文、AI 生成与独立笔记              |
-| 标题翻译  | 已实现 | 批量翻译、Extra 存储与 Zotero 自定义列       |
-| 管理工具  | 待开发 | `src/modules/tools/` 仅含 `.gitkeep`         |
-| 思维导图  | 待开发 | `src/modules/mindmap/` 仅含 `.gitkeep`       |
-| 阅读侧栏  | 待开发 | 当前没有 `sidebar.xhtml`                     |
+| 模块      | 状态   | 说明                                              |
+| --------- | ------ | ------------------------------------------------- |
+| 项目骨架  | 已实现 | 启动、关闭、偏好设置注册和本地化                  |
+| AI 配置档 | 已实现 | 多配置档、编辑器、排序、当前配置与连通性检测      |
+| AI 客户端 | 已实现 | Chat Completions、Responses、SSE 和重试           |
+| PDF 精读  | 基础版 | 索引文本、单轮生成、子笔记和串行批处理            |
+| PDF 翻译  | 基础版 | 子进程、服务端、任务列表和结果附件                |
+| 仪表盘    | 已实现 | 概览、翻译任务、提示词管理与高级设置              |
+| 文献综述  | 基础版 | 多条目上下文、AI 生成与独立笔记                   |
+| 标题翻译  | 已实现 | 批量翻译、Extra 存储与 Zotero 自定义列            |
+| 管理工具  | 待开发 | `src/modules/tools/` 仅含 `.gitkeep`              |
+| 思维导图  | 待开发 | `src/modules/mindmap/` 仅含 `.gitkeep`            |
+| 阅读侧栏  | 已实现 | Zotero 条目面板中的 AI 笔记预览、生成、刷新和打开 |
 
 ## 代码结构
 
@@ -49,7 +49,7 @@ test/                            启动测试、翻译流程测试与 PDF 样例
 
 - AI 网络调用集中在 `src/modules/ai/ai-client.ts`。
 - 通用 AI 提示词位于 `src/modules/ai/prompts.ts`。
-- 当前精读提示词位于 `src/modules/reader/prompts.ts`，后续可迁移到持久化管理。
+- 精读、摘要及其他 AI 功能提示词统一位于 `src/modules/ai/prompts.ts`，通过仪表盘提示词管理持久化。
 - PDF 翻译统一从 `src/modules/translate/translator.ts` 发起。
 - 条目右键菜单由 `src/modules/reader/menu.ts` 实现，并由 `src/hooks.ts` 注册。
 - 偏好设置键使用 `extensions.zotero.zotwanglele.` 前缀。

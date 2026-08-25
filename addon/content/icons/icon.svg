@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+
+    <!-- 左翼渐变 (蓝青) -->
+    <linearGradient id="leftWing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+
+    <!-- 右翼渐变 (紫粉) -->
+    <linearGradient id="rightWing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+
+    <!-- 边框 -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#a855f7" stop-opacity="0.3"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- 圆角矩形背景 (预留安全内边距 6px) -->
+  <rect x="6" y="6" width="116" height="116" rx="26" fill="url(#bgGrad)"/>
+  <rect x="6.75" y="6.75" width="114.5" height="114.5" rx="25.25" fill="none" stroke="url(#borderGrad)" stroke-width="1.5"/>
+
+  <!-- 主体结构：双翼对称与中脊星芒 -->
+  <g filter="url(#shadow)">
+    <!-- 左翼 -->
+    <path d="M 33 42 L 52 83 L 64 54"
+          fill="none"
+          stroke="url(#leftWing)"
+          stroke-width="11"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+
+    <!-- 右翼 -->
+    <path d="M 64 54 L 76 83 L 95 42"
+          fill="none"
+          stroke="url(#rightWing)"
+          stroke-width="11"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+
+    <!-- 中间交汇处星芒微光 -->
+    <polygon points="64,46 66.5,51.5 72,54 66.5,56.5 64,62 61.5,56.5 56,54 61.5,51.5" fill="#ffffff" opacity="0.95"/>
+  </g>
+</svg>

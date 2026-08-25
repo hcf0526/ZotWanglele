@@ -6,11 +6,8 @@
  * `subElementOptions`。这是 toolkit 的一个 bug，所以我们直接传 `children`。
  */
 import { config } from "../../../package.json";
-import {
-  ReadingTemplate,
-  TEMPLATE_FULL_READ,
-  TEMPLATE_QUICK_SUMMARY,
-} from "./prompts";
+import { FULL_READ_TEMPLATE_ID, QUICK_SUMMARY_TEMPLATE_ID } from "./prompts";
+import { getBuiltinTemplateName } from "../ai/prompts";
 import { generateNoteForItem } from "./note-generator";
 import { startTranslate } from "../translate/translator";
 import { openDashboard } from "../dashboard/dashboard";
@@ -18,6 +15,10 @@ import { runLiteratureReviewOnSelected } from "../review/review-generator";
 import { runTitleTranslationOnSelected } from "../title-translate/title-translation";
 
 const ICON = `chrome://${config.addonRef}/content/icons/favicon.png`;
+const FULL_READ_LABEL =
+  getBuiltinTemplateName(FULL_READ_TEMPLATE_ID) ?? "AI 精读";
+const QUICK_SUMMARY_LABEL =
+  getBuiltinTemplateName(QUICK_SUMMARY_TEMPLATE_ID) ?? "快速摘要";
 
 export function registerReaderMenu() {
   ztoolkit.log("[ReaderMenu] registering item context menu...");
@@ -33,10 +34,10 @@ export function registerReaderMenu() {
         {
           tag: "menuitem",
           id: "zotwanglele-itemmenu-fullread",
-          label: TEMPLATE_FULL_READ.label,
+          label: FULL_READ_LABEL,
           commandListener: () => {
             ztoolkit.log("[ReaderMenu] fullread click");
-            runOnSelected(TEMPLATE_FULL_READ).catch((e) =>
+            runOnSelected(FULL_READ_TEMPLATE_ID).catch((e) =>
               ztoolkit.log("[ReaderMenu] fullread error:", e),
             );
           },
@@ -44,10 +45,10 @@ export function registerReaderMenu() {
         {
           tag: "menuitem",
           id: "zotwanglele-itemmenu-summary",
-          label: TEMPLATE_QUICK_SUMMARY.label,
+          label: QUICK_SUMMARY_LABEL,
           commandListener: () => {
             ztoolkit.log("[ReaderMenu] summary click");
-            runOnSelected(TEMPLATE_QUICK_SUMMARY).catch((e) =>
+            runOnSelected(QUICK_SUMMARY_TEMPLATE_ID).catch((e) =>
               ztoolkit.log("[ReaderMenu] summary error:", e),
             );
           },
@@ -96,7 +97,7 @@ export function registerReaderMenu() {
 /**
  * 对所有选中的常规条目，依次生成笔记。串行处理，避免并发打爆 API。
  */
-async function runOnSelected(template: ReadingTemplate) {
+async function runOnSelected(templateId: string) {
   const pane = (Zotero as any).getActiveZoteroPane?.();
   const items: Zotero.Item[] = pane?.getSelectedItems?.() ?? [];
   const targets = items.filter(
@@ -136,7 +137,7 @@ async function runOnSelected(template: ReadingTemplate) {
 
     try {
       const r = await generateNoteForItem(item, {
-        template,
+        templateId,
         onProgress: (s) => popup.changeLine({ text: `${prefix}${s}` }),
       });
       if (r.ok) {

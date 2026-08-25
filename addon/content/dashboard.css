@@ -171,10 +171,28 @@
   min-height: 120px;
 }
 
-.zwl-field-row input,
 .zwl-field-stack textarea {
   box-sizing: border-box;
   width: 100%;
+}
+
+.zwl-prompt-static-value {
+  display: flex;
+  align-items: center;
+  min-height: 26px;
+  min-width: 0;
+  padding: 4px 0;
+  overflow-wrap: anywhere;
+  color: inherit;
+}
+
+.zwl-prompt-name-view {
+  font-weight: 600;
+}
+
+.zwl-prompt-description-view {
+  color: color-mix(in srgb, currentColor 68%, transparent);
+  font-size: 12px;
 }
 
 .zwl-field-stack textarea {

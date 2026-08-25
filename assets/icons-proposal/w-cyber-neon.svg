@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <!-- 背景渐变 -->
+    <linearGradient id="bgGradB" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="60%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+
+    <!-- W渐变 (青蓝紫霓虹) -->
+    <linearGradient id="wNeonB" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="35%" stop-color="#6366f1"/>
+      <stop offset="70%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+
+    <!-- 外边框渐变 -->
+    <linearGradient id="borderGradB" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#ec4899" stop-opacity="0.4"/>
+    </linearGradient>
+
+    <!-- 辉光滤镜 -->
+    <filter id="glowB" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#6366f1" flood-opacity="0.6"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#a855f7" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- 圆角矩形背景 -->
+  <rect width="128" height="128" rx="28" fill="url(#bgGradB)"/>
+  <rect x="1" y="1" width="126" height="126" rx="27" fill="none" stroke="url(#borderGradB)" stroke-width="1.5"/>
+
+  <!-- 发光底衬层 -->
+  <path d="M 28 36 L 46 90 L 64 50 L 82 90 L 100 36"
+        fill="none"
+        stroke="url(#wNeonB)"
+        stroke-width="14"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        filter="url(#glowB)"
+        opacity="0.8"/>
+
+  <!-- 实体主体层 -->
+  <path d="M 28 36 L 46 90 L 64 50 L 82 90 L 100 36"
+        fill="none"
+        stroke="url(#wNeonB)"
+        stroke-width="10"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <!-- 内部光芯高光层 (增加层次与通透感) -->
+  <path d="M 28 36 L 46 90 L 64 50 L 82 90 L 100 36"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="3"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.85"/>
+
+  <!-- 节点光斑 -->
+  <circle cx="28" cy="36" r="2.5" fill="#ffffff"/>
+  <circle cx="64" cy="50" r="2.5" fill="#ffffff"/>
+  <circle cx="100" cy="36" r="2.5" fill="#ffffff"/>
+</svg>

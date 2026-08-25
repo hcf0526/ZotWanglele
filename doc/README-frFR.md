@@ -1,6 +1,6 @@
 # ZotWanglele
 
-ZotWanglele est une extension personnelle pour Zotero 9 consacrée à la lecture
+ZotWanglele est une extension personnelle pour Zotero 10 consacrée à la lecture
 assistée par IA et à la traduction de fichiers PDF. Le projet utilise
 TypeScript, zotero-plugin-scaffold et zotero-plugin-toolkit.
 
@@ -18,9 +18,9 @@ TypeScript, zotero-plugin-scaffold et zotero-plugin-toolkit.
 
 ## État du projet
 
-La version actuelle est `0.1.0`. L'analyse multimodale, le dialogue, les
-revues bibliographiques, les outils de gestion, les cartes mentales et le
-panneau latéral restent planifiés.
+La version actuelle est `0.1.1`. Le panneau latéral de notes IA, la gestion des
+prompts intégrés et les modèles personnalisés sont disponibles. L'analyse
+multimodale, le dialogue et les cartes mentales restent planifiés.
 
 La documentation principale est disponible dans
 [README.md](../README.md). Les étapes de développement sont décrites dans
@@ -35,5 +35,5 @@ npm run lint:check
 npm test
 ```
 
-Le projet cible Zotero 9 et produit un fichier `.xpi` dans
+Le projet cible Zotero 10 et produit un fichier `.xpi` dans
 `.scaffold/build/`.

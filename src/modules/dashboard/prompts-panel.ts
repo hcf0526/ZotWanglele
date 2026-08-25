@@ -31,9 +31,11 @@ export function mountPromptsPanel(win: Window): () => void {
   }
   let selectedId: string | null = getAllTemplates()[0]?.id ?? null;
   let creating = false;
+  let creatingName = "";
+  let creatingDescription = "";
 
   const getField = (id: string) =>
-    doc.getElementById(id) as HTMLInputElement | HTMLTextAreaElement;
+    doc.getElementById(id) as HTMLTextAreaElement;
 
   const showTemplate = (template?: PromptTemplate) => {
     const values = template ?? {
@@ -43,18 +45,17 @@ export function mountPromptsPanel(win: Window): () => void {
       userPrompt: "",
       builtin: false,
     };
-    getField("zwl-prompt-name").value = values.name;
-    getField("zwl-prompt-description").value = values.description;
+    const nameView = doc.getElementById("zwl-prompt-name-view") as HTMLElement;
+    const descriptionView = doc.getElementById(
+      "zwl-prompt-description-view",
+    ) as HTMLElement;
+
+    nameView.textContent = values.name;
+    descriptionView.textContent = values.description || strings.noDescription;
     getField("zwl-prompt-system").value = values.systemPrompt;
     getField("zwl-prompt-user").value = values.userPrompt;
-    for (const id of [
-      "zwl-prompt-name",
-      "zwl-prompt-description",
-      "zwl-prompt-system",
-      "zwl-prompt-user",
-    ]) {
-      getField(id).disabled = false;
-    }
+    getField("zwl-prompt-system").disabled = false;
+    getField("zwl-prompt-user").disabled = false;
     deleteButton.hidden = !!values.builtin || creating;
     resetButton.hidden = !values.builtin || creating;
     (doc.getElementById("zwl-prompt-save") as HTMLButtonElement).hidden = false;
@@ -92,22 +93,36 @@ export function mountPromptsPanel(win: Window): () => void {
   };
 
   const onNew = () => {
+    const name = win.prompt(strings.newNamePrompt, "")?.trim() ?? "";
+    if (!name) return;
+    const description =
+      win.prompt(strings.newDescriptionPrompt, "")?.trim() ?? "";
     creating = true;
+    creatingName = name;
+    creatingDescription = description;
     selectedId = null;
     renderList();
-    showTemplate();
-    getField("zwl-prompt-name").focus();
+    showTemplate({
+      id: "",
+      name: creatingName,
+      description: creatingDescription,
+      systemPrompt: "",
+      userPrompt: "",
+      builtin: false,
+    });
+    getField("zwl-prompt-system").focus();
   };
 
   const onSubmit = (event: Event) => {
     event.preventDefault();
+    const selectedTemplate = selectedId
+      ? getAllTemplates().find((item) => item.id === selectedId)
+      : undefined;
     const draft = {
-      name: getField("zwl-prompt-name").value.trim(),
-      description: getField("zwl-prompt-description").value.trim(),
       systemPrompt: getField("zwl-prompt-system").value.trim(),
       userPrompt: getField("zwl-prompt-user").value.trim(),
     };
-    if (!draft.name || !draft.systemPrompt || !draft.userPrompt) {
+    if (!draft.systemPrompt || !draft.userPrompt) {
       setStatus(doc, strings.requiredFields, true);
       return;
     }
@@ -116,12 +131,24 @@ export function mountPromptsPanel(win: Window): () => void {
       selectedId = `custom-${Date.now()}-${Math.random()
         .toString(36)
         .slice(2, 7)}`;
-      addCustomTemplate({ id: selectedId, ...draft });
+      addCustomTemplate({
+        id: selectedId,
+        name: creatingName,
+        description: creatingDescription,
+        ...draft,
+      });
       creating = false;
+      creatingName = "";
+      creatingDescription = "";
     } else if (selectedId) {
-      const template = getAllTemplates().find((item) => item.id === selectedId);
-      if (template?.builtin) updateBuiltinTemplate(selectedId, draft);
-      else updateCustomTemplate(selectedId, draft);
+      if (selectedTemplate?.builtin) {
+        updateBuiltinTemplate(selectedId, {
+          systemPrompt: draft.systemPrompt,
+          userPrompt: draft.userPrompt,
+        });
+      } else {
+        updateCustomTemplate(selectedId, draft);
+      }
     }
     renderList();
     showTemplate(getAllTemplates().find((item) => item.id === selectedId));
@@ -171,11 +198,12 @@ export function mountPromptsPanel(win: Window): () => void {
 function getStrings() {
   if (!Zotero.locale?.startsWith("zh")) {
     return {
-      builtinReadonly: "Built-in template",
       builtin: "Built-in",
       custom: "Custom",
       noDescription: "No description",
-      requiredFields: "Name and both prompts are required",
+      requiredFields: "Both prompts are required",
+      newNamePrompt: "Template name",
+      newDescriptionPrompt: "Template description (optional)",
       saved: "Template saved",
       reset: "Restored built-in template",
       deleted: "Template deleted",
@@ -183,11 +211,12 @@ function getStrings() {
     };
   }
   return {
-    builtinReadonly: "内置模板",
     builtin: "内置",
     custom: "自定义",
     noDescription: "暂无说明",
-    requiredFields: "请填写名称及两类提示词",
+    requiredFields: "请填写两类提示词",
+    newNamePrompt: "模板名称",
+    newDescriptionPrompt: "模板说明（可选）",
     saved: "模板已保存",
     reset: "已恢复内置模板",
     deleted: "模板已删除",

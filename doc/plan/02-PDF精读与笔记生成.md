@@ -2,14 +2,18 @@
 
 ## 阶段状态
 
-索引文本精读与快速摘要已经形成基础流程。多模态 PDF、多轮分析、对话追问和
-阅读侧栏仍待开发。
+索引文本精读与快速摘要已经形成基础流程，Zotero 条目面板的 AI 笔记预览也已经接入。
+多模态 PDF、多轮分析和对话追问仍待开发。
 
 ## 文本提取
 
 `src/modules/reader/pdf-extractor.ts` 会从常规条目中查找第一个 PDF 附件，并读取
 Zotero 的 `attachmentText` 全文索引。`getPdfText()` 默认返回最多 60000 个字符；
 索引缺失时返回空文本。
+
+阅读提示词统一存放在 `src/modules/ai/prompts.ts`。仪表盘中的“论文精读”和“快速摘要”
+内置名称固定，系统提示词与用户提示词可以编辑；阅读流程按模板 ID 读取当前内容并
+替换论文元数据变量。
 
 同一模块提供 `getPdfBase64()`，可读取整个 PDF 并生成 Base64 字符串。当前
 `note-generator.ts` 仅使用索引文本，因此公式、图表和后续页面可能缺少上下文。
@@ -26,7 +30,21 @@ Zotero 的 `attachmentText` 全文索引。`getPdfText()` 默认返回最多 600
 基础 Markdown 转换覆盖标题、段落、无序列表、代码块、粗体、斜体与行内代码。
 表格、脚注、LaTeX 和复杂嵌套尚无专门处理。
 
-## 触发与批处理
+## 右侧笔记预览
+
+`src/modules/reader/note-preview.ts` 通过 `Zotero.ItemPaneManager.registerSection()`
+注册“AI 笔记预览”区块，文库条目面板和 PDF Reader 均可使用。选择附件时，模块会
+找到父文献，并通过 `reading-notes.ts` 查找最新的“论文精读”或“快速摘要”子笔记。
+
+预览区提供以下操作：
+
+- 在两类阅读笔记之间切换。
+- 缺失时直接发起生成。
+- 监听 Zotero item 变化并自动刷新，也可手动刷新。
+- 打开对应的 Zotero 原始笔记。
+- 调整字号和预览高度，设置保存于 Zotero prefs。
+
+新生成的阅读笔记带有 `ZotWanglele-AI:<template-id>` 标签；旧笔记继续通过标题识别。
 
 `src/modules/reader/menu.ts` 在 Zotero 条目菜单中注册“论文精读”和“快速摘要”。
 菜单仅处理常规条目。多选时按条目顺序串行调用 AI，并通过进度窗口展示成功与
@@ -44,5 +62,5 @@ Zotero 的 `attachmentText` 全文索引。`getPdfText()` 默认返回最多 600
 - 将 PDF 或页面图像送入支持文件理解的模型。
 - 增加分段、上下文预算与长文汇总策略。
 - 增加多轮分析及对话追问。
-- 让用户选择 PDF 附件和提示词模板。
-- 增加笔记渲染测试与 Zotero 9 人工验证记录。
+- 让用户选择 PDF 附件，并为更多模板接入执行入口。
+- 增加笔记渲染测试与 Zotero 10 人工验证记录。

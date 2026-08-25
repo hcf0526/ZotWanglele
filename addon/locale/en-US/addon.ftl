@@ -1,3 +1,15 @@
 startup-begin = ZotWanglele is loading
 startup-finish = ZotWanglele is ready
 prefs-title = ZotWanglele
+sidebar-ai-title = AI Note Preview
+sidebar-ai-no-item = No literature item is selected
+sidebar-ai-empty = No {$kind} note exists for this item
+sidebar-ai-generate = Generate {$kind}
+sidebar-ai-open = Open note
+sidebar-ai-refresh = Refresh note preview
+sidebar-ai-decrease-font = Decrease font size
+sidebar-ai-increase-font = Increase font size
+sidebar-ai-resize = Drag to resize preview height
+sidebar-ai-loading = Loading note…
+sidebar-ai-generating = Generating…
+sidebar-ai-failed = Operation failed

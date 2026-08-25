@@ -1,0 +1,434 @@
+<div id="icon-preview-app" class="icon-app-wrap">
+  <style>
+    .icon-app-wrap {
+      font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
+        "Microsoft YaHei", sans-serif;
+      padding: 16px;
+      color: var(--text-color, #1e293b);
+      background: var(--bg-color, transparent);
+    }
+    .header-box {
+      margin-bottom: 20px;
+    }
+    .header-box h2 {
+      margin: 0 0 6px 0;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .header-box p {
+      margin: 0;
+      font-size: 13px;
+      color: #64748b;
+    }
+    .proposals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .proposal-card {
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 12px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .proposal-card {
+        background: rgba(30, 41, 59, 0.5);
+        border-color: rgba(148, 163, 184, 0.15);
+      }
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-title {
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: #e0e7ff;
+      color: #4338ca;
+      font-weight: 500;
+    }
+    .card-desc {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+    .sizes-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      padding: 12px;
+      background: rgba(15, 23, 42, 0.04);
+      border-radius: 8px;
+      min-height: 108px;
+    }
+    .size-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .size-label {
+      font-size: 11px;
+      color: #94a3b8;
+      font-variant-numeric: tabular-nums;
+    }
+    .preview-svg-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
+    }
+  </style>
+
+  <div class="header-box">
+    <h2>ZotWanglele “W” 字母系列图标设计方案</h2>
+    <p>
+      以下提供了三种不同风格的极简设计感“W”图标，并按 96px、48px、32px、16px
+      实机尺寸进行了同屏比对。
+    </p>
+  </div>
+
+  <div class="proposals-grid">
+    <!-- 方案 A -->
+    <div class="proposal-card">
+      <div class="card-top">
+        <span class="card-title">方案 A：折纸交叠 (Origami / Academic)</span>
+        <span class="badge">学术折面</span>
+      </div>
+      <div class="card-desc">
+        采用多层渐变几何折纸构成字母
+        W，形似展开的书页与交织的知识切面，具有层次感与学术科技质感。
+      </div>
+      <div class="sizes-row">
+        <div class="size-item">
+          <div class="preview-svg-box" style="width: 80px; height: 80px">
+            <svg viewBox="0 0 128 128" width="100%" height="100%">
+              <defs>
+                <linearGradient id="bgA1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#0b0f19" />
+                  <stop offset="100%" stop-color="#1e1b4b" />
+                </linearGradient>
+                <linearGradient id="s1A" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#38bdf8" />
+                  <stop offset="100%" stop-color="#6366f1" />
+                </linearGradient>
+                <linearGradient id="s2A" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#4f46e5" />
+                  <stop offset="100%" stop-color="#818cf8" />
+                </linearGradient>
+                <linearGradient id="s3A" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#818cf8" />
+                  <stop offset="100%" stop-color="#c084fc" />
+                </linearGradient>
+                <linearGradient id="s4A" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#9333ea" />
+                  <stop offset="100%" stop-color="#f472b6" />
+                </linearGradient>
+              </defs>
+              <rect width="128" height="128" rx="28" fill="url(#bgA1)" />
+              <path d="M26 36 L44 92 H56 L38 36 Z" fill="url(#s1A)" />
+              <path
+                d="M44 92 L64 48 H54 L36 88 Z"
+                fill="url(#s2A)"
+                opacity="0.9"
+              />
+              <path d="M64 48 L74 48 L92 92 H80 L64 54 Z" fill="url(#s3A)" />
+              <path d="M82 92 L100 36 H88 L72 86 Z" fill="url(#s4A)" />
+              <circle cx="64" cy="46" r="3.5" fill="#e0e7ff" />
+            </svg>
+          </div>
+          <span class="size-label">96px</span>
+        </div>
+        <div class="size-item">
+          <div class="preview-svg-box" style="width: 44px; height: 44px">
+            <svg viewBox="0 0 128 128" width="100%" height="100%">
+              <rect width="128" height="128" rx="28" fill="url(#bgA1)" />
+              <path d="M26 36 L44 92 H56 L38 36 Z" fill="url(#s1A)" />
+              <path d="M44 92 L64 48 H54 L36 88 Z" fill="url(#s2A)" />
+              <path d="M64 48 L74 48 L92 92 H80 L64 54 Z" fill="url(#s3A)" />
+              <path d="M82 92 L100 36 H88 L72 86 Z" fill="url(#s4A)" />
+            </svg>
+          </div>
+          <span class="size-label">48px</span>
+        </div>
+        <div class="size-item">
+          <div class="preview-svg-box" style="width: 28px; height: 28px">
+            <svg viewBox="0 0 128 128" width="100%" height="100%">
+              <rect width="128" height="128" rx="28" fill="url(#bgA1)" />
+              <path d="M26 36 L44 92 H56 L38 36 Z" fill="url(#s1A)" />
+              <path d="M44 92 L64 48 H54 L36 88 Z" fill="url(#s2A)" />
+              <path d="M64 48 L74 48 L92 92 H80 L64 54 Z" fill="url(#s3A)" />
+              <path d="M82 92 L100 36 H88 L72 86 Z" fill="url(#s4A)" />
+            </svg>
+          </div>
+          <span class="size-label">32px</span>
+        </div>
+        <div class="size-item">
+          <div class="preview-svg-box" style="width: 16px; height: 16px">
+            <svg viewBox="0 0 128 128" width="100%" height="100%">
+              <rect width="128" height="128" rx="28" fill="url(#bgA1)" />
+              <path d="M26 36 L44 92 H56 L38 36 Z" fill="url(#s1A)" />
+              <path d="M44 92 L64 48 H54 L36 88 Z" fill="url(#s2A)" />
+              <path d="M64 48 L74 48 L92 92 H80 L64 54 Z" fill="url(#s3A)" />
+              <path d="M82 92 L100 36 H88 L72 86 Z" fill="url(#s4A)" />
+            </svg>
+          </div>
+          <span class="size-label">16px</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案 B -->
+    <div class="proposal-card">
+      <div class="card-top">
+        <span class="card-title">方案 B：霓虹光轨 (Cyber Neon / AI)</span>
+        <span class="badge">AI 流光</span>
+      </div>
+      <div class="card-desc">
+        采用柔和发光的霓虹连续笔触，内部带有白芯光芒，在极小尺寸下依然拥有清晰的高对比度轮廓。
+      </div>
+      <div class="sizes-row">
+        <div class="size-item">
+          <div class="preview-svg-box" style="width: 80px; height: 80px">
+            <svg viewBox="0 0 128 128" width="100%" height="100%">
+              <defs>
+                <linearGradient id="bgB1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#020617" />
+                  <stop offset="100%" stop-color="#1e1b4b" />
+                </linearGradient>
+                <linearGradient id="wNB" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#38bdf8" />
+                  <stop offset="50%" stop-color="#6366f1" />
+                  <stop offset="100%" stop-color="#ec4899" />
+                </linearGradient>
+              </defs>
+              <rect width="128" height="128" rx="28" fill="url(#bgB1)" />
+              <path
+                d="M 28 36 L 46 90 L 64 50 L 82 90 L 100 36"
+                fill="none"
+                stroke="url(#wNB)"
+                stroke-width="12"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M 28 36 L 46 90 L 64 50 L 82 90 L 100 36"
+                fill="none"
+                stroke="#ffffff"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                opacity="0.9"
+              />
+              <circle cx="28" cy="36" r="2.5" fill="#ffffff" />
+              <circle cx="64" cy="50" r="2.5" fill="#ffffff" />
+              <circle cx="100" cy="36" r="2.5" fill="#ffffff" />
+            </svg>
+          </div>
+          <span class="size-label">96px</span>
+        </div>
+        <div class="size-item">
+          <div class="preview-svg-box" style="width: 44px; height: 44px">
+            <svg viewBox="0 0 128 128" width="100%" height="100%">
+              <rect width="128" height="128" rx="28" fill="url(#bgB1)" />
+              <path
+                d="M 28 36 L 46 90 L 64 50 L 82 90 L 100 36"
+                fill="none"
+                stroke="url(#wNB)"
+                stroke-width="13"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M 28 36 L 46 90 L 64 50 L 82 90 L 100 36"
+                fill="none"
+                stroke="#ffffff"
+                stroke-width="3.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <span class="size-label">48px</span>
+        </div>
+        <div class="size-item">
+          <div class="preview-svg-box" style="width: 28px; height: 28px">
+            <svg viewBox="0 0 128 128" width="100%" height="100%">
+              <rect width="128" height="128" rx="28" fill="url(#bgB1)" />
+              <path
+                d="M 28 36 L 46 90 L 64 50 L 82 90 L 100 36"
+                fill="none"
+                stroke="url(#wNB)"
+                stroke-width="14"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M 28 36 L 46 90 L 64 50 L 82 90 L 100 36"
+                fill="none"
+                stroke="#ffffff"
+                stroke-width="4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <span class="size-label">32px</span>
+        </div>
+        <div class="size-item">
+          <div class="preview-svg-box" style="width: 16px; height: 16px">
+            <svg viewBox="0 0 128 128" width="100%" height="100%">
+              <rect width="128" height="128" rx="28" fill="url(#bgB1)" />
+              <path
+                d="M 28 36 L 46 90 L 64 50 L 82 90 L 100 36"
+                fill="none"
+                stroke="url(#wNB)"
+                stroke-width="16"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <span class="size-label">16px</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案 C -->
+    <div class="proposal-card">
+      <div class="card-top">
+        <span class="card-title">方案 C：双翼星芒 (Wings & Spark)</span>
+        <span class="badge">简约现代</span>
+      </div>
+      <div class="card-desc">
+        将字母 W
+        的左右笔画解构为蓝青与紫粉两面对称舒展的双翼，中脊点缀智慧微光星芒，轻盈且富有科技感。
+      </div>
+      <div class="sizes-row">
+        <div class="size-item">
+          <div class="preview-svg-box" style="width: 80px; height: 80px">
+            <svg viewBox="0 0 128 128" width="100%" height="100%">
+              <defs>
+                <linearGradient id="bgC1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#0f172a" />
+                  <stop offset="100%" stop-color="#1e1b4b" />
+                </linearGradient>
+                <linearGradient id="lwC" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#06b6d4" />
+                  <stop offset="100%" stop-color="#3b82f6" />
+                </linearGradient>
+                <linearGradient id="rwC" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#8b5cf6" />
+                  <stop offset="100%" stop-color="#ec4899" />
+                </linearGradient>
+              </defs>
+              <rect width="128" height="128" rx="28" fill="url(#bgC1)" />
+              <path
+                d="M 28 38 C 28 34 32 32 35 34 L 49 84 C 50 87 53 87 54 84 L 64 52"
+                fill="none"
+                stroke="url(#lwC)"
+                stroke-width="10"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M 64 52 L 74 84 C 75 87 78 87 79 84 L 93 34 C 96 32 100 34 100 38"
+                fill="none"
+                stroke="url(#rwC)"
+                stroke-width="10"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <polygon
+                points="64,44 66.5,49.5 72,52 66.5,54.5 64,60 61.5,54.5 56,52 61.5,49.5"
+                fill="#ffffff"
+              />
+            </svg>
+          </div>
+          <span class="size-label">96px</span>
+        </div>
+        <div class="size-item">
+          <div class="preview-svg-box" style="width: 44px; height: 44px">
+            <svg viewBox="0 0 128 128" width="100%" height="100%">
+              <rect width="128" height="128" rx="28" fill="url(#bgC1)" />
+              <path
+                d="M 28 38 C 28 34 32 32 35 34 L 49 84 C 50 87 53 87 54 84 L 64 52"
+                fill="none"
+                stroke="url(#lwC)"
+                stroke-width="11"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M 64 52 L 74 84 C 75 87 78 87 79 84 L 93 34 C 96 32 100 34 100 38"
+                fill="none"
+                stroke="url(#rwC)"
+                stroke-width="11"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <polygon
+                points="64,44 66.5,49.5 72,52 66.5,54.5 64,60 61.5,54.5 56,52 61.5,49.5"
+                fill="#ffffff"
+              />
+            </svg>
+          </div>
+          <span class="size-label">48px</span>
+        </div>
+        <div class="size-item">
+          <div class="preview-svg-box" style="width: 28px; height: 28px">
+            <svg viewBox="0 0 128 128" width="100%" height="100%">
+              <rect width="128" height="128" rx="28" fill="url(#bgC1)" />
+              <path
+                d="M 28 38 C 28 34 32 32 35 34 L 49 84 C 50 87 53 87 54 84 L 64 52"
+                fill="none"
+                stroke="url(#lwC)"
+                stroke-width="13"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M 64 52 L 74 84 C 75 87 78 87 79 84 L 93 34 C 96 32 100 34 100 38"
+                fill="none"
+                stroke="url(#rwC)"
+                stroke-width="13"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <span class="size-label">32px</span>
+        </div>
+        <div class="size-item">
+          <div class="preview-svg-box" style="width: 16px; height: 16px">
+            <svg viewBox="0 0 128 128" width="100%" height="100%">
+              <rect width="128" height="128" rx="28" fill="url(#bgC1)" />
+              <path
+                d="M 28 38 L 49 84 L 64 52 L 79 84 L 100 38"
+                fill="none"
+                stroke="url(#lwC)"
+                stroke-width="16"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <span class="size-label">16px</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

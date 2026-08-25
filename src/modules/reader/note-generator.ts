@@ -9,11 +9,12 @@ import { AiClient, ChatMessage } from "../ai/ai-client";
 import { ApiFormat, getPreset } from "../ai/presets";
 import { getActiveProfile } from "../ai/profiles";
 import { getPdfText, getItemMeta } from "./pdf-extractor";
-import { ReadingTemplate } from "./prompts";
+import { getTemplate, renderPrompt } from "../ai/prompts";
+import { getGeneratedNoteTag } from "./reading-notes";
 
 export interface GenerateOptions {
-  /** 模板（精读/快速摘要） */
-  template: ReadingTemplate;
+  /** 提示词管理中的内置模板 ID */
+  templateId: string;
   /** 进度回调（status 行文字） */
   onProgress?: (text: string) => void;
 }
@@ -37,7 +38,7 @@ export async function generateNoteForItem(
   item: Zotero.Item,
   options: GenerateOptions,
 ): Promise<GenerateResult> {
-  const { template, onProgress } = options;
+  const { templateId, onProgress } = options;
   const log = (s: string) => {
     onProgress?.(s);
     ztoolkit.log("[NoteGenerator]", s);
@@ -58,7 +59,14 @@ export async function generateNoteForItem(
     };
   }
 
-  // 2. 元数据 + 全文
+  const template = getTemplate(templateId);
+  if (!template) {
+    return {
+      ok: false,
+      message: "提示词模板不存在，请在提示词管理中检查内置模板",
+    };
+  }
+
   log("正在提取元数据与全文…");
   const meta = getItemMeta(item);
   const fullText = await getPdfText(item, 60_000);
@@ -71,24 +79,22 @@ export async function generateNoteForItem(
 
   // 3. 构造消息
   const userPart = [
-    template.user,
-    "",
-    "---",
-    `**标题**: ${meta.title || "（未填）"}`,
-    `**作者**: ${meta.authors || "（未填）"}`,
-    `**年份**: ${meta.year || "（未填）"}`,
-    meta.abstract ? `**摘要**: ${meta.abstract}` : "",
+    renderPrompt(template.userPrompt, {
+      title: meta.title || "（未填）",
+      authors: meta.authors || "（未填）",
+      year: meta.year || "（未填）",
+      abstract: meta.abstract || "（未提供）",
+      keywords: "",
+    }),
     "",
     "---",
     "**正文**（已索引文本，可能不完整）：",
     "",
     fullText,
-  ]
-    .filter((s) => s !== "")
-    .join("\n");
+  ].join("\n");
 
   const messages: ChatMessage[] = [
-    { role: "system", content: template.system },
+    { role: "system", content: template.systemPrompt },
     { role: "user", content: userPart },
   ];
 
@@ -117,10 +123,15 @@ export async function generateNoteForItem(
 
   // 5. 保存为子笔记
   log("正在保存笔记…");
-  const noteId = await saveAsChildNote(item, template.label, content);
+  const noteId = await saveAsChildNote(
+    item,
+    templateId,
+    template.name,
+    content,
+  );
   return {
     ok: true,
-    message: `已生成 ${template.label}（笔记 #${noteId}）`,
+    message: `已生成 ${template.name}（笔记 #${noteId}）`,
     noteId,
   };
 }
@@ -145,6 +156,7 @@ function getProviderName(provider: string): string {
  */
 async function saveAsChildNote(
   parent: Zotero.Item,
+  templateId: string,
   templateLabel: string,
   markdown: string,
 ): Promise<number> {
@@ -154,6 +166,7 @@ async function saveAsChildNote(
   const headHtml = `<h1>ZotWanglele · ${escapeHtml(templateLabel)}</h1>`;
   const bodyHtml = markdownToHtmlMinimal(markdown);
   note.setNote(`${headHtml}\n${bodyHtml}`);
+  note.addTag(getGeneratedNoteTag(templateId));
 
   const saved = await note.saveTx();
   return typeof saved === "number" ? saved : note.id;

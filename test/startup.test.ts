@@ -15,6 +15,7 @@ describe("startup", function () {
       doc.getElementById("zotwanglele-itemmenu-title-translate"),
     );
     assert.isNotNull(doc.getElementById("zotwanglele-tb-dashboard"));
+    assert.exists(getNotePreviewSection());
     const columns = (Zotero.ItemTreeManager as any).getCustomColumns(
       undefined,
       { pluginID: config.addonID },
@@ -36,6 +37,50 @@ describe("startup", function () {
     );
   });
 
+  it("should render the AI reading-note preview controls", async function () {
+    this.timeout(15_000);
+    const section = getNotePreviewSection();
+    assert.exists(section);
+
+    const item = new Zotero.Item("journalArticle");
+    item.libraryID = Zotero.Libraries.userLibraryID;
+    item.setField("title", "Preview panel paper");
+    await item.saveTx();
+
+    const note = new Zotero.Item("note");
+    note.parentID = item.id;
+    note.setNote(
+      "<h1>ZotWanglele · 论文精读</h1><h2>研究方法</h2><p>侧栏预览正文</p>",
+    );
+    note.addTag("ZotWanglele-AI:paper-reading");
+    await note.saveTx();
+
+    const doc = Zotero.getMainWindow().document;
+    const body = doc.createElement("div");
+    doc.documentElement.appendChild(body);
+
+    try {
+      section.onRender({ body, item });
+      const preview = await waitFor(
+        () => body.querySelector(".zwl-note-preview-markdown"),
+        5_000,
+      );
+      assert.isNotNull(preview);
+      assert.include(preview?.textContent ?? "", "侧栏预览正文");
+      assert.lengthOf(body.querySelectorAll(".zwl-note-preview-tab"), 2);
+      assert.isNotNull(body.querySelector(".zwl-note-preview-font-controls"));
+      assert.isNotNull(body.querySelector(".zwl-note-preview-resize-handle"));
+      assert.include(
+        body.querySelector(".zwl-note-preview-item-title")?.textContent ?? "",
+        "Preview panel paper",
+      );
+    } finally {
+      section.onDestroy?.({ body });
+      body.remove();
+      await item.eraseTx();
+    }
+  });
+
   it("should open and mount every dashboard panel", async function () {
     this.timeout(15_000);
     const dashboard = openDashboard(Zotero.getMainWindow(), "overview");
@@ -52,11 +97,30 @@ describe("startup", function () {
       assert.isNotNull(doc.getElementById("zwl-prompt-form"));
       assert.isNotNull(doc.getElementById("zotwanglele-adv-root"));
       assert.isNotNull(promptList);
+      const firstPrompt = promptList!.firstElementChild as HTMLElement;
+      firstPrompt.click();
+      const nameView = doc.getElementById("zwl-prompt-name-view");
+      const descriptionView = doc.getElementById("zwl-prompt-description-view");
+      assert.include(["DIV", "html:div"], nameView?.tagName);
+      assert.include(["DIV", "html:div"], descriptionView?.tagName);
+      assert.isNull(doc.querySelector("input#zwl-prompt-name"));
+      assert.isNull(doc.querySelector("input#zwl-prompt-description"));
+      assert.equal(nameView?.textContent, "论文精读");
     } finally {
       dashboard!.close();
     }
   });
 });
+
+function getNotePreviewSection(): any {
+  const sections = ((Zotero.ItemPaneManager as any).customSectionData
+    ?.options ?? []) as Array<{ paneID?: string; pluginID?: string }>;
+  return sections.find(
+    (section) =>
+      section.pluginID === config.addonID &&
+      String(section.paneID).includes("zotwanglele-ai-notes"),
+  );
+}
 
 async function waitFor<T>(
   getValue: () => T | Promise<T>,

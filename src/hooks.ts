@@ -6,6 +6,10 @@ import {
 } from "./modules/dashboard/dashboard";
 import { onProfileEditorLoad } from "./modules/ai/profile-editor";
 import { registerReaderMenu } from "./modules/reader/menu";
+import {
+  registerNotePreviewSection,
+  unregisterNotePreviewSection,
+} from "./modules/reader/note-preview";
 import { registerDashboardToolbarButton } from "./modules/ui/toolbar";
 import {
   registerTitleTranslationColumn,
@@ -38,6 +42,12 @@ async function onStartup() {
   await Promise.all(
     Zotero.getMainWindows().map((win) => onMainWindowLoad(win)),
   );
+
+  try {
+    registerNotePreviewSection();
+  } catch (error) {
+    ztoolkit.log("[Hooks] note preview registration failed:", error);
+  }
 
   addon.data.initialized = true;
 }
@@ -90,6 +100,7 @@ async function onMainWindowUnload(_win: Window): Promise<void> {
 }
 
 function onShutdown(): void {
+  unregisterNotePreviewSection();
   unregisterTitleTranslationColumn();
   ztoolkit.unregisterAll();
   addon.data.alive = false;

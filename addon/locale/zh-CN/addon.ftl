@@ -1,3 +1,15 @@
 startup-begin = ZotWanglele 加载中
 startup-finish = ZotWanglele 已就绪
 prefs-title = ZotWanglele
+sidebar-ai-title = AI 笔记预览
+sidebar-ai-no-item = 当前没有可展示的文献
+sidebar-ai-empty = 当前条目还没有 {$kind} 笔记
+sidebar-ai-generate = 生成 {$kind}
+sidebar-ai-open = 打开笔记
+sidebar-ai-refresh = 刷新笔记预览
+sidebar-ai-decrease-font = 减小字号
+sidebar-ai-increase-font = 增大字号
+sidebar-ai-resize = 拖动调整预览高度
+sidebar-ai-loading = 正在加载笔记…
+sidebar-ai-generating = 正在生成…
+sidebar-ai-failed = 操作失败

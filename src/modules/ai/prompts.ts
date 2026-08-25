@@ -1,3 +1,5 @@
+import { config } from "../../../package.json";
+
 // ============================================================
 // Types
 // ============================================================
@@ -29,34 +31,66 @@ const BUILTIN_TEMPLATES: PromptTemplate[] = [
     id: "paper-reading",
     name: "论文精读",
     description: "详细分析背景、方法、实验、结论",
-    systemPrompt:
-      "你是一位资深的学术论文分析专家。请对用户提供的论文进行全面深入的分析。使用中文回答。",
-    userPrompt: `请对以下论文进行精读分析：
+    systemPrompt: `你是资深科研助手，擅长把学术论文转化为结构化、易回顾的中文笔记。
+要求：
+- 使用 Markdown，层级清晰；
+- 关键术语保留英文原文；
+- 数学公式使用 LaTeX；
+- 不要凭空发挥，没找到的信息标注 "未提及"；
+- 不要复述全文，要精炼、要解释。`,
+    userPrompt: `请基于下面这篇论文，输出一份精读笔记，结构如下：
 
-**标题**: {{title}}
-**作者**: {{authors}}
-**年份**: {{year}}
-**摘要**: {{abstract}}
+# {{title}}
 
-请从以下几个方面进行详细分析：
-1. **研究背景与动机**：该研究解决什么问题？为什么重要？
-2. **核心方法**：使用了什么方法/技术？创新点在哪里？
-3. **实验设计与结果**：实验如何设计？关键结果是什么？
-4. **结论与贡献**：主要贡献是什么？有什么局限性？
-5. **个人评价**：论文的优缺点，对领域的影响。`,
+## 1. 一句话总结
+（1-2 句话概括最核心的贡献）
+
+## 2. 研究背景与问题
+- **背景**：
+- **要解决的核心问题**：
+- **已有方法的不足**：
+
+## 3. 方法
+（解释关键方法、模型架构、算法思路。需要的话画出 mermaid 流程图。）
+
+## 4. 实验
+- **数据集**：
+- **指标**：
+- **主要结果**：
+- **消融**：
+
+## 5. 结论与启示
+- **结论**：
+- **作者展望**：
+- **对我的启示**：
+
+## 6. 关键术语
+（5-10 个术语，带一句话解释）
+
+**作者**：{{authors}}
+**年份**：{{year}}
+**摘要**：{{abstract}}`,
     builtin: true,
   },
   {
     id: "quick-summary",
     name: "快速摘要",
     description: "一段话总结核心贡献",
-    systemPrompt:
-      "你是一位学术摘要专家。用简洁的语言总结论文核心内容。使用中文回答。",
-    userPrompt: `请用一段话（150-200字）总结以下论文的核心贡献：
+    systemPrompt: `你是科研助手。请用中文写出论文的快速摘要，重点是让我 30 秒读完就知道要点。`,
+    userPrompt: `请基于这篇论文输出快速摘要：
 
-**标题**: {{title}}
-**作者**: {{authors}}
-**摘要**: {{abstract}}`,
+# {{title}}
+
+**作者**：{{authors}}
+**年份**：{{year}}
+**摘要**：{{abstract}}
+
+**一句话**：用一句话讲清楚论文做了什么。
+
+**亮点**（3-5 个 bullet）：
+- ...
+
+**适合谁读**：什么背景的人值得读这篇。`,
     builtin: true,
   },
   {
@@ -143,16 +177,14 @@ const BUILTIN_TEMPLATES: PromptTemplate[] = [
 const CUSTOM_PROMPTS_PREF = `extensions.zotero.${config.addonRef}.ai.customPrompts`;
 const BUILTIN_OVERRIDES_PREF = `extensions.zotero.${config.addonRef}.ai.builtinPromptOverrides`;
 
-let customTemplates: PromptTemplate[] | null = null;
-let builtinOverrides: Record<
-  string,
-  Partial<Omit<PromptTemplate, "id" | "builtin">>
-> | null = null;
+type BuiltinPromptOverride = Partial<
+  Pick<PromptTemplate, "systemPrompt" | "userPrompt">
+>;
 
-function readBuiltinOverrides(): Record<
-  string,
-  Partial<Omit<PromptTemplate, "id" | "builtin">>
-> {
+let customTemplates: PromptTemplate[] | null = null;
+let builtinOverrides: Record<string, BuiltinPromptOverride> | null = null;
+
+function readBuiltinOverrides(): Record<string, BuiltinPromptOverride> {
   if (builtinOverrides) return builtinOverrides;
   try {
     const stored = (Zotero.Prefs as any).get(BUILTIN_OVERRIDES_PREF, true);
@@ -209,14 +241,23 @@ function persistCustomTemplates(): void {
   );
 }
 
+export function getBuiltinTemplateName(id: string): string | undefined {
+  return BUILTIN_TEMPLATES.find((template) => template.id === id)?.name;
+}
+
 export function getAllTemplates(): PromptTemplate[] {
   const overrides = readBuiltinOverrides();
   return [
-    ...BUILTIN_TEMPLATES.map((template) => ({
-      ...template,
-      ...(overrides[template.id] ?? {}),
-      builtin: true,
-    })),
+    ...BUILTIN_TEMPLATES.map((template) => {
+      const override = overrides[template.id] ?? {};
+      return {
+        ...template,
+        systemPrompt: override.systemPrompt ?? template.systemPrompt,
+        userPrompt: override.userPrompt ?? template.userPrompt,
+        // Built-in function names always come from the source definition.
+        builtin: true,
+      };
+    }),
     ...readCustomTemplates(),
   ];
 }
@@ -235,10 +276,15 @@ export function getCustomTemplates(): PromptTemplate[] {
 
 export function updateBuiltinTemplate(
   id: string,
-  updates: Partial<Omit<PromptTemplate, "id" | "builtin">>,
+  updates: BuiltinPromptOverride,
 ): boolean {
   if (!BUILTIN_TEMPLATES.some((template) => template.id === id)) return false;
-  readBuiltinOverrides()[id] = { ...readBuiltinOverrides()[id], ...updates };
+  const { systemPrompt, userPrompt } = updates;
+  readBuiltinOverrides()[id] = {
+    ...readBuiltinOverrides()[id],
+    ...(systemPrompt !== undefined ? { systemPrompt } : {}),
+    ...(userPrompt !== undefined ? { userPrompt } : {}),
+  };
   persistBuiltinOverrides();
   return true;
 }
@@ -292,4 +338,3 @@ export function renderPrompt(template: string, vars: PromptVariables): string {
     return vars[key] ?? match;
   });
 }
-import { config } from "../../../package.json";
