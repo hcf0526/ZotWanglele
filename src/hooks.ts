@@ -7,6 +7,11 @@ import {
 import { onProfileEditorLoad } from "./modules/ai/profile-editor";
 import { registerReaderMenu } from "./modules/reader/menu";
 import {
+  onMetadataCandidateDialogLoad,
+  onMetadataDialogLoad,
+  onMetadataResultDialogLoad,
+} from "./modules/metadata";
+import {
   registerNotePreviewSection,
   unregisterNotePreviewSection,
 } from "./modules/reader/note-preview";
@@ -145,4 +150,7 @@ export default {
   onDashboardLoad,
   onDashboardUnload,
   onProfileEditorLoad,
+  onMetadataDialogLoad,
+  onMetadataCandidateDialogLoad,
+  onMetadataResultDialogLoad,
 };

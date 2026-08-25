@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  title="选择 Crossref 记录"
+  windowtype="zotwanglele:metadata-candidate-dialog"
+  width="900"
+  height="700"
+  persist="screenX screenY width height"
+  onload="
+    window.opener.Zotero.__addonInstance__.hooks.onMetadataCandidateDialogLoad(
+      window,
+    )
+  "
+  ondialogcancel="window.zwlMetadataCandidateCancel()"
+>
+  <html:style>
+    html|body { margin: 0; padding: 0; font-family: sans-serif; color:
+    -moz-DialogText; background: -moz-Dialog; } .zwl-candidate-shell { display:
+    flex; flex-direction: column; gap: 12px; height: 100%; box-sizing:
+    border-box; padding: 16px; } .zwl-candidate-heading { margin: 0; font-size:
+    17px; font-weight: 600; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; } .zwl-candidate-note { margin: 0; color: #666;
+    font-size: 12px; } .zwl-candidate-list { display: flex; flex-direction:
+    column; gap: 8px; flex: 1; min-height: 0; overflow-y: auto; padding-right:
+    4px; } .zwl-metadata-candidate-row { display: flex; align-items: flex-start;
+    gap: 10px; padding: 10px; border: 1px solid #d5d5d5; border-radius: 4px;
+    background: rgba(255,255,255,.55); cursor: pointer; }
+    .zwl-metadata-candidate-row:hover { background: rgba(225,238,250,.8); }
+    .zwl-metadata-candidate-row input { margin-top: 3px; }
+    .zwl-metadata-candidate-body { min-width: 0; }
+    .zwl-metadata-candidate-heading { font-size: 13px; font-weight: 600;
+    line-height: 1.4; overflow-wrap: anywhere; } .zwl-metadata-candidate-info {
+    margin-top: 5px; color: #666; font-size: 12px; line-height: 1.4;
+    overflow-wrap: anywhere; } .zwl-candidate-toolbar { display: flex;
+    justify-content: flex-end; gap: 8px; }
+  </html:style>
+  <vbox flex="1" style="padding: 0">
+    <html:div class="zwl-candidate-shell">
+      <html:h1 id="zwl-metadata-candidate-title" class="zwl-candidate-heading"
+        >选择 Crossref 记录</html:h1
+      >
+      <html:p class="zwl-candidate-note"
+        >当前条目没有
+        DOI。请选择最匹配的记录，之后仍可逐项选择需要写入的字段。</html:p
+      >
+      <html:div
+        id="zwl-metadata-candidate-list"
+        class="zwl-candidate-list"
+      ></html:div>
+      <html:div class="zwl-candidate-toolbar">
+        <button label="取消" oncommand="window.zwlMetadataCandidateCancel()" />
+        <button
+          label="使用所选记录"
+          default="true"
+          oncommand="window.zwlMetadataCandidateApply()"
+        />
+      </html:div>
+    </html:div>
+  </vbox>
+</window>

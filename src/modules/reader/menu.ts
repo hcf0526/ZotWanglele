@@ -13,6 +13,13 @@ import { startTranslate } from "../translate/translator";
 import { openDashboard } from "../dashboard/dashboard";
 import { runLiteratureReviewOnSelected } from "../review/review-generator";
 import { runTitleTranslationOnSelected } from "../title-translate/title-translation";
+import {
+  applyMetadataFields,
+  fetchAndCompareMetadata,
+  openMetadataComparisonDialog,
+  openMetadataResultDialog,
+  type MetadataItemResult,
+} from "../metadata";
 
 const ICON = `chrome://${config.addonRef}/content/icons/favicon.png`;
 const FULL_READ_LABEL =
@@ -71,6 +78,16 @@ export function registerReaderMenu() {
           commandListener: () => {
             runTitleTranslationOnSelected().catch((e) =>
               ztoolkit.log("[ReaderMenu] title translation error:", e),
+            );
+          },
+        },
+        {
+          tag: "menuitem",
+          id: "zotwanglele-itemmenu-metadata-update",
+          label: "更新文献信息",
+          commandListener: () => {
+            runMetadataUpdateOnSelected().catch((e) =>
+              ztoolkit.log("[ReaderMenu] metadata update error:", e),
             );
           },
         },
@@ -162,6 +179,261 @@ async function runOnSelected(templateId: string) {
     progress: 100,
   });
   popup.startCloseTimer(8000);
+}
+
+/**
+ * 串行查询选中的文献。每个条目都在对比窗口中单独选择要写入的字段，
+ * 这样批量操作仍然保留字段级确认能力。处理完成后弹出结果汇总窗口，
+ * 展示每个条目的成功 / 失败 / 跳过 / 无变化状态及具体信息。
+ */
+async function runMetadataUpdateOnSelected() {
+  const pane = (Zotero as any).getActiveZoteroPane?.();
+  const items: Zotero.Item[] = pane?.getSelectedItems?.() ?? [];
+  const targets = items.filter(
+    (item) => item && item.isRegularItem && item.isRegularItem(),
+  );
+
+  if (targets.length === 0) {
+    new ztoolkit.ProgressWindow("ZotWanglele 元数据")
+      .createLine({
+        text: "请先在条目列表里选中一篇或多篇文献",
+        type: "fail",
+        progress: 100,
+      })
+      .show()
+      .startCloseTimer(3000);
+    return;
+  }
+
+  const progress = new ztoolkit.ProgressWindow("ZotWanglele 元数据", {
+    closeTime: -1,
+  })
+    .createLine({
+      text: `准备查询 ${targets.length} 篇文献…`,
+      type: "default",
+      progress: 0,
+    })
+    .show();
+  const parentWin = (pane?.document?.defaultView ??
+    Zotero.getMainWindow()) as Window;
+
+  const results: MetadataItemResult[] = [];
+  let queried = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (let index = 0; index < targets.length; index++) {
+    const item = targets[index];
+    const title = (item.getField("title") as string) || `条目 ${item.id}`;
+    const prefix = `[${index + 1}/${targets.length}] `;
+    progress.changeLine({
+      text: `${prefix}${title.slice(0, 56)} — 查询中…`,
+      progress: Math.round((index / targets.length) * 100),
+    });
+
+    const fetched = await fetchAndCompareMetadata(item, parentWin, false);
+    if (!fetched.ok) {
+      if (fetched.needsCandidateSelection) {
+        skipped++;
+        progress.changeLine({ text: `${prefix}等待选择记录`, type: "default" });
+        results.push({
+          title,
+          status: "pending",
+          detail: fetched.message,
+          selectable: true,
+          targetIndex: index,
+        });
+        continue;
+      }
+      failed++;
+      progress.changeLine({
+        text: `${prefix}查询失败`,
+        type: "fail",
+      });
+      results.push({
+        title,
+        status: "failed",
+        detail: `查询失败：${fetched.message}`,
+      });
+      continue;
+    }
+
+    queried++;
+    const diffs = fetched.diffs ?? [];
+    if (diffs.length === 0) {
+      unchanged++;
+      progress.changeLine({ text: `${prefix}没有字段变化`, type: "success" });
+      results.push({
+        title,
+        status: "unchanged",
+        detail: "Crossref 元数据与当前条目一致，没有字段需要更新。",
+      });
+      continue;
+    }
+
+    const selected = openMetadataComparisonDialog(parentWin, title, diffs);
+    if (selected === null) {
+      skipped++;
+      progress.changeLine({ text: `${prefix}已跳过`, type: "default" });
+      results.push({
+        title,
+        status: "skipped",
+        detail: "取消更新，未做任何修改。",
+      });
+      continue;
+    }
+    if (selected.length === 0 || !fetched.metadata) {
+      skipped++;
+      progress.changeLine({ text: `${prefix}未选择字段`, type: "default" });
+      results.push({
+        title,
+        status: "skipped",
+        detail: "未选择任何字段，未写入。",
+      });
+      continue;
+    }
+
+    try {
+      const applied = await applyMetadataFields(
+        item,
+        fetched.metadata,
+        selected,
+      );
+      if (applied.applied.length > 0) {
+        updated++;
+        const fieldNames = applied.applied
+          .map((f) => {
+            return (
+              {
+                title: "标题",
+                authors: "作者",
+                abstractNote: "摘要",
+                DOI: "DOI",
+                date: "日期",
+              }[f] ?? f
+            );
+          })
+          .join("、");
+        progress.changeLine({
+          text: `${prefix}已更新 ${applied.applied.length} 个字段`,
+          type: "success",
+        });
+        results.push({
+          title,
+          status: "success",
+          detail: `已写入字段：${fieldNames}。`,
+        });
+      } else {
+        skipped++;
+        progress.changeLine({ text: `${prefix}未写入字段`, type: "default" });
+        results.push({
+          title,
+          status: "skipped",
+          detail: "所选字段无可写入内容，未修改。",
+        });
+      }
+    } catch (error: any) {
+      failed++;
+      progress.changeLine({
+        text: `${prefix}保存失败`,
+        type: "fail",
+      });
+      results.push({
+        title,
+        status: "failed",
+        detail: `保存失败：${error?.message ?? String(error)}`,
+      });
+    }
+  }
+
+  progress.changeLine({
+    text: `完成：查询 ${queried}，更新 ${updated}，无变化 ${unchanged}，跳过 ${skipped}，失败 ${failed}`,
+    type: failed === 0 ? "success" : "default",
+    progress: 100,
+  });
+  progress.startCloseTimer(500);
+
+  // 先展示全部初始结果；无 DOI 条目由用户点击“选择”后才进入候选窗口。
+  let selectedResultIndex = openMetadataResultDialog(parentWin, results);
+  while (selectedResultIndex !== null) {
+    const pending = results[selectedResultIndex];
+    const targetIndex = pending?.targetIndex;
+    if (
+      pending?.status !== "pending" ||
+      targetIndex === undefined ||
+      !targets[targetIndex]
+    ) {
+      break;
+    }
+    results[selectedResultIndex] = await processNoDoiMetadataItem(
+      targets[targetIndex],
+      parentWin,
+    );
+    selectedResultIndex = openMetadataResultDialog(parentWin, results);
+  }
+}
+
+async function processNoDoiMetadataItem(
+  item: Zotero.Item,
+  parentWin: Window,
+): Promise<MetadataItemResult> {
+  const title = (item.getField("title") as string) || `条目 ${item.id}`;
+  const fetched = await fetchAndCompareMetadata(item, parentWin, true);
+  if (!fetched.ok) {
+    return {
+      title,
+      status: fetched.message === "已取消候选记录选择" ? "skipped" : "failed",
+      detail: fetched.message,
+    };
+  }
+
+  const diffs = fetched.diffs ?? [];
+  if (diffs.length === 0) {
+    return {
+      title,
+      status: "unchanged",
+      detail: "Crossref 元数据与当前条目一致，没有字段需要更新。",
+    };
+  }
+
+  const selected = openMetadataComparisonDialog(parentWin, title, diffs);
+  if (selected === null) {
+    return { title, status: "skipped", detail: "取消更新，未做任何修改。" };
+  }
+  if (selected.length === 0 || !fetched.metadata) {
+    return { title, status: "skipped", detail: "未选择任何字段，未写入。" };
+  }
+
+  try {
+    const applied = await applyMetadataFields(item, fetched.metadata, selected);
+    if (applied.applied.length === 0) {
+      return {
+        title,
+        status: "skipped",
+        detail: "所选字段无可写入内容，未修改。",
+      };
+    }
+    const labels: Record<string, string> = {
+      title: "标题",
+      authors: "作者",
+      abstractNote: "摘要",
+      DOI: "DOI",
+      date: "日期",
+    };
+    return {
+      title,
+      status: "success",
+      detail: `已写入字段：${applied.applied.map((field) => labels[field] ?? field).join("、")}。`,
+    };
+  } catch (error: any) {
+    return {
+      title,
+      status: "failed",
+      detail: `保存失败：${error?.message ?? String(error)}`,
+    };
+  }
 }
 
 /**
