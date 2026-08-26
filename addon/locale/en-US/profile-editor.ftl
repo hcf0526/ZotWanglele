@@ -1,4 +1,7 @@
 editor-title = Edit Profile
+editor-subtitle = Configure the API connection, model, and generation settings
+editor-section-connection = Connection
+editor-section-generation = Generation settings
 editor-field-name = Name
 editor-field-preset = Preset
 editor-field-format = API Format

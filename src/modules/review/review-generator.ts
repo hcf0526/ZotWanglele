@@ -3,6 +3,12 @@ import { getTemplate, renderPrompt } from "../ai/prompts";
 import { ApiProfile, getActiveProfile } from "../ai/profiles";
 import { markdownToHtmlMinimal } from "../reader/note-generator";
 import { getItemMeta, getPdfText } from "../reader/pdf-extractor";
+import {
+  addTask,
+  createTaskItems,
+  type TaskItemResult,
+  updateTask,
+} from "../tasks/task-store";
 
 const MAX_REVIEW_ITEMS = 30;
 
@@ -97,16 +103,83 @@ export async function runLiteratureReviewOnSelected(): Promise<void> {
   const collection = pane?.getSelectedCollection?.() as
     | Zotero.Collection
     | undefined;
+  const targets = items.filter((item) => item?.isRegularItem?.());
+  const canCreateTask =
+    targets.length >= 2 && targets.length <= MAX_REVIEW_ITEMS;
+  const itemResults = canCreateTask ? createTaskItems(targets) : [];
+  const task = canCreateTask
+    ? addTask({
+        kind: "literature-review",
+        title: "生成文献综述",
+        itemIds: targets.map((item) => item.id),
+        itemTitles: itemResults.map((item) => item.title),
+        itemResults,
+        startedAt: Date.now(),
+        summary: `纳入 ${targets.length} 篇文献`,
+        details: [{ label: "输出", value: "独立综述笔记" }],
+      })
+    : null;
+  if (task) {
+    updateTask(task.id, {
+      status: "running",
+      step: "正在准备文献信息",
+      progress: 5,
+    });
+  }
+
   const progress = new ztoolkit.ProgressWindow("ZotWanglele 文献综述", {
     closeTime: -1,
   })
     .createLine({ text: "正在准备文献信息", type: "default", progress: 0 })
     .show();
 
-  const result = await generateLiteratureReview(items, {
-    collectionId: collection?.id,
-    onProgress: (text) => progress.changeLine({ text }),
-  });
+  let reportedProgress = 5;
+  let result: ReviewResult;
+  try {
+    result = await generateLiteratureReview(items, {
+      collectionId: collection?.id,
+      onProgress: (text) => {
+        progress.changeLine({ text });
+        if (task) {
+          reportedProgress = Math.min(reportedProgress + 20, 90);
+          updateTask(task.id, {
+            step: text,
+            progress: reportedProgress,
+            lastLog: text,
+          });
+        }
+      },
+    });
+  } catch (error: any) {
+    result = {
+      ok: false,
+      message: `生成综述失败：${error?.message ?? String(error)}`,
+    };
+  }
+
+  if (task) {
+    const finalItems: TaskItemResult[] = itemResults.map((item) => ({
+      ...item,
+      status: result.ok ? "success" : "failed",
+      detail: result.ok ? "已纳入综述来源" : result.message,
+    }));
+    updateTask(task.id, {
+      status: result.ok ? "success" : "failed",
+      step: result.ok ? "完成" : "生成失败",
+      progress: 100,
+      summary: result.message,
+      itemResults: finalItems,
+      error: result.ok ? undefined : result.message,
+      finishedAt: Date.now(),
+      details: [
+        {
+          label: "输出",
+          value: result.noteId ? `笔记 ${result.noteId}` : "未生成",
+        },
+      ],
+    });
+  }
+
   progress.changeLine({
     text: result.message,
     type: result.ok ? "success" : "fail",

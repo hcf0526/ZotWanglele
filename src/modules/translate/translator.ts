@@ -34,6 +34,11 @@ export interface StartTranslateResult {
   error?: string;
 }
 
+type ReadyTranslateTask = TranslateTask & {
+  attachmentId: number;
+  pdfPath: string;
+};
+
 /**
  * 入口：选中一个 Zotero 条目，发起翻译任务。
  * 加入任务队列、立即开始执行（异步），返回 task。
@@ -43,54 +48,103 @@ export async function startTranslate(
 ): Promise<StartTranslateResult> {
   const cfg = loadTranslateConfig();
 
-  // 1. 找 PDF 附件
-  const att = await pickPdfAttachment(opts.item);
-  if (!att) {
-    return { ok: false, error: "条目下没有 PDF 附件" };
-  }
-  const pdfPath = (await att.getFilePathAsync?.()) || att.getFilePath?.();
-  if (!pdfPath) {
-    return { ok: false, error: "PDF 附件文件路径不可访问" };
-  }
-
-  // 3. 创建任务
-  const task = addTask({
+  const title =
+    (opts.item.getField("title") as string) || `条目 ${opts.item.id}`;
+  const task = addTask<TranslateTask>({
+    kind: "pdf-translation",
     itemId: opts.item.id,
-    title: (opts.item.getField("title") as string) || `条目 ${opts.item.id}`,
-    attachmentId: att.id,
-    pdfPath,
+    itemIds: [opts.item.id],
+    itemTitles: [title],
+    title,
     engine: cfg.engine,
     outputs: cfg.outputs,
     langOut: cfg.langOut,
     service: cfg.service,
     startedAt: Date.now(),
+    summary: "等待翻译",
+    details: [
+      { label: "翻译引擎", value: cfg.engine },
+      { label: "目标语言", value: cfg.langOut },
+      { label: "翻译服务", value: cfg.service },
+      { label: "输出格式", value: cfg.outputs.join(" + ") },
+    ],
   });
 
-  // 4. 解析环境
-  const env = await resolveEnv();
-  if (!env) {
+  // 1. 找 PDF 附件
+  const att = await pickPdfAttachment(opts.item);
+  if (!att) {
     updateTask(task.id, {
+      status: "failed",
+      error: "条目下没有 PDF 附件",
+      summary: "未找到 PDF 附件",
+      finishedAt: Date.now(),
+    });
+    return { ok: false, error: "条目下没有 PDF 附件", task };
+  }
+  const pdfPath = (await att.getFilePathAsync?.()) || att.getFilePath?.();
+  if (!pdfPath) {
+    updateTask(task.id, {
+      status: "failed",
+      error: "PDF 附件文件路径不可访问",
+      summary: "PDF 文件不可访问",
+      finishedAt: Date.now(),
+    });
+    return { ok: false, error: "PDF 附件文件路径不可访问", task };
+  }
+
+  const readyTask: ReadyTranslateTask = {
+    ...task,
+    attachmentId: att.id,
+    pdfPath,
+  };
+  updateTask(readyTask.id, {
+    attachmentId: readyTask.attachmentId,
+    pdfPath: readyTask.pdfPath,
+    status: "running",
+    step: "准备翻译环境",
+    progress: 2,
+    summary: "正在准备翻译",
+  });
+
+  // 2. 解析环境
+  let env: ResolvedEnv | null;
+  try {
+    env = await resolveEnv();
+  } catch (error: any) {
+    const message = `翻译环境检测失败：${error?.message ?? String(error)}`;
+    updateTask(readyTask.id, {
+      status: "failed",
+      error: message,
+      summary: "翻译环境检测失败",
+      finishedAt: Date.now(),
+    });
+    return { ok: false, error: message, task: readyTask };
+  }
+  if (!env) {
+    updateTask(readyTask.id, {
       status: "failed",
       error:
         cfg.envSource === "server"
           ? "服务端地址不可用，请在仪表盘 → 高级设置中填写并检测服务地址"
           : "翻译环境不可用，请在仪表盘 → 高级设置中配置 uv 路径、bundle 路径或切换到服务端模式",
+      summary: "翻译环境不可用",
       finishedAt: Date.now(),
     });
-    return { ok: false, error: "翻译环境不可用", task };
+    return { ok: false, error: "翻译环境不可用", task: readyTask };
   }
 
   // 5. 异步执行（不 await，调用方立即拿到 task 句柄）
-  void runTask(task, env, cfg).catch((e) => {
+  void runTask(readyTask, env, cfg).catch((e) => {
     ztoolkit.log("[Translator] runTask uncaught:", e);
-    updateTask(task.id, {
+    updateTask(readyTask.id, {
       status: "failed",
       error: String(e?.message ?? e),
+      summary: "翻译执行异常",
       finishedAt: Date.now(),
     });
   });
 
-  return { ok: true, task };
+  return { ok: true, task: readyTask };
 }
 
 // ============================================================
@@ -98,7 +152,7 @@ export async function startTranslate(
 // ============================================================
 
 async function runTask(
-  task: TranslateTask,
+  task: ReadyTranslateTask,
   env: ResolvedEnv,
   cfg: ReturnType<typeof loadTranslateConfig>,
 ): Promise<void> {
@@ -185,7 +239,7 @@ async function runTask(
 }
 
 async function runServerTask(
-  task: TranslateTask,
+  task: ReadyTranslateTask,
   cfg: ReturnType<typeof loadTranslateConfig>,
 ): Promise<void> {
   const baseUrl = normalizeServerUrl(cfg.serverUrl);
@@ -399,7 +453,7 @@ async function addOutputsToZotero(
 }
 
 function buildServerPayload(
-  task: TranslateTask,
+  task: ReadyTranslateTask,
   cfg: ReturnType<typeof loadTranslateConfig>,
   fileContent: string,
 ): Record<string, any> {

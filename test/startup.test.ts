@@ -14,6 +14,9 @@ describe("startup", function () {
     assert.isNotNull(
       doc.getElementById("zotwanglele-itemmenu-title-translate"),
     );
+    assert.isNotNull(
+      doc.getElementById("zotwanglele-itemmenu-metadata-update"),
+    );
     assert.isNotNull(doc.getElementById("zotwanglele-tb-dashboard"));
     assert.exists(getNotePreviewSection());
     const columns = (Zotero.ItemTreeManager as any).getCustomColumns(
@@ -106,6 +109,53 @@ describe("startup", function () {
       assert.isNull(doc.querySelector("input#zwl-prompt-name"));
       assert.isNull(doc.querySelector("input#zwl-prompt-description"));
       assert.equal(nameView?.textContent, "论文精读");
+
+      const item = new Zotero.Item("journalArticle");
+      item.libraryID = Zotero.Libraries.userLibraryID;
+      const taskTitle = `Dashboard task card ${Date.now()}`;
+      item.setField("title", taskTitle);
+      await item.saveTx();
+
+      try {
+        const pane = (Zotero as any).getActiveZoteroPane();
+        await pane.selectItem(item.id);
+        const translateMenuItem =
+          Zotero.getMainWindow().document.getElementById(
+            "zotwanglele-itemmenu-translate",
+          ) as any;
+        assert.isNotNull(translateMenuItem);
+        translateMenuItem.doCommand();
+
+        const taskToggle = await waitFor(() => {
+          return (Array.from(
+            doc.querySelectorAll(".zwl-task-card-toggle"),
+          ).find((element) => element.textContent?.includes(taskTitle)) ??
+            null) as HTMLButtonElement | null;
+        }, 5_000);
+        assert.isNotNull(taskToggle);
+        assert.equal(taskToggle?.getAttribute("aria-expanded"), "false");
+
+        taskToggle!.click();
+        const expandedToggle = doc.querySelector(
+          ".zwl-task-card-toggle",
+        ) as HTMLButtonElement | null;
+        assert.equal(expandedToggle?.getAttribute("aria-expanded"), "true");
+        const expandedDetails = expandedToggle?.parentElement?.querySelector(
+          ".zwl-task-card-details",
+        ) as HTMLElement | null;
+        assert.isFalse(expandedDetails?.hidden ?? true);
+
+        expandedToggle!.click();
+        assert.equal(expandedToggle?.getAttribute("aria-expanded"), "false");
+        assert.isTrue(expandedDetails?.hidden ?? false);
+      } finally {
+        (
+          doc.getElementById(
+            "zotwanglele-queue-clear",
+          ) as HTMLButtonElement | null
+        )?.click();
+        await item.eraseTx();
+      }
     } finally {
       dashboard!.close();
     }

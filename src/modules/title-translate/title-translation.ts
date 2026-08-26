@@ -2,6 +2,14 @@ import { config } from "../../../package.json";
 import { AiClient } from "../ai/ai-client";
 import { getTemplate, renderPrompt } from "../ai/prompts";
 import { ApiProfile, getActiveProfile } from "../ai/profiles";
+import {
+  addTask,
+  createTaskItems,
+  getItemTitle,
+  type TaskItemResult,
+  type TaskStatus,
+  updateTask,
+} from "../tasks/task-store";
 
 const EXTRA_FIELD = "ZotWanglele-Translated-Title";
 const EXTRA_PATTERN = new RegExp(`^${EXTRA_FIELD}:\\s*(.*)$`, "im");
@@ -96,6 +104,23 @@ export async function runTitleTranslationOnSelected(): Promise<void> {
     return;
   }
 
+  const itemResults = createTaskItems(targets);
+  const task = addTask({
+    kind: "title-translation",
+    title: "翻译标题",
+    itemIds: targets.map((item) => item.id),
+    itemTitles: itemResults.map((item) => item.title),
+    itemResults,
+    startedAt: Date.now(),
+    summary: `共 ${targets.length} 篇文献`,
+    details: [{ label: "写入位置", value: "条目 Extra 的标题译文" }],
+  });
+  updateTask(task.id, {
+    status: "running",
+    step: "准备翻译标题",
+    progress: 2,
+  });
+
   const progress = new ztoolkit.ProgressWindow("ZotWanglele 标题翻译", {
     closeTime: -1,
   })
@@ -110,18 +135,60 @@ export async function runTitleTranslationOnSelected(): Promise<void> {
   const errors: string[] = [];
   for (let index = 0; index < targets.length; index++) {
     const item = targets[index];
-    const title = (item.getField("title") as string) || `条目 ${item.id}`;
+    const title = getItemTitle(item);
+    itemResults[index] = { ...itemResults[index], status: "running" };
+    updateTask(task.id, {
+      step: `正在翻译 ${index + 1}/${targets.length}：${title}`,
+      progress: Math.round((index / targets.length) * 100),
+      itemResults: itemResults.slice(),
+    });
     progress.changeLine({
       text: `[${index + 1}/${targets.length}] ${title.slice(0, 60)}`,
       progress: Math.round((index / targets.length) * 100),
     });
-    const result = await translateItemTitle(item);
-    if (result.ok) success++;
-    else errors.push(`${title}: ${result.message}`);
+
+    let result: TitleTranslationResult;
+    try {
+      result = await translateItemTitle(item);
+    } catch (error: any) {
+      result = {
+        ok: false,
+        message: `标题翻译异常：${error?.message ?? String(error)}`,
+      };
+    }
+
+    if (result.ok) {
+      success++;
+      itemResults[index] = {
+        ...itemResults[index],
+        status: "success",
+        detail: result.translatedTitle || result.message,
+      };
+    } else {
+      errors.push(`${title}: ${result.message}`);
+      itemResults[index] = {
+        ...itemResults[index],
+        status: "failed",
+        detail: result.message,
+      };
+    }
+    updateTask(task.id, { itemResults: itemResults.slice() });
   }
 
   const failed = targets.length - success;
   const detail = errors.length > 0 ? `；${errors[0]}` : "";
+  const status: TaskStatus =
+    failed === 0 ? "success" : success === 0 ? "failed" : "partial";
+  const summary = `成功 ${success} 项，失败 ${failed} 项`;
+  updateTask(task.id, {
+    status,
+    step: "完成",
+    progress: 100,
+    summary,
+    itemResults: itemResults.slice(),
+    error: status === "failed" ? errors.join("\n") : undefined,
+    finishedAt: Date.now(),
+  });
   progress.changeLine({
     text: `完成 ${success} 项，失败 ${failed} 项${detail}`,
     type: failed === 0 ? "success" : "default",

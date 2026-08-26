@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?> <?xml-stylesheet
+href="chrome://zotwanglele/content/profile-editor.css"?>
 <window
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
@@ -16,191 +17,184 @@
     <html:link rel="localization" href="__addonRef__-profile-editor.ftl" />
   </linkset>
 
-  <vbox flex="1" style="padding: 16px">
-    <!-- 名称 -->
-    <hbox align="center">
-      <html:label
-        for="zwl-editor-name"
-        data-l10n-id="editor-field-name"
-        style="min-width: 100px"
-      ></html:label>
-      <html:input
-        type="text"
-        id="zwl-editor-name"
-        style="flex: 1"
-        placeholder="如：DeepSeek 主账号"
+  <vbox class="zwl-profile-editor-shell" flex="1">
+    <hbox align="center" class="zwl-profile-editor-header">
+      <html:img
+        class="zwl-profile-editor-mark"
+        src="chrome://zotwanglele/content/icons/icon@32.png"
+        alt=""
       />
+      <vbox class="zwl-profile-editor-heading" flex="1">
+        <html:h2 data-l10n-id="editor-title" />
+        <html:p data-l10n-id="editor-subtitle" />
+      </vbox>
     </hbox>
 
-    <!-- 预设 -->
-    <hbox align="center" style="margin-top: 8px">
-      <html:label
-        for="zwl-editor-preset"
-        data-l10n-id="editor-field-preset"
-        style="min-width: 100px"
-      ></html:label>
-      <menulist id="zwl-editor-preset" style="flex: 1">
-        <menupopup>
-          <menuitem
-            data-l10n-id="editor-preset-custom"
-            value="custom"
-            oncommand="window.zwlEditorPresetChange(this.value)"
-          />
-          <menuitem
-            label="OpenAI"
-            value="openai"
-            oncommand="window.zwlEditorPresetChange(this.value)"
-          />
-          <menuitem
-            label="Claude"
-            value="claude"
-            oncommand="window.zwlEditorPresetChange(this.value)"
-          />
-          <menuitem
-            label="DeepSeek"
-            value="deepseek"
-            oncommand="window.zwlEditorPresetChange(this.value)"
-          />
-          <menuitem
-            label="Gemini"
-            value="gemini"
-            oncommand="window.zwlEditorPresetChange(this.value)"
-          />
-          <menuitem
-            label="SiliconFlow"
-            value="siliconflow"
-            oncommand="window.zwlEditorPresetChange(this.value)"
-          />
-          <menuitem
-            label="Ollama"
-            value="ollama"
-            oncommand="window.zwlEditorPresetChange(this.value)"
-          />
-        </menupopup>
-      </menulist>
-    </hbox>
-
-    <!-- API 格式 -->
-    <hbox align="center" style="margin-top: 8px">
-      <html:label
-        for="zwl-editor-format"
-        data-l10n-id="editor-field-format"
-        style="min-width: 100px"
-      ></html:label>
-      <menulist id="zwl-editor-format" style="flex: 1">
-        <menupopup>
-          <menuitem label="Chat Completions" value="chat-completions" />
-          <menuitem label="Responses" value="responses" />
-        </menupopup>
-      </menulist>
-    </hbox>
-
-    <!-- Base URL -->
-    <hbox align="center" style="margin-top: 8px">
-      <html:label
-        for="zwl-editor-baseUrl"
-        data-l10n-id="editor-field-baseurl"
-        style="min-width: 100px"
-      ></html:label>
-      <html:input
-        type="text"
-        id="zwl-editor-baseUrl"
-        style="flex: 1"
-        placeholder="https://api.example.com"
-      />
-    </hbox>
-
-    <!-- API Key -->
-    <hbox align="center" style="margin-top: 8px">
-      <html:label
-        for="zwl-editor-apiKey"
-        data-l10n-id="editor-field-apikey"
-        style="min-width: 100px"
-      ></html:label>
-      <html:input
-        type="password"
-        id="zwl-editor-apiKey"
-        style="flex: 1"
-        placeholder="sk-..."
-      />
-    </hbox>
-
-    <!-- 模型名称 -->
-    <hbox align="center" style="margin-top: 8px">
-      <html:label
-        for="zwl-editor-model"
-        data-l10n-id="editor-field-model"
-        style="min-width: 100px"
-      ></html:label>
-      <html:input
-        type="text"
-        id="zwl-editor-model"
-        style="flex: 1"
-        placeholder="gpt-4o"
-      />
-    </hbox>
-
-    <!-- Temperature -->
-    <hbox align="center" style="margin-top: 8px">
-      <html:label
-        for="zwl-editor-temperature"
-        data-l10n-id="editor-field-temperature"
-        style="min-width: 100px"
-      ></html:label>
-      <html:input
-        type="range"
-        id="zwl-editor-temperature"
-        min="0"
-        max="100"
-        style="flex: 1"
-      />
-      <html:span
-        id="zwl-editor-temperature-value"
-        style="min-width: 40px; text-align: right"
-        >0.7</html:span
+    <html:div class="zwl-profile-editor-section-heading">
+      <html:span class="zwl-profile-editor-section-icon" aria-hidden="true"
+        >✦</html:span
       >
-    </hbox>
+      <html:span data-l10n-id="editor-section-connection" />
+    </html:div>
 
-    <!-- Max Tokens -->
-    <hbox align="center" style="margin-top: 8px">
-      <html:label
-        for="zwl-editor-maxTokens"
-        data-l10n-id="editor-field-maxtokens"
-        style="min-width: 100px"
-      ></html:label>
-      <html:input
-        type="number"
-        id="zwl-editor-maxTokens"
-        min="256"
-        max="128000"
-        style="width: 100px"
-      />
-    </hbox>
+    <vbox class="zwl-profile-editor-fields">
+      <hbox align="center" class="zwl-editor-field">
+        <html:label for="zwl-editor-name" data-l10n-id="editor-field-name" />
+        <html:input
+          type="text"
+          id="zwl-editor-name"
+          placeholder="如：DeepSeek 主账号"
+        />
+      </hbox>
 
-    <!-- 间距填充 -->
-    <html:div style="flex: 1" />
+      <hbox align="center" class="zwl-editor-field">
+        <html:label
+          for="zwl-editor-preset"
+          data-l10n-id="editor-field-preset"
+        />
+        <menulist id="zwl-editor-preset">
+          <menupopup>
+            <menuitem
+              data-l10n-id="editor-preset-custom"
+              value="custom"
+              oncommand="window.zwlEditorPresetChange(this.value)"
+            />
+            <menuitem
+              label="OpenAI"
+              value="openai"
+              oncommand="window.zwlEditorPresetChange(this.value)"
+            />
+            <menuitem
+              label="Claude"
+              value="claude"
+              oncommand="window.zwlEditorPresetChange(this.value)"
+            />
+            <menuitem
+              label="DeepSeek"
+              value="deepseek"
+              oncommand="window.zwlEditorPresetChange(this.value)"
+            />
+            <menuitem
+              label="Gemini"
+              value="gemini"
+              oncommand="window.zwlEditorPresetChange(this.value)"
+            />
+            <menuitem
+              label="SiliconFlow"
+              value="siliconflow"
+              oncommand="window.zwlEditorPresetChange(this.value)"
+            />
+            <menuitem
+              label="Ollama"
+              value="ollama"
+              oncommand="window.zwlEditorPresetChange(this.value)"
+            />
+          </menupopup>
+        </menulist>
+      </hbox>
 
-    <!-- 底部按钮 -->
-    <hbox align="center" style="padding-top: 16px">
+      <hbox align="center" class="zwl-editor-field">
+        <html:label
+          for="zwl-editor-format"
+          data-l10n-id="editor-field-format"
+        />
+        <menulist id="zwl-editor-format">
+          <menupopup>
+            <menuitem label="Chat Completions" value="chat-completions" />
+            <menuitem label="Responses" value="responses" />
+          </menupopup>
+        </menulist>
+      </hbox>
+
+      <hbox align="center" class="zwl-editor-field">
+        <html:label
+          for="zwl-editor-baseUrl"
+          data-l10n-id="editor-field-baseurl"
+        />
+        <html:input
+          type="text"
+          id="zwl-editor-baseUrl"
+          placeholder="https://api.example.com"
+        />
+      </hbox>
+
+      <hbox align="center" class="zwl-editor-field">
+        <html:label
+          for="zwl-editor-apiKey"
+          data-l10n-id="editor-field-apikey"
+        />
+        <html:input
+          type="password"
+          id="zwl-editor-apiKey"
+          placeholder="sk-..."
+        />
+      </hbox>
+
+      <hbox align="center" class="zwl-editor-field">
+        <html:label for="zwl-editor-model" data-l10n-id="editor-field-model" />
+        <html:input type="text" id="zwl-editor-model" placeholder="gpt-4o" />
+      </hbox>
+    </vbox>
+
+    <html:div
+      class="zwl-profile-editor-section-heading zwl-profile-editor-section-heading-spaced"
+    >
+      <html:span class="zwl-profile-editor-section-icon" aria-hidden="true"
+        >◌</html:span
+      >
+      <html:span data-l10n-id="editor-section-generation" />
+    </html:div>
+
+    <vbox class="zwl-profile-editor-options">
+      <hbox align="center" class="zwl-editor-field">
+        <html:label
+          for="zwl-editor-temperature"
+          data-l10n-id="editor-field-temperature"
+        />
+        <html:input
+          type="range"
+          id="zwl-editor-temperature"
+          min="0"
+          max="100"
+        />
+        <html:span id="zwl-editor-temperature-value">0.7</html:span>
+      </hbox>
+
+      <hbox align="center" class="zwl-editor-field">
+        <html:label
+          for="zwl-editor-maxTokens"
+          data-l10n-id="editor-field-maxtokens"
+        />
+        <html:input
+          type="number"
+          id="zwl-editor-maxTokens"
+          min="256"
+          max="128000"
+        />
+      </hbox>
+    </vbox>
+
+    <spacer flex="1" />
+
+    <hbox align="center" class="zwl-profile-editor-footer">
       <button
         id="zwl-editor-test"
+        class="zwl-editor-button zwl-editor-button-secondary"
         data-l10n-id="editor-btn-test"
         oncommand="window.zwlEditorTest()"
       />
-      <html:span
-        id="zwl-editor-test-status"
-        style="margin-left: 10px; font-size: 12px"
-      ></html:span>
-      <html:div style="flex: 1" />
+      <html:span id="zwl-editor-test-status" class="zwl-editor-test-status" />
+      <spacer flex="1" />
       <button
         id="zwl-editor-cancel"
+        class="zwl-editor-button"
         data-l10n-id="editor-btn-cancel"
         oncommand="window.close()"
       />
       <button
         id="zwl-editor-save"
+        class="zwl-editor-button zwl-editor-button-primary"
         data-l10n-id="editor-btn-save"
-        style="margin-left: 8px"
         oncommand="window.zwlEditorSave()"
       />
     </hbox>

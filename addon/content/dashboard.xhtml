@@ -18,15 +18,20 @@ href="chrome://zotwanglele/content/dashboard.css"?>
     <html:link rel="localization" href="__addonRef__-dashboard.ftl" />
   </linkset>
 
-  <vbox flex="1" style="padding: 12px">
+  <vbox flex="1" class="zwl-dashboard-shell">
     <!-- 顶部标题栏 -->
-    <hbox align="center" style="padding-bottom: 8px">
-      <html:h2 data-l10n-id="dashboard-title" style="margin: 0; flex: 1" />
+    <hbox align="center" class="zwl-dashboard-titlebar">
+      <html:img
+        class="zwl-dashboard-brand-mark"
+        src="chrome://zotwanglele/content/icons/icon@32.png"
+        alt=""
+      />
+      <html:h2 data-l10n-id="dashboard-title" />
     </hbox>
 
     <!-- Tab 容器 -->
-    <tabbox flex="1">
-      <tabs>
+    <tabbox flex="1" class="zwl-dashboard-tabbox">
+      <tabs class="zwl-dashboard-tabs">
         <tab data-l10n-id="dashboard-tab-overview" />
         <tab data-l10n-id="dashboard-tab-queue" />
         <tab data-l10n-id="dashboard-tab-prompts" />
@@ -36,13 +41,31 @@ href="chrome://zotwanglele/content/dashboard.css"?>
         <!-- 概览 -->
         <tabpanel
           id="zotwanglele-dashboard-overview"
+          class="zwl-dashboard-panel"
           orient="vertical"
           flex="1"
         >
           <html:div id="zotwanglele-overview-root" class="zwl-overview">
-            <html:h3 data-l10n-id="dashboard-overview-heading" />
+            <html:div class="zwl-overview-hero">
+              <html:div class="zwl-overview-hero-copy">
+                <html:span
+                  class="zwl-overview-kicker"
+                  data-l10n-id="dashboard-overview-kicker"
+                />
+                <html:h3 data-l10n-id="dashboard-overview-heading" />
+                <html:p data-l10n-id="dashboard-overview-description" />
+              </html:div>
+              <html:img
+                class="zwl-overview-hero-mark"
+                src="chrome://zotwanglele/content/icons/icon@64.png"
+                alt=""
+              />
+            </html:div>
             <html:div class="zwl-metrics">
               <html:div class="zwl-metric">
+                <html:span class="zwl-metric-icon" aria-hidden="true"
+                  >◎</html:span
+                >
                 <html:span
                   class="zwl-metric-label"
                   data-l10n-id="dashboard-overview-profile"
@@ -51,6 +74,9 @@ href="chrome://zotwanglele/content/dashboard.css"?>
                 <html:small id="zwl-overview-model"></html:small>
               </html:div>
               <html:div class="zwl-metric">
+                <html:span class="zwl-metric-icon" aria-hidden="true"
+                  >✦</html:span
+                >
                 <html:span
                   class="zwl-metric-label"
                   data-l10n-id="dashboard-overview-prompts"
@@ -59,6 +85,9 @@ href="chrome://zotwanglele/content/dashboard.css"?>
                 <html:small id="zwl-overview-custom-prompts"></html:small>
               </html:div>
               <html:div class="zwl-metric">
+                <html:span class="zwl-metric-icon" aria-hidden="true"
+                  >◌</html:span
+                >
                 <html:span
                   class="zwl-metric-label"
                   data-l10n-id="dashboard-overview-tasks"
@@ -67,6 +96,9 @@ href="chrome://zotwanglele/content/dashboard.css"?>
                 <html:small id="zwl-overview-task-total"></html:small>
               </html:div>
               <html:div class="zwl-metric">
+                <html:span class="zwl-metric-icon" aria-hidden="true"
+                  >文</html:span
+                >
                 <html:span
                   class="zwl-metric-label"
                   data-l10n-id="dashboard-overview-titles"
@@ -77,7 +109,17 @@ href="chrome://zotwanglele/content/dashboard.css"?>
             </html:div>
             <html:div class="zwl-workflows">
               <html:div class="zwl-workflow">
-                <html:h4 data-l10n-id="dashboard-overview-review" />
+                <html:div class="zwl-workflow-copy">
+                  <html:span class="zwl-workflow-icon" aria-hidden="true"
+                    >▤</html:span
+                  >
+                  <html:div>
+                    <html:h4 data-l10n-id="dashboard-overview-review" />
+                    <html:p
+                      data-l10n-id="dashboard-overview-review-description"
+                    />
+                  </html:div>
+                </html:div>
                 <html:button
                   id="zwl-overview-review"
                   type="button"
@@ -85,7 +127,19 @@ href="chrome://zotwanglele/content/dashboard.css"?>
                 />
               </html:div>
               <html:div class="zwl-workflow">
-                <html:h4 data-l10n-id="dashboard-overview-title-translate" />
+                <html:div class="zwl-workflow-copy">
+                  <html:span class="zwl-workflow-icon" aria-hidden="true"
+                    >A</html:span
+                  >
+                  <html:div>
+                    <html:h4
+                      data-l10n-id="dashboard-overview-title-translate"
+                    />
+                    <html:p
+                      data-l10n-id="dashboard-overview-title-translate-description"
+                    />
+                  </html:div>
+                </html:div>
                 <html:button
                   id="zwl-overview-title-translate"
                   type="button"
@@ -96,51 +150,52 @@ href="chrome://zotwanglele/content/dashboard.css"?>
           </html:div>
         </tabpanel>
 
-        <!-- 翻译任务 -->
-        <tabpanel id="zotwanglele-dashboard-queue" orient="vertical" flex="1">
-          <html:div
-            id="zotwanglele-queue-root"
-            style="
-              padding: 12px;
-              display: flex;
-              flex-direction: column;
-              gap: 8px;
-              height: 100%;
-              box-sizing: border-box;
-            "
-          >
-            <html:div style="display: flex; gap: 8px; align-items: center">
-              <html:strong>翻译任务</html:strong>
-              <html:span
-                id="zotwanglele-queue-summary"
-                style="color: #666; flex: 1"
-                >暂无任务</html:span
-              >
-              <html:button id="zotwanglele-queue-clear" type="button"
-                >清除已完成</html:button
-              >
-            </html:div>
+        <!-- 任务记录 -->
+        <tabpanel
+          id="zotwanglele-dashboard-queue"
+          class="zwl-dashboard-panel"
+          orient="vertical"
+          flex="1"
+        >
+          <html:section id="zotwanglele-queue-root" class="zwl-task-records">
+            <html:header class="zwl-task-records-header">
+              <html:div class="zwl-task-records-heading">
+                <html:span class="zwl-task-records-icon" aria-hidden="true"
+                  >▤</html:span
+                >
+                <html:div>
+                  <html:h3 data-l10n-id="dashboard-task-records-heading" />
+                  <html:p
+                    id="zotwanglele-queue-summary"
+                    class="zwl-task-records-summary"
+                    >暂无任务记录</html:p
+                  >
+                </html:div>
+              </html:div>
+              <html:button
+                id="zotwanglele-queue-clear"
+                class="zwl-task-clear-button"
+                type="button"
+                data-l10n-id="dashboard-task-records-clear"
+              />
+            </html:header>
             <html:div
               id="zotwanglele-queue-list"
-              style="
-                flex: 1;
-                overflow-y: auto;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                padding: 8px;
-                background: #fafafa;
-              "
+              class="zwl-task-records-list"
+              role="list"
             >
-              <html:p
-                data-l10n-id="dashboard-queue-placeholder"
-                style="color: #888"
-              />
+              <html:p data-l10n-id="dashboard-queue-placeholder" />
             </html:div>
-          </html:div>
+          </html:section>
         </tabpanel>
 
         <!-- 提示词管理 -->
-        <tabpanel id="zotwanglele-dashboard-prompts" orient="vertical" flex="1">
+        <tabpanel
+          id="zotwanglele-dashboard-prompts"
+          class="zwl-dashboard-panel"
+          orient="vertical"
+          flex="1"
+        >
           <html:div id="zotwanglele-dashboard-prompts-list">
             <html:div class="zwl-prompts-toolbar">
               <html:div>
@@ -204,8 +259,8 @@ href="chrome://zotwanglele/content/dashboard.css"?>
                     id="zwl-prompt-reset"
                     type="button"
                     hidden="hidden"
-                    >恢复内置</html:button
-                  >
+                    data-l10n-id="dashboard-prompts-reset"
+                  />
                   <html:button
                     id="zwl-prompt-delete"
                     type="button"
@@ -225,72 +280,48 @@ href="chrome://zotwanglele/content/dashboard.css"?>
         <!-- 高级设置：翻译配置 -->
         <tabpanel
           id="zotwanglele-dashboard-advanced"
+          class="zwl-dashboard-panel"
           orient="vertical"
           flex="1"
         >
-          <html:div
-            id="zotwanglele-adv-root"
-            style="
-              padding: 12px;
-              overflow-y: auto;
-              height: 100%;
-              box-sizing: border-box;
-              font-size: 13px;
-            "
-          >
-            <html:h3 style="margin-top: 0">翻译配置</html:h3>
+          <html:div id="zotwanglele-adv-root" class="zwl-advanced-root">
+            <html:h3 class="zwl-advanced-heading">翻译配置</html:h3>
 
             <!-- 执行环境与检测 -->
-            <html:fieldset style="margin-bottom: 12px; padding: 8px 12px">
-              <html:legend>执行环境</html:legend>
-              <html:div
-                style="
-                  display: grid;
-                  grid-template-columns: 100px 1fr;
-                  gap: 8px 12px;
-                  align-items: center;
-                "
-              >
-                <html:label for="zwl-server-url">服务端地址</html:label>
+            <html:fieldset class="zwl-settings-section">
+              <html:legend class="zwl-settings-legend">执行环境</html:legend>
+              <html:div class="zwl-settings-grid">
+                <html:label class="zwl-settings-label" for="zwl-server-url"
+                  >服务端地址</html:label
+                >
                 <html:input
                   type="text"
                   id="zwl-server-url"
                   placeholder="http://127.0.0.1:9999"
                 />
-                <html:label>环境检测</html:label>
-                <html:div style="display: flex; gap: 6px; align-items: center">
+                <html:label class="zwl-settings-label">环境检测</html:label>
+                <html:div class="zwl-settings-inline">
                   <html:button type="button" id="zwl-env-check"
                     >立即检测</html:button
                   >
-                  <html:span id="zwl-env-status" style="color: #888"
+                  <html:span id="zwl-env-status" class="zwl-settings-status"
                     >尚未检测</html:span
                   >
                 </html:div>
-                <html:label>检测详情</html:label>
+                <html:label class="zwl-settings-label">检测详情</html:label>
                 <html:div
                   id="zwl-env-detail"
-                  style="
-                    font-size: 12px;
-                    font-family: monospace;
-                    color: #444;
-                    white-space: pre-wrap;
-                  "
+                  class="zwl-settings-detail"
                 ></html:div>
               </html:div>
             </html:fieldset>
             <!-- 翻译参数 -->
-            <html:fieldset style="margin-bottom: 12px; padding: 8px 12px">
-              <html:legend>翻译参数</html:legend>
-              <html:div
-                style="
-                  display: grid;
-                  grid-template-columns: 100px 1fr;
-                  gap: 8px 12px;
-                  margin-top: 4px;
-                  align-items: center;
-                "
-              >
-                <html:label for="zwl-engine">引擎</html:label>
+            <html:fieldset class="zwl-settings-section">
+              <html:legend class="zwl-settings-legend">翻译参数</html:legend>
+              <html:div class="zwl-settings-grid">
+                <html:label class="zwl-settings-label" for="zwl-engine"
+                  >引擎</html:label
+                >
                 <html:select id="zwl-engine">
                   <html:option value="pdf2zh">pdf2zh（稳定）</html:option>
                   <html:option value="pdf2zh_next"
@@ -298,23 +329,21 @@ href="chrome://zotwanglele/content/dashboard.css"?>
                   >
                 </html:select>
 
-                <html:label>输出格式</html:label>
-                <html:div style="display: flex; gap: 12px">
-                  <html:label
-                    style="display: flex; align-items: center; gap: 4px"
-                  >
+                <html:label class="zwl-settings-label">输出格式</html:label>
+                <html:div class="zwl-settings-inline zwl-settings-options">
+                  <html:label class="zwl-settings-check">
                     <html:input type="checkbox" id="zwl-out-mono" />
                     <html:span>单语（仅译文）</html:span>
                   </html:label>
-                  <html:label
-                    style="display: flex; align-items: center; gap: 4px"
-                  >
+                  <html:label class="zwl-settings-check">
                     <html:input type="checkbox" id="zwl-out-dual" />
                     <html:span>双语对照</html:span>
                   </html:label>
                 </html:div>
 
-                <html:label for="zwl-dual-mode">双语模式</html:label>
+                <html:label class="zwl-settings-label" for="zwl-dual-mode"
+                  >双语模式</html:label
+                >
                 <html:select id="zwl-dual-mode">
                   <html:option value="LR"
                     >LR：左右分栏（译文左、原文右）</html:option
@@ -324,31 +353,41 @@ href="chrome://zotwanglele/content/dashboard.css"?>
                   >
                 </html:select>
 
-                <html:label for="zwl-ocr">OCR</html:label>
-                <html:label
-                  style="display: flex; align-items: center; gap: 4px"
+                <html:label class="zwl-settings-label" for="zwl-ocr"
+                  >OCR</html:label
                 >
+                <html:label class="zwl-settings-check">
                   <html:input type="checkbox" id="zwl-ocr" />
                   <html:span>扫描版 PDF 或文本层异常时启用</html:span>
                 </html:label>
 
-                <html:label for="zwl-lang-out">目标语言</html:label>
+                <html:label class="zwl-settings-label" for="zwl-lang-out"
+                  >目标语言</html:label
+                >
                 <html:input
                   type="text"
                   id="zwl-lang-out"
                   placeholder="zh / en / ja..."
                 />
 
-                <html:label for="zwl-lang-in">源语言</html:label>
+                <html:label class="zwl-settings-label" for="zwl-lang-in"
+                  >源语言</html:label
+                >
                 <html:input type="text" id="zwl-lang-in" placeholder="auto" />
 
-                <html:label for="zwl-service">翻译服务（Chat 配置）</html:label>
+                <html:label class="zwl-settings-label" for="zwl-service"
+                  >翻译服务（Chat 配置）</html:label
+                >
                 <html:select id="zwl-service"></html:select>
 
-                <html:label for="zwl-qps">QPS</html:label>
+                <html:label class="zwl-settings-label" for="zwl-qps"
+                  >QPS</html:label
+                >
                 <html:input type="number" id="zwl-qps" min="1" max="100" />
 
-                <html:label for="zwl-pool-size">并发池</html:label>
+                <html:label class="zwl-settings-label" for="zwl-pool-size"
+                  >并发池</html:label
+                >
                 <html:input
                   type="number"
                   id="zwl-pool-size"
@@ -358,14 +397,13 @@ href="chrome://zotwanglele/content/dashboard.css"?>
               </html:div>
             </html:fieldset>
 
-            <!-- 保存 -->
-            <html:div style="display: flex; gap: 8px; align-items: center">
+            <html:div class="zwl-advanced-actions">
               <html:button type="button" id="zwl-adv-save"
-                ><html:b>保存设置</html:b></html:button
+                >✓ <html:b>保存设置</html:b></html:button
               >
               <html:span
                 id="zwl-adv-savestatus"
-                style="color: #888"
+                class="zwl-settings-status"
               ></html:span>
             </html:div>
           </html:div>
@@ -374,7 +412,7 @@ href="chrome://zotwanglele/content/dashboard.css"?>
     </tabbox>
 
     <!-- 底部操作栏 -->
-    <hbox align="center" pack="end" style="padding-top: 8px">
+    <hbox align="center" pack="end" class="zwl-dashboard-footer">
       <button data-l10n-id="dashboard-close" oncommand="window.close()" />
     </hbox>
   </vbox>

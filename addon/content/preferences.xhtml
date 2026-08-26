@@ -1,60 +1,85 @@
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://zotwanglele/content/preferences.css"?>
 <linkset>
   <html:link rel="localization" href="__addonRef__-preferences.ftl" />
 </linkset>
 <groupbox
+  class="zwl-prefs-root"
+  flex="1"
   onload="Zotero.__addonInstance__.hooks.onPrefsEvent('load', { window })"
 >
-  <hbox align="center">
-    <label
-      ><html:h2 data-l10n-id="pref-title" style="margin: 0; flex: 1"></html:h2
-    ></label>
+  <hbox align="center" class="zwl-prefs-header">
+    <hbox align="center" class="zwl-prefs-brand" flex="1">
+      <html:img
+        class="zwl-prefs-brand-mark"
+        src="chrome://zotwanglele/content/icons/icon@32.png"
+        alt=""
+      />
+      <vbox class="zwl-prefs-brand-copy" flex="1">
+        <html:h2 data-l10n-id="pref-title" />
+        <html:p data-l10n-id="pref-subtitle" />
+      </vbox>
+    </hbox>
     <button
       id="zotero-prefpane-__addonRef__-open-dashboard"
+      class="zwl-prefs-dashboard-button"
       data-l10n-id="pref-open-dashboard"
     />
   </hbox>
 
-  <!-- 配置档列表 -->
-  <vbox flex="1" style="margin-top: 8px">
-    <html:label data-l10n-id="pref-ai-profiles-title" />
+  <html:div class="zwl-prefs-section-heading">
+    <html:span class="zwl-prefs-section-icon" aria-hidden="true">◎</html:span>
+    <html:div>
+      <html:h3 data-l10n-id="pref-ai-profiles-title" />
+      <html:p data-l10n-id="pref-ai-profiles-hint" />
+    </html:div>
+  </html:div>
+
+  <vbox class="zwl-prefs-profile-area" flex="1">
     <richlistbox
       id="zotero-prefpane-__addonRef__-profile-list"
+      class="zwl-prefs-profile-list"
       flex="1"
       rows="6"
-      style="min-height: 200px; margin-top: 4px"
     />
-    <hbox align="center" style="margin-top: 8px">
+    <hbox align="center" class="zwl-prefs-actions">
       <button
         id="zotero-prefpane-__addonRef__-profile-use"
+        class="zwl-prefs-button zwl-prefs-button-primary"
         data-l10n-id="pref-ai-profile-use"
       />
       <button
         id="zotero-prefpane-__addonRef__-profile-add"
+        class="zwl-prefs-button"
         data-l10n-id="pref-ai-profile-add"
       />
       <button
         id="zotero-prefpane-__addonRef__-profile-edit"
+        class="zwl-prefs-button"
         data-l10n-id="pref-ai-profile-edit"
       />
       <button
         id="zotero-prefpane-__addonRef__-profile-delete"
+        class="zwl-prefs-button zwl-prefs-button-danger"
         data-l10n-id="pref-ai-profile-delete"
       />
-      <html:span style="flex: 1" />
+      <spacer flex="1" />
       <button
         id="zotero-prefpane-__addonRef__-profile-up"
+        class="zwl-prefs-button zwl-prefs-icon-button"
         data-l10n-id="pref-ai-profile-up"
       />
       <button
         id="zotero-prefpane-__addonRef__-profile-down"
+        class="zwl-prefs-button zwl-prefs-icon-button"
         data-l10n-id="pref-ai-profile-down"
       />
     </hbox>
   </vbox>
 </groupbox>
-<vbox>
+<vbox class="zwl-prefs-footer">
   <html:label
     data-l10n-id="pref-help"
     data-l10n-args='{"time": "__buildTime__","name": "__addonName__","version":"__buildVersion__"}'
-  ></html:label>
+  />
 </vbox>

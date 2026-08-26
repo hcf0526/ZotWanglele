@@ -41,13 +41,16 @@ export function mountAdvancedPanel(win: Window): () => void {
 
       const status = doc.getElementById("zwl-env-status");
       const detail = doc.getElementById("zwl-env-detail");
-      if (status) status.textContent = "检测中…";
+      if (status) {
+        status.textContent = "检测中…";
+        status.setAttribute("data-state", "checking");
+      }
       if (detail) detail.textContent = "";
 
       const r = await checkEnv();
       if (status) {
-        status.textContent = r.ok ? `✅ ${r.message}` : `❌ ${r.message}`;
-        status.setAttribute("style", `color: ${r.ok ? "#1a8917" : "#c0392b"};`);
+        status.textContent = r.ok ? `✓ ${r.message}` : `× ${r.message}`;
+        status.setAttribute("data-state", r.ok ? "success" : "error");
       }
       if (detail) {
         detail.textContent = r.items
@@ -63,8 +66,8 @@ export function mountAdvancedPanel(win: Window): () => void {
       saveFromForm(doc);
       const note = doc.getElementById("zwl-adv-savestatus");
       if (note) {
-        note.textContent = "✅ 已保存";
-        note.setAttribute("style", "color: #1a8917;");
+        note.textContent = "✓ 已保存";
+        note.setAttribute("data-state", "success");
         win.setTimeout(() => {
           note.textContent = "";
         }, 2000);

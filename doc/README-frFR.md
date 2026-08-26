@@ -18,7 +18,7 @@ TypeScript, zotero-plugin-scaffold et zotero-plugin-toolkit.
 
 ## État du projet
 
-La version actuelle est `0.1.1`. Le panneau latéral de notes IA, la gestion des
+La version actuelle est `0.1.3`. Le panneau latéral de notes IA, la gestion des
 prompts intégrés et les modèles personnalisés sont disponibles. L'analyse
 multimodale, le dialogue et les cartes mentales restent planifiés.
 

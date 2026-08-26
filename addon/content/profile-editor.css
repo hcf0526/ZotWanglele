@@ -1,0 +1,233 @@
+:root {
+  color-scheme: light;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  background: #f4f7fb;
+  color: #1f2937;
+}
+
+.zwl-profile-editor-shell {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 18px;
+  background: #f4f7fb;
+  color: #1f2937;
+}
+
+.zwl-profile-editor-header {
+  gap: 11px;
+  min-height: 48px;
+  padding: 2px 2px 14px;
+  border-bottom: 1px solid #dce4ec;
+}
+
+.zwl-profile-editor-mark {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #d8e2eb;
+  border-radius: 7px;
+  background: #ffffff;
+  object-fit: contain;
+}
+
+.zwl-profile-editor-heading {
+  min-width: 0;
+  gap: 3px;
+}
+
+.zwl-profile-editor-heading h2 {
+  margin: 0;
+  color: #162536;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.zwl-profile-editor-heading p {
+  margin: 0;
+  color: #718096;
+  font-size: 11px;
+}
+
+.zwl-profile-editor-section-heading {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 16px 0 9px;
+  color: #41566a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.zwl-profile-editor-section-heading-spaced {
+  margin-top: 18px;
+}
+
+.zwl-profile-editor-section-icon {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid #bcd7e7;
+  border-radius: 5px;
+  color: #2368a2;
+  background: #eef6fb;
+  font-size: 14px;
+}
+
+.zwl-profile-editor-fields,
+.zwl-profile-editor-options {
+  gap: 9px;
+  padding: 13px 14px;
+  border: 1px solid #dce4ec;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.zwl-editor-field {
+  gap: 12px;
+  min-height: 30px;
+}
+
+.zwl-editor-field > label {
+  width: 96px;
+  flex: 0 0 96px;
+  color: #526477;
+  font-size: 12px;
+}
+
+.zwl-editor-field > input[type="text"],
+.zwl-editor-field > input[type="password"],
+.zwl-editor-field > input[type="number"],
+.zwl-editor-field > menulist {
+  box-sizing: border-box;
+  min-width: 0;
+  flex: 1;
+}
+
+.zwl-editor-field > input[type="text"],
+.zwl-editor-field > input[type="password"],
+.zwl-editor-field > input[type="number"] {
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid #cbd6e1;
+  border-radius: 4px;
+  color: #1f2937;
+  background: #ffffff;
+}
+
+.zwl-editor-field > input:focus,
+.zwl-editor-field > menulist:focus {
+  border-color: #5b9bc4;
+  outline: 2px solid #d9edf8;
+  outline-offset: 0;
+}
+
+.zwl-editor-field > input[type="range"] {
+  min-width: 0;
+  flex: 1;
+  accent-color: #167d68;
+}
+
+#zwl-editor-temperature-value {
+  min-width: 42px;
+  color: #167d68;
+  font:
+    650 12px ui-monospace,
+    monospace;
+  text-align: right;
+}
+
+#zwl-editor-maxTokens {
+  flex: 0 0 150px;
+}
+
+.zwl-profile-editor-footer {
+  gap: 8px;
+  min-height: 36px;
+  padding-top: 14px;
+  border-top: 1px solid #dce4ec;
+}
+
+.zwl-editor-button {
+  min-height: 30px;
+  padding: 5px 12px;
+  border: 1px solid #cbd6e1;
+  border-radius: 5px;
+  color: #263746;
+  background: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.zwl-editor-button:hover {
+  border-color: #8fb4cf;
+  background: #eef5fb;
+}
+
+.zwl-editor-button-secondary {
+  border-color: #8ab8a8;
+  color: #126b59;
+}
+
+.zwl-editor-button-primary {
+  border-color: #2368a2;
+  color: #ffffff;
+  background: #2368a2;
+  font-weight: 650;
+}
+
+.zwl-editor-button-primary:hover {
+  border-color: #185481;
+  color: #ffffff;
+  background: #185481;
+}
+
+.zwl-editor-test-status {
+  min-width: 0;
+  max-width: 245px;
+  overflow: hidden;
+  color: #6b7b8c;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .zwl-profile-editor-shell {
+    padding: 12px;
+  }
+
+  .zwl-editor-field {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .zwl-editor-field > label {
+    width: auto;
+    flex-basis: auto;
+  }
+
+  .zwl-editor-field > input[type="text"],
+  .zwl-editor-field > input[type="password"],
+  .zwl-editor-field > input[type="number"],
+  .zwl-editor-field > menulist,
+  #zwl-editor-maxTokens {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .zwl-profile-editor-footer {
+    flex-wrap: wrap;
+  }
+
+  .zwl-editor-test-status {
+    max-width: 100%;
+    flex-basis: 100%;
+    order: 3;
+  }
+}

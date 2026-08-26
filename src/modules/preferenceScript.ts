@@ -61,11 +61,13 @@ function injectProfileListStyle(doc: Document, ref: string) {
   style.id = styleId;
   style.textContent = `
     #zotero-prefpane-${ref}-profile-list richlistitem[selected="true"]:not([data-header]) {
-      background-color: SelectedItem !important;
-      color: SelectedItemText !important;
+      border-color: #8fbdd8 !important;
+      background-color: #eaf4fb !important;
+      color: #163f5d !important;
     }
     #zotero-prefpane-${ref}-profile-list richlistitem[data-header] {
-      background-color: transparent !important;
+      background-color: #f5f8fb !important;
+      color: #5a6d7f !important;
     }
   `;
   (doc.documentElement || doc.body)?.appendChild(style);
@@ -110,11 +112,7 @@ function bindProfileList(doc: Document, ref: string, win: Window) {
       header.setAttribute("data-header", "1");
       const headerLabel = doc.createXULElement("label") as any;
       headerLabel.setAttribute("value", `▼ ${getProviderLabel(providerKey)}`);
-      headerLabel.style.padding = "6px 8px";
-      headerLabel.style.fontWeight = "bold";
-      // 使用系统色，自动适配深色主题
-      headerLabel.style.background =
-        "color-mix(in srgb, currentColor 8%, transparent)";
+      headerLabel.setAttribute("class", "zwl-profile-group-label");
       header.appendChild(headerLabel);
       listEl.appendChild(header);
 
@@ -125,25 +123,25 @@ function bindProfileList(doc: Document, ref: string, win: Window) {
 
         const vbox = doc.createXULElement("vbox") as any;
         vbox.setAttribute("flex", "1");
-        vbox.style.padding = "4px 8px 4px 24px"; // 缩进
+        vbox.setAttribute("class", "zwl-profile-item-content");
 
         const nameLabel = doc.createXULElement("label") as any;
+        nameLabel.setAttribute("class", "zwl-profile-item-name");
         const isActive = p.id === activeId;
         nameLabel.setAttribute(
           "value",
           `${isActive ? "★ " : "  "}${p.name || "(未命名)"}`,
         );
-        nameLabel.style.fontWeight = isActive ? "bold" : "normal";
+        item.setAttribute("data-active", String(isActive));
 
         const detailLabel = doc.createXULElement("label") as any;
+        detailLabel.setAttribute("class", "zwl-profile-item-detail");
         const formatLabel =
           p.format === "responses" ? "Responses" : "Chat Completions";
         detailLabel.setAttribute(
           "value",
           `${p.model || "未填模型"} · ${formatLabel}`,
         );
-        detailLabel.style.opacity = "0.7";
-        detailLabel.style.fontSize = "smaller";
 
         vbox.appendChild(nameLabel);
         vbox.appendChild(detailLabel);
@@ -159,14 +157,20 @@ function bindProfileList(doc: Document, ref: string, win: Window) {
 
   // 选中改变仅高亮，不自动设为 active；需明确点"设为当前"按钮
 
-  // 双击→ 编辑（跳过分组头）
-  listEl.addEventListener("dblclick", () => {
+  // 双击→ 编辑（跳过分组头）；偏好面板重载时替换旧监听器
+  const previousDoubleClick = (listEl as any).__zwlDoubleClickHandler;
+  if (previousDoubleClick) {
+    listEl.removeEventListener("dblclick", previousDoubleClick);
+  }
+  const onDoubleClick = () => {
     const selected = listEl.selectedItem as any;
     if (!selected) return;
     if (selected.getAttribute("data-header") === "1") return;
     const id = selected.getAttribute("value");
     if (id) editProfile(win, id, refreshList);
-  });
+  };
+  (listEl as any).__zwlDoubleClickHandler = onDoubleClick;
+  listEl.addEventListener("dblclick", onDoubleClick);
 
   // 按钮接线
   bindButton(doc.querySelector(`#zotero-prefpane-${ref}-profile-add`), () =>

@@ -93,11 +93,11 @@ export type MetadataItemStatus =
 
 /** 单个条目的处理结果，用于结果汇总窗口展示。 */
 export interface MetadataItemResult {
+  itemId: number;
   title: string;
   status: MetadataItemStatus;
   detail: string;
   selectable?: boolean;
-  targetIndex?: number;
 }
 
 export interface MetadataResultDialogResult {

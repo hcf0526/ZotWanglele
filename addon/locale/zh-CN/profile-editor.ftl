@@ -1,4 +1,7 @@
 editor-title = 编辑配置档
+editor-subtitle = 设置 API 连接方式、模型和生成参数
+editor-section-connection = 连接信息
+editor-section-generation = 生成参数
 editor-field-name = 名称
 editor-field-preset = 模型预设
 editor-field-format = API 格式
