@@ -168,10 +168,14 @@ function renderNotePreviewSection(
   body.classList.add("zwl-note-preview-host");
   body.style.padding = "0";
   body.style.minWidth = "0";
+  body.style.width = "100%";
+  body.style.maxWidth = "100%";
   body.style.minHeight = `${previewHeight}px`;
   body.style.height = `${previewHeight}px`;
   body.style.overflow = "hidden";
-  body.style.background = "#ffffff";
+  body.style.boxSizing = "border-box";
+  body.style.contain = "inline-size";
+  body.style.background = "#fbf8f0";
 
   const shell = doc.createElement("div");
   shell.className = "zwl-note-preview-shell";
@@ -200,11 +204,112 @@ function renderNotePreviewSection(
     "aria-label",
     getString("sidebar-ai-refresh" as any),
   );
-  header.append(titleWrap, refreshButton);
 
+  // "Open note" lives in the header row; its click target is enabled once a
+  // note is loaded for the active template.
+  const openNoteButton = doc.createElement("button");
+  openNoteButton.type = "button";
+  openNoteButton.className = "zwl-note-preview-icon-button";
+  openNoteButton.textContent = "↗";
+  openNoteButton.title = getString("sidebar-ai-open" as any);
+  openNoteButton.setAttribute(
+    "aria-label",
+    getString("sidebar-ai-open" as any),
+  );
+  openNoteButton.disabled = true;
+  openNoteButton.addEventListener("click", () => {
+    const note = notes.get(activeId);
+    if (!note) return;
+    const pane = (Zotero as any).getActiveZoteroPane?.();
+    void pane?.selectItem?.(note.note.id);
+  });
+  header.append(titleWrap, openNoteButton, refreshButton);
+
+  // Template picker: plain text + triangle that opens a small custom list.
+  // A native <select> repaints its popup on every pane-width adjustment and
+  // visibly flickers between options; this lightweight list has no such
+  // repaint coupling.
   const tabs = doc.createElement("div");
   tabs.className = "zwl-note-preview-tabs";
-  tabs.setAttribute("role", "tablist");
+  const templateTrigger = doc.createElement("button");
+  templateTrigger.type = "button";
+  templateTrigger.className = "zwl-note-preview-dropdown-trigger";
+  templateTrigger.setAttribute("aria-haspopup", "listbox");
+  templateTrigger.setAttribute("aria-expanded", "false");
+  const templateTriggerLabel = doc.createElement("span");
+  templateTriggerLabel.className = "zwl-note-preview-dropdown-label";
+  const templateTriggerCaret = doc.createElement("span");
+  templateTriggerCaret.className = "zwl-note-preview-dropdown-caret";
+  templateTriggerCaret.setAttribute("aria-hidden", "true");
+  templateTriggerCaret.textContent = "▾";
+  templateTrigger.append(templateTriggerLabel, templateTriggerCaret);
+
+  const templateMenu = doc.createElement("div");
+  templateMenu.className = "zwl-note-preview-dropdown-menu";
+  templateMenu.setAttribute("role", "listbox");
+  templateMenu.hidden = true;
+  const templateMenuItems = new Map<string, HTMLElement>();
+  for (const definition of READING_NOTE_DEFINITIONS) {
+    const menuItem = doc.createElement("div");
+    menuItem.className = "zwl-note-preview-dropdown-option";
+    menuItem.setAttribute("role", "option");
+    menuItem.dataset.id = definition.id;
+    const optionLabel = doc.createElement("span");
+    optionLabel.className = "zwl-note-preview-dropdown-option-label";
+    optionLabel.textContent = getTemplateLabel(definition);
+    const optionCheck = doc.createElement("span");
+    optionCheck.className = "zwl-note-preview-dropdown-option-check";
+    optionCheck.setAttribute("aria-hidden", "true");
+    menuItem.append(optionLabel, optionCheck);
+    menuItem.addEventListener("click", () => {
+      closeTemplateMenu();
+      setActive(definition.id);
+    });
+    templateMenuItems.set(definition.id, menuItem);
+    templateMenu.appendChild(menuItem);
+  }
+  let activeId = READING_NOTE_DEFINITIONS[0].id;
+  const renderTemplateMenu = () => {
+    templateTriggerLabel.textContent = getTemplateLabel(
+      READING_NOTE_DEFINITIONS.find((entry) => entry.id === activeId) ??
+        READING_NOTE_DEFINITIONS[0],
+    );
+    for (const [definitionId, menuItem] of templateMenuItems) {
+      const isSelected = definitionId === activeId;
+      menuItem.classList.toggle("is-selected", isSelected);
+      menuItem.setAttribute("aria-selected", String(isSelected));
+      // Check mark sits two spaces after the text; no default dot marker.
+      menuItem.querySelector(
+        ".zwl-note-preview-dropdown-option-check",
+      )!.textContent = isSelected ? "✓" : "";
+    }
+  };
+  const closeTemplateMenu = () => {
+    templateMenu.hidden = true;
+    templateTrigger.setAttribute("aria-expanded", "false");
+    doc.removeEventListener("click", onDocClickClose, true);
+  };
+  const onDocClickClose = (event: MouseEvent) => {
+    const target = event.target as Node | null;
+    if (
+      target &&
+      (templateMenu.contains(target) || templateTrigger.contains(target))
+    ) {
+      return;
+    }
+    closeTemplateMenu();
+  };
+  templateTrigger.addEventListener("click", () => {
+    const willOpen = templateMenu.hidden;
+    if (willOpen) {
+      templateMenu.hidden = false;
+      templateTrigger.setAttribute("aria-expanded", "true");
+      doc.addEventListener("click", onDocClickClose, true);
+    } else {
+      closeTemplateMenu();
+    }
+  });
+  tabs.append(templateTrigger, templateMenu);
 
   const content = doc.createElement("div");
   content.className = "zwl-note-preview-content";
@@ -248,9 +353,7 @@ function renderNotePreviewSection(
     setPreviewPrefNumber(PREF_PREVIEW_FONT_SIZE, previewFontSize);
   });
   fontControls.append(decreaseFontButton, fontSizeLabel, increaseFontButton);
-  header.insertBefore(fontControls, refreshButton);
-  const tabButtons = new Map<string, HTMLButtonElement>();
-  let activeId = READING_NOTE_DEFINITIONS[0].id;
+  header.insertBefore(fontControls, openNoteButton);
   let notes = new Map<string, ReadingNoteRecord | null>();
   let parentItem: Zotero.Item | null = null;
   let loading = false;
@@ -263,6 +366,7 @@ function renderNotePreviewSection(
     if (!definition) return;
 
     const note = notes.get(definition.id);
+    openNoteButton.disabled = !note;
     if (!note) {
       const empty = doc.createElement("div");
       empty.className = "zwl-note-preview-empty";
@@ -295,51 +399,14 @@ function renderNotePreviewSection(
     const noteContent = doc.createElement("div");
     noteContent.className = "zwl-note-preview-markdown";
     noteContent.innerHTML = sanitizePreviewHtml(note.previewHtml);
-
-    const actions = doc.createElement("div");
-    actions.className = "zwl-note-preview-actions";
-    const openButton = doc.createElement("button");
-    openButton.type = "button";
-    openButton.className = "zwl-note-preview-command";
-    const openLabel = getString("sidebar-ai-open" as any);
-    openButton.textContent = `↗ ${openLabel}`;
-    openButton.setAttribute("aria-label", openLabel);
-    openButton.addEventListener("click", () => {
-      const pane = (Zotero as any).getActiveZoteroPane?.();
-      void pane?.selectItem?.(note.note.id);
-    });
-    actions.appendChild(openButton);
-    content.append(noteContent, actions);
+    content.append(noteContent);
   };
 
   const setActive = (id: string) => {
     activeId = id;
-    for (const [tabId, button] of tabButtons) {
-      const isActive = tabId === activeId;
-      button.classList.toggle("is-active", isActive);
-      button.setAttribute("aria-selected", String(isActive));
-      button.tabIndex = isActive ? 0 : -1;
-      if (isActive) {
-        content.setAttribute("aria-labelledby", button.id);
-      }
-    }
+    renderTemplateMenu();
     renderContent();
   };
-
-  for (const definition of READING_NOTE_DEFINITIONS) {
-    const button = doc.createElement("button");
-    button.type = "button";
-    button.className = "zwl-note-preview-tab";
-    button.textContent = getTemplateLabel(definition);
-    button.setAttribute("role", "tab");
-    button.id = `zwl-note-preview-tab-${definition.id}-${Date.now()}`;
-    button.setAttribute("aria-controls", content.id);
-    button.setAttribute("aria-selected", "false");
-    button.tabIndex = -1;
-    button.addEventListener("click", () => setActive(definition.id));
-    tabButtons.set(definition.id, button);
-    tabs.appendChild(button);
-  }
 
   const refresh = async () => {
     if (loading) return;
@@ -384,8 +451,10 @@ function renderNotePreviewSection(
       } else {
         setActive(activeId);
       }
+      renderTemplateMenu();
     } catch (error: any) {
       ztoolkit.log("[NotePreview] refresh failed:", error);
+      openNoteButton.disabled = true;
       content.replaceChildren();
       const status = doc.createElement("div");
       status.className = "zwl-note-preview-error";
@@ -555,11 +624,20 @@ function renderNotePreviewSection(
   doc.addEventListener("mousemove", onMouseMove);
   doc.addEventListener("mouseup", onMouseUp);
 
+  // Inline-size containment removes this long document from the intrinsic
+  // width calculation. Zotero owns the sidebar width; the browser wraps the
+  // note inside that width without any JavaScript measurement or style-write
+  // loop, so growing and shrinking follow the splitter symmetrically.
   const cleanup = () => {
     resizeHandle.removeEventListener("mousedown", onMouseDown);
     resizeHandle.removeEventListener("keydown", onResizeKeyDown);
     doc.removeEventListener("mousemove", onMouseMove);
     doc.removeEventListener("mouseup", onMouseUp);
+    try {
+      closeTemplateMenu();
+    } catch (error) {
+      ztoolkit.log("[NotePreview] dropdown cleanup failed:", error);
+    }
     if (doc.body) doc.body.style.cursor = "";
     body.classList.remove("zwl-note-preview-host");
   };
@@ -716,28 +794,33 @@ function ensurePreviewStyles(doc: Document): void {
       display: flex;
       flex-direction: column;
       width: 100%;
+      max-width: 100%;
       height: 100%;
       min-height: 180px;
       min-width: 0;
+      contain: inline-size;
       overflow: hidden;
       box-sizing: border-box;
-      border: 1px solid #dce4ec;
+      border: 1px solid #dcc9a6;
       border-radius: 7px;
-      color: #25384a;
-      background: #ffffff;
-      font: 12px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #2b241e;
+      background: #fbf8f0;
+      font: 12px/1.6 "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "SimSun", serif;
+      user-select: text;
+      -moz-user-select: text;
+      cursor: auto;
     }
     .zwl-note-preview-host {
-      background: #ffffff;
+      background: #fbf8f0;
     }
     .zwl-note-preview-header {
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 10px 11px;
-      border-top: 3px solid #2368a2;
-      border-bottom: 1px solid #e1e8ef;
-      background: #ffffff;
+      border-top: 3px solid #b64b37;
+      border-bottom: 1px solid #e6d9bd;
+      background: #fffaf2;
     }
     .zwl-note-preview-title-wrap {
       min-width: 0;
@@ -751,29 +834,29 @@ function ensurePreviewStyles(doc: Document): void {
     }
     .zwl-note-preview-font-size {
       min-width: 30px;
-      color: #718096;
+      color: #8a7a63;
       font-size: 10px;
       text-align: center;
     }
     .zwl-note-preview-eyebrow {
-      color: #2368a2;
+      color: #b64b37;
       font-size: 10px;
       font-weight: 700;
+      letter-spacing: 0.06em;
     }
     .zwl-note-preview-item-title {
       overflow: hidden;
-      color: #1f3447;
+      color: #2b241e;
       text-overflow: ellipsis;
       white-space: nowrap;
       font-weight: 700;
     }
     .zwl-note-preview-icon-button,
-    .zwl-note-preview-command,
-    .zwl-note-preview-tab {
-      border: 1px solid #cbd6e1;
+    .zwl-note-preview-command {
+      border: 1px solid #d3c1a0;
       border-radius: 5px;
-      color: #41566a;
-      background: #ffffff;
+      color: #5c4f3d;
+      background: #fffaf2;
       cursor: pointer;
       transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
     }
@@ -785,142 +868,226 @@ function ensurePreviewStyles(doc: Document): void {
       line-height: 20px;
     }
     .zwl-note-preview-icon-button:hover,
-    .zwl-note-preview-command:hover,
-    .zwl-note-preview-tab:hover {
-      border-color: #8fb4cf;
-      color: #2368a2;
-      background: #eef6fb;
+    .zwl-note-preview-command:hover {
+      border-color: #b64b37;
+      color: #873627;
+      background: #f9e9e2;
     }
     .zwl-note-preview-icon-button:focus-visible,
     .zwl-note-preview-command:focus-visible,
-    .zwl-note-preview-tab:focus-visible,
+    .zwl-note-preview-dropdown-trigger:focus-visible,
+    .zwl-note-preview-dropdown-option:focus-visible,
     .zwl-note-preview-resize-handle:focus-visible {
-      outline: 2px solid #5b9bc4;
+      outline: 2px solid #b64b37;
       outline-offset: 1px;
     }
+    .zwl-note-preview-icon-button:disabled {
+      cursor: default;
+      opacity: 0.45;
+    }
+    .zwl-note-preview-icon-button:disabled:hover {
+      border-color: #d3c1a0;
+      color: #5c4f3d;
+      background: #fffaf2;
+    }
     .zwl-note-preview-tabs {
+      position: relative;
       display: flex;
+      align-items: center;
+      padding: 10px 10px 0;
+      background: #f7efe1;
+    }
+    .zwl-note-preview-dropdown-trigger {
+      display: inline-flex;
+      align-items: center;
       gap: 5px;
-      padding: 9px 10px 0;
-      overflow-x: auto;
-      background: #fbfcfe;
+      max-width: 100%;
+      padding: 2px 2px;
+      border: 0;
+      color: #873627;
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
     }
-    .zwl-note-preview-tab {
+    .zwl-note-preview-dropdown-trigger:hover {
+      color: #b64b37;
+    }
+    .zwl-note-preview-dropdown-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .zwl-note-preview-dropdown-caret {
       flex: 0 0 auto;
-      padding: 5px 9px;
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 10px;
+      line-height: 1;
     }
-    .zwl-note-preview-tab.is-active {
-      border-color: #167d68;
-      color: #126b59;
-      background: #eaf7f3;
+    .zwl-note-preview-dropdown-menu {
+      position: absolute;
+      z-index: 20;
+      top: 100%;
+      left: 10px;
+      min-width: 140px;
+      padding: 4px;
+      border: 1px solid #d3c1a0;
+      border-radius: 6px;
+      background: #fffaf2;
+      box-shadow: 0 4px 14px rgba(43, 36, 30, 0.18);
+    }
+    .zwl-note-preview-dropdown-option {
+      display: flex;
+      align-items: baseline;
+      gap: 0;
+      padding: 5px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #5c4f3d;
+      font-size: 12px;
+      list-style: none;
+    }
+    .zwl-note-preview-dropdown-option:hover {
+      color: #873627;
+      background: #f9e9e2;
+    }
+    .zwl-note-preview-dropdown-option.is-selected {
+      color: #873627;
+      font-weight: 700;
+    }
+    .zwl-note-preview-dropdown-option-check {
+      min-width: 1em;
+      margin-left: 0.5em;
+      color: #b64b37;
     }
     .zwl-note-preview-content {
       flex: 1;
       min-height: 0;
-      overflow: auto;
-      padding: 12px;
-      background: #ffffff;
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
+      overflow-x: hidden;
+      overflow-y: auto;
+      margin-top: 10px;
+      padding: 16px 12px 12px;
+      background: #fbf8f0;
     }
     .zwl-note-preview-markdown {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
       overflow-wrap: anywhere;
-      word-break: break-word;
-      color: #25384a;
+      color: #2b241e;
     }
     .zwl-note-preview-markdown h1,
     .zwl-note-preview-markdown h2,
     .zwl-note-preview-markdown h3,
     .zwl-note-preview-markdown h4 {
       margin: 0.9em 0 0.45em;
-      color: #1f3447;
-      line-height: 1.3;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      color: #2b241e;
+      line-height: 1.35;
     }
-    .zwl-note-preview-markdown h1 { font-size: 17px; border-bottom: 1px solid #e1e8ef; padding-bottom: 5px; }
-    .zwl-note-preview-markdown h2 { font-size: 15px; color: #2368a2; }
-    .zwl-note-preview-markdown h3 { font-size: 13px; color: #167d68; }
-    .zwl-note-preview-markdown p { margin: 0.55em 0; }
+    .zwl-note-preview-markdown h1 { font-size: 17px; border-bottom: 1px solid #e6d9bd; padding-bottom: 5px; }
+    .zwl-note-preview-markdown h2 { font-size: 15px; color: #873627; }
+    .zwl-note-preview-markdown h3 { font-size: 13px; color: #3d6b55; }
+    .zwl-note-preview-markdown p,
+    .zwl-note-preview-markdown li {
+      max-width: 100%;
+      margin: 0.55em 0;
+      overflow-wrap: anywhere;
+    }
     .zwl-note-preview-markdown ul,
-    .zwl-note-preview-markdown ol { padding-left: 20px; }
+    .zwl-note-preview-markdown ol { padding-left: 18px; }
     .zwl-note-preview-markdown pre {
       max-width: 100%;
       overflow-x: auto;
       padding: 8px;
-      border: 1px solid #e1e8ef;
+      border: 1px solid #e6d9bd;
       border-radius: 5px;
-      background: #f7f9fc;
+      background: #f7efe1;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
     .zwl-note-preview-markdown img,
     .zwl-note-preview-markdown table { max-width: 100%; }
     .zwl-note-preview-markdown table {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
       border-collapse: collapse;
       font-size: 11px;
     }
     .zwl-note-preview-markdown th,
     .zwl-note-preview-markdown td {
-      border: 1px solid #dce4ec;
+      border: 1px solid #dcc9a6;
       padding: 5px 6px;
       vertical-align: top;
     }
     .zwl-note-preview-markdown th {
-      color: #41566a;
-      background: #f2f6f9;
+      color: #5c4f3d;
+      background: #f7efe1;
     }
     .zwl-note-preview-empty,
     .zwl-note-preview-status,
     .zwl-note-preview-error {
       position: relative;
-      max-width: 310px;
+      max-width: 100%;
+      box-sizing: border-box;
       margin: 20px auto;
       padding: 26px 16px 16px;
-      border: 1px dashed #cbdbe8;
+      border: 1px dashed #c9b48c;
       border-radius: 7px;
       text-align: center;
-      color: #718096;
-      background: #f8fafc;
+      color: #8a7a63;
+      background: #fffaf2;
     }
     .zwl-note-preview-empty::before,
     .zwl-note-preview-status::before {
       display: block;
       margin-bottom: 7px;
-      color: #2368a2;
+      color: #b64b37;
       content: "✦";
       font-size: 18px;
       font-weight: 700;
     }
     .zwl-note-preview-error {
-      border-color: #efb4af;
-      color: #b42318;
-      background: #fff7f6;
+      border-color: #d99a8c;
+      color: #873627;
+      background: #f9e9e2;
     }
     .zwl-note-preview-error::before {
       display: block;
       margin-bottom: 7px;
+      color: #b64b37;
       content: "!";
       font-size: 18px;
       font-weight: 700;
     }
     .zwl-note-preview-status.is-error {
-      border-color: #efb4af;
-      color: #b42318;
-      background: #fff7f6;
+      border-color: #d99a8c;
+      color: #873627;
+      background: #f9e9e2;
     }
     .zwl-note-preview-command {
       display: block;
+      max-width: 100%;
+      box-sizing: border-box;
       margin: 10px auto 0;
       padding: 6px 10px;
-      border-color: #167d68;
-      color: #126b59;
-      background: #f1fbf8;
+      border-color: #3d6b55;
+      color: #2f5742;
+      background: #e9f0e9;
       font-size: 11px;
       font-weight: 650;
     }
     .zwl-note-preview-command:hover {
-      border-color: #0f6252;
-      color: #0f6252;
-      background: #e3f5ef;
+      border-color: #2f5742;
+      color: #2f5742;
+      background: #dbe7db;
     }
     .zwl-note-preview-command:disabled,
     .zwl-note-preview-icon-button:disabled {
@@ -933,14 +1100,14 @@ function ensurePreviewStyles(doc: Document): void {
       justify-content: center;
       flex: 0 0 10px;
       cursor: ns-resize;
-      border-top: 1px solid #dce4ec;
-      background: #f2f6f9;
+      border-top: 1px solid #e6d9bd;
+      background: #f7efe1;
     }
     .zwl-note-preview-resize-grip {
       width: 38px;
       height: 3px;
       border-radius: 2px;
-      background: #8aa0b2;
+      background: #b3a184;
     }
   `;
   const styleHost = doc.head ?? doc.documentElement;

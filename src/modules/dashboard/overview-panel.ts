@@ -1,16 +1,10 @@
 import { getAllTemplates, getCustomTemplates } from "../ai/prompts";
 import { getActiveProfile } from "../ai/profiles";
-import { runLiteratureReviewOnSelected } from "../review/review-generator";
 import { getTasks, subscribe } from "../translate/task-store";
-import {
-  getTranslatedTitleFromExtra,
-  runTitleTranslationOnSelected,
-} from "../title-translate/title-translation";
+import { getTranslatedTitleFromExtra } from "../title-translate/title-translation";
 
 export function mountOverviewPanel(win: Window): () => void {
   const doc = win.document;
-  const reviewButton = doc.getElementById("zwl-overview-review");
-  const titleButton = doc.getElementById("zwl-overview-title-translate");
 
   const render = () => {
     const isChinese = Zotero.locale?.startsWith("zh");
@@ -61,26 +55,11 @@ export function mountOverviewPanel(win: Window): () => void {
     );
   };
 
-  const onReview = () => {
-    runLiteratureReviewOnSelected().catch((error) =>
-      ztoolkit.log("[Overview] review error:", error),
-    );
-  };
-  const onTitleTranslation = () => {
-    runTitleTranslationOnSelected().catch((error) =>
-      ztoolkit.log("[Overview] title translation error:", error),
-    );
-  };
-
-  reviewButton?.addEventListener("click", onReview);
-  titleButton?.addEventListener("click", onTitleTranslation);
   win.addEventListener("zotwanglele-prompts-changed", render);
   const unsubscribe = subscribe(render);
   render();
 
   return () => {
-    reviewButton?.removeEventListener("click", onReview);
-    titleButton?.removeEventListener("click", onTitleTranslation);
     win.removeEventListener("zotwanglele-prompts-changed", render);
     unsubscribe();
   };

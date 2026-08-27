@@ -161,7 +161,7 @@ function render(
   if (tasks.length === 0) {
     summaryEl.textContent = copy.emptySummary;
     const empty = createElement(doc, "div", "zwl-task-empty");
-    const icon = createElement(doc, "span", "zwl-task-empty-icon", "□");
+    const icon = createElement(doc, "span", "zwl-task-empty-icon");
     icon.setAttribute("aria-hidden", "true");
     appendChildren(
       empty,

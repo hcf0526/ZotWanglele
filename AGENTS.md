@@ -36,7 +36,7 @@ src/modules/ai/                  AI 客户端、预设、配置档与通用提�
 src/modules/reader/              PDF 文本读取、笔记生成与条目菜单
 src/modules/review/              多文献综述生成与笔记保存
 src/modules/title-translate/     标题翻译、Extra 存储与条目列表列
-src/modules/tasks/              统一任务记录、订阅与清理
+src/modules/tasks/                统一任务记录、订阅与清理
 src/modules/translate/           翻译配置、环境、子进程与执行器
 src/modules/dashboard/           仪表盘窗口、任务记录页与高级设置
 src/modules/ui/toolbar.ts        主窗口工具栏入口
@@ -45,6 +45,45 @@ addon/locale/                    中英文 Fluent 本地化
 doc/plan/                        阶段状态与后续计划
 test/                            启动测试、翻译流程测试与 PDF 样例
 ```
+
+## 主要代码用途
+
+| 文件                                      | 用途                                                                                                                                                                                                                                                                                      |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/index.ts`                            | 插件入口，挂载 `Zotero.ZotWanglele` 全局对象与生命周期钩子。                                                                                                                                                                                                                              |
+| `src/hooks.ts`                            | `onStartup`/`onMainWindowLoad`/`onShutdown`，注册工具栏、右键菜单、条目面板区块与偏好脚本。                                                                                                                                                                                               |
+| `src/modules/preferenceScript.ts`         | 插件设置页面逻辑：AI 配置档列表、增删改排序、注入 `preferences.css`（`injectPrefsStylesheet`，偏好面板会丢弃 XHTML 顶部 `xml-stylesheet`，样式表只能运行时注入）。                                                                                                                        |
+| `src/modules/ai/ai-client.ts`             | 全部 AI 网络调用的唯一出口：Chat Completions、Responses、SSE 流式、重试。                                                                                                                                                                                                                 |
+| `src/modules/ai/profiles.ts`              | AI 配置档的持久化（Zotero prefs 中的 JSON）、当前配置切换。                                                                                                                                                                                                                               |
+| `src/modules/ai/profile-editor.ts`        | 配置档编辑窗口逻辑与 API 连通性检测。                                                                                                                                                                                                                                                     |
+| `src/modules/ai/prompts.ts`               | 内置提示词与自定义模板管理，仪表盘提示词页的数据来源。                                                                                                                                                                                                                                    |
+| `src/modules/reader/note-preview.ts`      | 条目面板“AI 笔记预览”区块：论文精读/快速摘要的自定义下拉切换、生成、刷新、打开笔记、字号与高度调整。样式内嵌于 `ensurePreviewStyles`；内容容器使用 `contain: inline-size` 让 Zotero 决定侧栏宽度，避免 JS 测宽循环与长内容撑破面板；笔记 HTML 经 `sanitizePreviewHtml` 白名单清理后渲染。 |
+| `src/modules/reader/note-generator.ts`    | 精读/摘要生成流程：全文索引读取、任务记录联动、子笔记写入。                                                                                                                                                                                                                               |
+| `src/modules/reader/reading-notes.ts`     | 精读与摘要子笔记的定义、查找与归属（附件映射父文献）。                                                                                                                                                                                                                                    |
+| `src/modules/reader/menu.ts`              | 条目右键菜单注册（精读、摘要、翻译、综述、标题翻译、文献信息更新）。                                                                                                                                                                                                                      |
+| `src/modules/review/`                     | 多文献综述生成、上下文构建与独立笔记保存。                                                                                                                                                                                                                                                |
+| `src/modules/title-translate/`            | 批量标题翻译、Extra 字段读写、条目列表“标题译文”自定义列。                                                                                                                                                                                                                                |
+| `src/modules/metadata.ts`                 | Crossref 查询、字段对比窗口数据与选择性写入。                                                                                                                                                                                                                                             |
+| `src/modules/tasks/task-store.ts`         | 统一任务记录（进程内状态）、订阅通知；窗口关闭时需清理订阅。                                                                                                                                                                                                                              |
+| `src/modules/translate/`                  | PDF 翻译：配置读取、`uv` 环境探测、pdf2zh 子进程与服务端执行器。                                                                                                                                                                                                                          |
+| `src/modules/dashboard/dashboard.ts`      | 仪表盘单例窗口与页签切换。                                                                                                                                                                                                                                                                |
+| `src/modules/dashboard/queue-panel.ts`    | 任务记录页：卡片列表、进度与详情。                                                                                                                                                                                                                                                        |
+| `src/modules/dashboard/advanced-panel.ts` | 高级设置页：翻译环境、引擎、输出与语言。                                                                                                                                                                                                                                                  |
+| `src/modules/dashboard/prompts-panel.ts`  | 提示词管理页：内置提示词编辑与自定义模板。                                                                                                                                                                                                                                                |
+| `src/modules/dashboard/overview-panel.ts` | 工作概览页：配置、模板、任务统计与常用操作。                                                                                                                                                                                                                                              |
+| `src/modules/ui/toolbar.ts`               | Zotero 主工具栏的仪表盘按钮。                                                                                                                                                                                                                                                             |
+| `addon/content/preferences.css`           | 设置页面纸感主题（米色画布、纸质面板、衬线字体、红/苔绿点缀）。                                                                                                                                                                                                                           |
+| `addon/content/dashboard.css`             | 仪表盘纸感主题与任务卡片样式。                                                                                                                                                                                                                                                            |
+| `addon/content/profile-editor.css`        | 配置编辑器样式，与设置页同主题。                                                                                                                                                                                                                                                          |
+
+## 界面区域称呼
+
+为避免描述歧义，涉及插件界面区域时统一使用以下称呼：
+
+1. **插件设置页面**：Zotero 本身的插件设置页面，即“编辑 → 设置”中的插件设置区域。
+2. **仪表盘**：本插件设计的“仪表盘”窗口。
+3. **工具栏**：Zotero 右侧的“工具栏”。
+4. **弹窗**：批量文献任务后出现的“弹窗”。
 
 ## 开发约定
 
@@ -78,8 +117,11 @@ npm test
 
 ## 本地 Zotero 验证
 
-- 涉及插件行为的修改，完成构建后可以直接安装到本机 `zotero-wanglele` profile 进行实际测试，无需每次额外确认。
-- 安装前运行 `npm run build`，使用项目构建产物和现有 Zotero 配置完成菜单、窗口、条目写入等验证；测试完成后保留或卸载插件由当前任务需要决定。
+- 涉及插件行为的修改，完成构建后可直接将当前构建产物安装到 C 盘的 `zotero-wanglele` profile，无需额外确认。profile 的实际目录仍以 `C:\Users\<用户名>\AppData\Roaming\Zotero\Zotero\profiles.ini` 中 `Name=zotero-wanglele` 的 `Path` 为依据。
+- Zotero 的常规启动和功能测试由用户执行；完成安装后告知用户测试范围。
+- 本机 Zotero 安装目录为 `D:\Software\Zotero`；执行安装或调试命令时使用 `D:\Software\Zotero\zotero.exe`。
+- 用户反馈错误后，可启动使用 `zotero-wanglele` profile 的 Zotero 进行调试。
+- 安装前运行 `npm run build`，使用项目构建产物完成安装；测试完成后保留或卸载插件由当前任务需要决定。
 - `npm test` 使用 `.scaffold` 临时 profile，适合自动化回归；它不能替代在 `zotero-wanglele` profile 中的手动行为验证。
 - 最终汇报中说明是否已安装到 `zotero-wanglele` profile，以及实际验证过的功能范围。
 

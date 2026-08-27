@@ -1,9 +1,8 @@
 pref-title = ZotWanglele 设置
-pref-subtitle = AI 阅读 · PDF 翻译
 pref-open-dashboard =
-    .label = ▦ 打开仪表盘
-pref-ai-profiles-title = AI 配置档
-pref-ai-profiles-hint = 服务商 · 模型 · API 格式
+    .label = ▦ 仪表盘
+pref-ai-profiles-title = AI 配置
+pref-ai-profiles-hint = 管理各服务商的模型与 API 格式
 pref-ai-profile-use =
     .label = ✓ 设为当前
 pref-ai-profile-add =

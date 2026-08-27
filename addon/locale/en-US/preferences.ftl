@@ -1,9 +1,8 @@
 pref-title = ZotWanglele Settings
-pref-subtitle = AI reading · PDF translation
 pref-open-dashboard =
-    .label = ▦ Open Dashboard
+    .label = ▦ Dashboard
 pref-ai-profiles-title = AI Profiles
-pref-ai-profiles-hint = Provider · model · API format
+pref-ai-profiles-hint = Manage models and API formats for each provider
 pref-ai-profile-use =
     .label = ✓ Set as Current
 pref-ai-profile-add =

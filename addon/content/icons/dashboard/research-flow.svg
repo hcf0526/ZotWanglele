@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 244 84" fill="none">
+  <style>
+    .zwl-flow-trail {
+      stroke-dasharray: 14 8;
+      animation: zwl-flow-shift 5s linear infinite;
+    }
+
+    .zwl-flow-node {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: zwl-flow-pulse 3.2s ease-in-out infinite;
+    }
+
+    .zwl-flow-node.node-b {
+      animation-delay: 0.35s;
+    }
+
+    .zwl-flow-node.node-c {
+      animation-delay: 0.7s;
+    }
+
+    .zwl-flow-node.node-d {
+      animation-delay: 1.05s;
+    }
+
+    @keyframes zwl-flow-shift {
+      to {
+        stroke-dashoffset: -44;
+      }
+    }
+
+    @keyframes zwl-flow-pulse {
+      0%,
+      100% {
+        opacity: 0.82;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.16);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .zwl-flow-trail,
+      .zwl-flow-node {
+        animation: none;
+      }
+    }
+  </style>
+  <path d="M12 55H43L59 31L80 59L105 42L130 48L155 23L182 54L212 33H232" stroke="#D8C7AD" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+  <path class="zwl-flow-trail" d="M12 55H43L59 31L80 59L105 42L130 48L155 23L182 54L212 33" stroke="#B64B37" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
+  <circle class="zwl-flow-node node-a" cx="43" cy="55" r="5.5" fill="#FCF8F0" stroke="#B64B37" stroke-width="2.5"/>
+  <circle class="zwl-flow-node node-b" cx="80" cy="59" r="5.5" fill="#FCF8F0" stroke="#69537E" stroke-width="2.5"/>
+  <circle class="zwl-flow-node node-c" cx="130" cy="48" r="5.5" fill="#FCF8F0" stroke="#3D6B55" stroke-width="2.5"/>
+  <circle class="zwl-flow-node node-d" cx="182" cy="54" r="5.5" fill="#FCF8F0" stroke="#AC762A" stroke-width="2.5"/>
+  <path d="M43 17V35M80 17V39M130 17V28M182 17V38" stroke="#D4C2A7" stroke-linecap="round" stroke-width="2"/>
+  <rect x="36" y="10" width="14" height="7" rx="3.5" fill="#B64B37"/>
+  <rect x="73" y="10" width="14" height="7" rx="3.5" fill="#69537E"/>
+  <rect x="123" y="10" width="14" height="7" rx="3.5" fill="#3D6B55"/>
+  <rect x="175" y="10" width="14" height="7" rx="3.5" fill="#AC762A"/>
+  <path d="M12 72H232" stroke="#D4C2A7" stroke-linecap="round" stroke-width="2"/>
+</svg>

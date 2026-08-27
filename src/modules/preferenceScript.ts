@@ -37,10 +37,25 @@ export async function registerPrefsScripts(_window: Window) {
 
   ensureDefaultProfile();
 
+  injectPrefsStylesheet(doc, ref);
   bindOpenDashboard(doc, ref, _window);
   bindProfileList(doc, ref, _window);
 
   ztoolkit.log("ZotWanglele prefs loaded");
+}
+
+/**
+ * Zotero 解析偏好面板 XHTML 片段时会丢弃顶部的 xml-stylesheet 声明，
+ * preferences.css 因此不会被加载；改为运行时注入 link 引入样式表。
+ */
+function injectPrefsStylesheet(doc: Document, ref: string) {
+  const linkId = `zwl-prefs-css-${ref}`;
+  if (doc.getElementById(linkId)) return;
+  const link = doc.createElementNS("http://www.w3.org/1999/xhtml", "link");
+  link.id = linkId;
+  link.setAttribute("rel", "stylesheet");
+  link.setAttribute("href", `chrome://${ref}/content/preferences.css`);
+  (doc.documentElement || doc.body)?.appendChild(link);
 }
 
 function bindOpenDashboard(doc: Document, ref: string, win: Window) {
@@ -61,13 +76,13 @@ function injectProfileListStyle(doc: Document, ref: string) {
   style.id = styleId;
   style.textContent = `
     #zotero-prefpane-${ref}-profile-list richlistitem[selected="true"]:not([data-header]) {
-      border-color: #8fbdd8 !important;
-      background-color: #eaf4fb !important;
-      color: #163f5d !important;
+      border-color: #d0a091 !important;
+      background-color: #f9e9e2 !important;
+      color: #873627 !important;
     }
     #zotero-prefpane-${ref}-profile-list richlistitem[data-header] {
-      background-color: #f5f8fb !important;
-      color: #5a6d7f !important;
+      background-color: #f7efe1 !important;
+      color: #806f5e !important;
     }
   `;
   (doc.documentElement || doc.body)?.appendChild(style);
@@ -136,15 +151,18 @@ function bindProfileList(doc: Document, ref: string, win: Window) {
 
         const detailLabel = doc.createXULElement("label") as any;
         detailLabel.setAttribute("class", "zwl-profile-item-detail");
-        const formatLabel =
-          p.format === "responses" ? "Responses" : "Chat Completions";
-        detailLabel.setAttribute(
+        detailLabel.setAttribute("value", `${p.model || "未填模型"}`);
+
+        const formatLabel = doc.createXULElement("label") as any;
+        formatLabel.setAttribute("class", "zwl-profile-item-detail");
+        formatLabel.setAttribute(
           "value",
-          `${p.model || "未填模型"} · ${formatLabel}`,
+          p.format === "responses" ? "Responses" : "Chat Completions",
         );
 
         vbox.appendChild(nameLabel);
         vbox.appendChild(detailLabel);
+        vbox.appendChild(formatLabel);
         item.appendChild(vbox);
         listEl.appendChild(item);
       }

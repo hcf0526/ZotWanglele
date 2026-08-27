@@ -95,7 +95,7 @@ function loadIntoForm(doc: Document) {
   setRadio(doc, "zwl-env-server");
   setValue(doc, "zwl-server-url", cfg.serverUrl);
   setValue(doc, "zwl-engine", cfg.engine);
-  setChecked(doc, "zwl-out-mono", cfg.outputs.includes("mono"));
+  setChecked(doc, "zwl-out-mono", !cfg.outputs.includes("dual"));
   setChecked(doc, "zwl-out-dual", cfg.outputs.includes("dual"));
   setValue(doc, "zwl-dual-mode", cfg.dualMode);
   setChecked(doc, "zwl-ocr", cfg.ocr);
@@ -128,10 +128,9 @@ function saveFromForm(doc: Document) {
     getChatProfilesForTranslation().find(
       (item) => item.id === getValue(doc, "zwl-service"),
     ) ?? getActiveChatProfile();
-  const outputs: ("mono" | "dual")[] = [];
-  if (isChecked(doc, "zwl-out-mono")) outputs.push("mono");
-  if (isChecked(doc, "zwl-out-dual")) outputs.push("dual");
-  if (outputs.length === 0) outputs.push("dual");
+  const outputs: ("mono" | "dual")[] = isChecked(doc, "zwl-out-mono")
+    ? ["mono"]
+    : ["dual"];
 
   saveTranslateConfig({
     envSource: "server",

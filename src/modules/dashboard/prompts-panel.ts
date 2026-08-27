@@ -25,7 +25,17 @@ export function mountPromptsPanel(win: Window): () => void {
   const resetButton = doc.getElementById(
     "zwl-prompt-reset",
   ) as HTMLButtonElement;
-  if (!list || !form || !newButton || !deleteButton || !resetButton) {
+  const resetTopButton = doc.getElementById(
+    "zwl-prompt-reset-top",
+  ) as HTMLButtonElement;
+  if (
+    !list ||
+    !form ||
+    !newButton ||
+    !deleteButton ||
+    !resetButton ||
+    !resetTopButton
+  ) {
     ztoolkit.log("[PromptsPanel] required elements are unavailable");
     return () => undefined;
   }
@@ -58,6 +68,7 @@ export function mountPromptsPanel(win: Window): () => void {
     getField("zwl-prompt-user").disabled = false;
     deleteButton.hidden = !!values.builtin || creating;
     resetButton.hidden = !values.builtin || creating;
+    resetTopButton.hidden = !values.builtin || creating;
     (doc.getElementById("zwl-prompt-save") as HTMLButtonElement).hidden = false;
     setStatus(doc, "");
   };
@@ -184,6 +195,7 @@ export function mountPromptsPanel(win: Window): () => void {
   form.addEventListener("submit", onSubmit);
   deleteButton.addEventListener("click", onDelete);
   resetButton.addEventListener("click", onReset);
+  resetTopButton.addEventListener("click", onReset);
   renderList();
   showTemplate(getAllTemplates().find((item) => item.id === selectedId));
 
@@ -192,6 +204,7 @@ export function mountPromptsPanel(win: Window): () => void {
     form.removeEventListener("submit", onSubmit);
     deleteButton.removeEventListener("click", onDelete);
     resetButton.removeEventListener("click", onReset);
+    resetTopButton.removeEventListener("click", onReset);
   };
 }
 

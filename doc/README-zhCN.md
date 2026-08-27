@@ -1,6 +1,6 @@
 # ZotWanglele 简体中文说明
 
-ZotWanglele 是面向 Zotero 10 的 AI 阅读与 PDF 翻译插件。当前发布版本为 `0.1.3`。
+ZotWanglele 是面向 Zotero 10 的 AI 阅读与 PDF 翻译插件。当前发布版本为 `0.1.4`。
 完整使用说明、当前功能、开发命令与限制已经整合到仓库根目录的
 [README](../README.md)。
 
