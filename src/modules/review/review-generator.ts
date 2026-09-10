@@ -1,5 +1,5 @@
 import { AiClient, ChatMessage } from "../ai/ai-client";
-import { getTemplate, renderPrompt } from "../ai/prompts";
+import { getActiveTemplate, renderPrompt } from "../ai/prompts";
 import { ApiProfile, getActiveProfile } from "../ai/profiles";
 import { markdownToHtmlMinimal } from "../reader/note-generator";
 import { getItemMeta, getPdfText } from "../reader/pdf-extractor";
@@ -42,7 +42,7 @@ export async function generateLiteratureReview(
   const profileError = validateProfile(profile);
   if (profileError) return { ok: false, message: profileError };
 
-  const template = getTemplate("literature-review");
+  const template = getActiveTemplate("literature-review");
   if (!template) return { ok: false, message: "文献综述模板缺失" };
 
   options.onProgress?.("正在整理题录与摘要");

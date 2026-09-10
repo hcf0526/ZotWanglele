@@ -8,6 +8,8 @@ const PREF_ACTIVE = "ai.activeProfileId";
 export interface ApiProfile {
   id: string;
   name: string;
+  /** 用户填写的供应商名称；旧配置按原 provider 显示名称读取。 */
+  supplier?: string;
   /** Provider 类别：预设 key (deepseek/openai/...) 或 "custom" */
   provider: string;
   baseUrl: string;
@@ -28,6 +30,167 @@ export function inferProvider(baseUrl: string): string {
 }
 
 export type ApiProfileDraft = Omit<ApiProfile, "id">;
+
+export interface SupplierKey {
+  apiKey: string;
+  baseUrl: string;
+  format: ApiFormat;
+  models: string[];
+}
+
+export interface SupplierDraft {
+  supplier: string;
+  keys: SupplierKey[];
+  temperature: number;
+  maxTokens: number;
+}
+
+/** Keep every key/model route in storage; expose each supplier/model once. */
+export function listModelProfiles(format?: ApiFormat): ApiProfile[] {
+  const seen = new Set<string>();
+  const profiles = listProfiles();
+  return profiles.filter((profile) => {
+    if (format && profile.format !== format) return false;
+    if (
+      !profile.model &&
+      profiles.some(
+        (p) => getSupplierName(p) === getSupplierName(profile) && p.model,
+      )
+    )
+      return false;
+    const key = JSON.stringify([getSupplierName(profile), profile.model]);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export function getSupplierDraft(profile: ApiProfile): SupplierDraft {
+  const supplier = getSupplierName(profile);
+  const keys = new Map<string, SupplierKey>();
+  for (const item of listProfiles().filter(
+    (p) => getSupplierName(p) === supplier,
+  )) {
+    const id = JSON.stringify([item.baseUrl, item.apiKey, item.format]);
+    if (!keys.has(id)) {
+      keys.set(id, {
+        baseUrl: item.baseUrl,
+        apiKey: item.apiKey,
+        format: item.format,
+        models: [],
+      });
+    }
+    const models = keys.get(id)!.models;
+    if (item.model && !models.includes(item.model)) models.push(item.model);
+  }
+  return {
+    supplier,
+    keys: [...keys.values()],
+    temperature: profile.temperature,
+    maxTokens: profile.maxTokens,
+  };
+}
+
+export function saveSupplier(
+  draft: SupplierDraft,
+  originalSupplier?: string,
+): ApiProfile {
+  const profiles = listProfiles();
+  const supplier = draft.supplier.trim();
+  if (!supplier || draft.keys.length === 0)
+    throw new Error("请填写供应商并添加 API Key");
+  const source = profiles.filter(
+    (p) => getSupplierName(p) === originalSupplier,
+  );
+  const target = profiles.filter(
+    (p) => getSupplierName(p) === supplier && !source.includes(p),
+  );
+  const route = (
+    p: Pick<ApiProfile, "baseUrl" | "apiKey" | "format" | "model">,
+  ) => JSON.stringify([p.baseUrl, p.apiKey, p.format, p.model]);
+  const prior = new Map([...source, ...target].map((p) => [route(p), p]));
+  const replacements = new Map(target.map((p) => [route(p), p]));
+  for (const key of draft.keys) {
+    const models = [
+      ...new Set(key.models.map((model) => model.trim()).filter(Boolean)),
+    ];
+    for (const model of models.length ? models : [""]) {
+      const value = {
+        baseUrl: key.baseUrl.trim(),
+        apiKey: key.apiKey.trim(),
+        format: key.format,
+        model,
+      };
+      const old = prior.get(route(value));
+      replacements.set(route(value), {
+        ...value,
+        id: old?.id ?? generateId(),
+        name: model || supplier,
+        supplier,
+        provider: old?.provider ?? "custom",
+        temperature: draft.temperature,
+        maxTokens: draft.maxTokens,
+      });
+    }
+  }
+  const inserted = [...replacements.values()];
+  const removed = new Set([...source, ...target].map((p) => p.id));
+  const position = profiles.findIndex((p) => removed.has(p.id));
+  const remaining = profiles.filter((p) => !removed.has(p.id));
+  remaining.splice(position < 0 ? remaining.length : position, 0, ...inserted);
+  saveProfiles(remaining);
+  for (const pref of [PREF_ACTIVE, "translate.aiProfileId"]) {
+    const selected = getPref<string>(pref, "");
+    if (
+      !selected ||
+      (removed.has(selected) && !inserted.some((p) => p.id === selected))
+    ) {
+      const old = profiles.find((p) => p.id === selected);
+      const compatible = inserted.filter(
+        (p) =>
+          pref !== "translate.aiProfileId" || p.format === "chat-completions",
+      );
+      setPref(
+        pref,
+        (compatible.find((p) => p.model === old?.model) ?? compatible[0])?.id ??
+          "",
+      );
+    }
+  }
+  return inserted[0];
+}
+
+export function deleteSupplier(id: string): boolean {
+  const profiles = listProfiles();
+  const selected = profiles.find((p) => p.id === id);
+  if (!selected) return false;
+  const remaining = profiles.filter(
+    (p) => getSupplierName(p) !== getSupplierName(selected),
+  );
+  if (!remaining.length) return false;
+  saveProfiles(remaining);
+  if (!remaining.some((p) => p.id === getActiveId()))
+    setActiveId(remaining[0].id);
+  return true;
+}
+
+export function getSupplierName(profile: ApiProfileDraft): string {
+  if (typeof profile.supplier === "string") return profile.supplier.trim();
+  return profile.provider === "custom"
+    ? ""
+    : (BUILTIN_PRESETS[profile.provider]?.name ?? profile.provider ?? "");
+}
+
+/** 按供应商首次出现的顺序分组，保留组内配置顺序。 */
+export function groupProfilesBySupplier(profiles: ApiProfile[]) {
+  const groups = new Map<string, ApiProfile[]>();
+  for (const profile of profiles) {
+    const supplier = getSupplierName(profile);
+    if (!groups.has(supplier)) groups.set(supplier, []);
+    groups.get(supplier)!.push(profile);
+  }
+  return groups;
+}
 
 // ============================================================
 // Pref helpers
@@ -177,9 +340,24 @@ export function moveProfile(id: string, direction: -1 | 1): boolean {
   const profiles = listProfiles();
   const idx = profiles.findIndex((p) => p.id === id);
   if (idx === -1) return false;
-  const newIdx = idx + direction;
-  if (newIdx < 0 || newIdx >= profiles.length) return false;
-  [profiles[idx], profiles[newIdx]] = [profiles[newIdx], profiles[idx]];
+  const supplier = getSupplierName(profiles[idx]);
+  const members = profiles.filter((p) => getSupplierName(p) === supplier);
+  const models = [...new Set(members.map((p) => p.model))];
+  const modelIndex = models.indexOf(profiles[idx].model);
+  const newIndex = modelIndex + direction;
+  if (newIndex < 0 || newIndex >= models.length) return false;
+  [models[modelIndex], models[newIndex]] = [
+    models[newIndex],
+    models[modelIndex],
+  ];
+  const ordered = models.flatMap((model) =>
+    members.filter((p) => p.model === model),
+  );
+  let memberIndex = 0;
+  for (let i = 0; i < profiles.length; i++) {
+    if (getSupplierName(profiles[i]) === supplier)
+      profiles[i] = ordered[memberIndex++];
+  }
   saveProfiles(profiles);
   return true;
 }

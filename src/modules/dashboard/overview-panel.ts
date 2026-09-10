@@ -1,5 +1,5 @@
 import { getAllTemplates, getCustomTemplates } from "../ai/prompts";
-import { getActiveProfile } from "../ai/profiles";
+import { getActiveProfile, getSupplierName } from "../ai/profiles";
 import { getTasks, subscribe } from "../translate/task-store";
 import { getTranslatedTitleFromExtra } from "../title-translate/title-translation";
 
@@ -12,7 +12,8 @@ export function mountOverviewPanel(win: Window): () => void {
     setText(
       doc,
       "zwl-overview-profile",
-      profile?.name || (isChinese ? "尚未选择" : "Not selected"),
+      (profile && getSupplierName(profile)) ||
+        (isChinese ? "尚未选择" : "Not selected"),
     );
     setText(
       doc,

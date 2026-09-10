@@ -64,6 +64,37 @@ export class AiClient {
     Object.assign(this.config, partial);
   }
 
+  async listModels(): Promise<string[]> {
+    const baseUrl = this.normalizeBaseUrl().replace(/\/v1$/i, "");
+    const xhr = await Zotero.HTTP.request("GET", `${baseUrl}/v1/models`, {
+      headers: this.config.apiKey
+        ? { Authorization: `Bearer ${this.config.apiKey}` }
+        : {},
+      responseType: "text",
+      successCodes: false,
+      timeout: 30000,
+    });
+    if (xhr.status < 200 || xhr.status >= 300) {
+      throw new Error(`获取模型失败（HTTP ${xhr.status}）`);
+    }
+    let json: { data?: Array<{ id?: unknown }> };
+    try {
+      json = JSON.parse(xhr.responseText ?? "");
+    } catch {
+      throw new Error("模型列表响应格式无效");
+    }
+    if (!Array.isArray(json?.data)) throw new Error("响应中缺少模型列表 data");
+    return [
+      ...new Set(
+        json.data.flatMap((model) =>
+          typeof model?.id === "string" && model.id.trim()
+            ? [model.id.trim()]
+            : [],
+        ),
+      ),
+    ];
+  }
+
   async chat(
     messages: ChatMessage[],
     onStream?: StreamCallback,

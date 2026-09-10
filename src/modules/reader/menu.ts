@@ -71,16 +71,6 @@ export function registerReaderMenu() {
         { tag: "menuseparator" },
         {
           tag: "menuitem",
-          id: "zotwanglele-itemmenu-review",
-          label: "生成文献综述",
-          commandListener: () => {
-            runLiteratureReviewOnSelected().catch((e) =>
-              ztoolkit.log("[ReaderMenu] review error:", e),
-            );
-          },
-        },
-        {
-          tag: "menuitem",
           id: "zotwanglele-itemmenu-title-translate",
           label: "翻译标题",
           commandListener: () => {
@@ -92,7 +82,7 @@ export function registerReaderMenu() {
         {
           tag: "menuitem",
           id: "zotwanglele-itemmenu-metadata-update",
-          label: "更新文献信息",
+          label: "更新信息",
           commandListener: () => {
             runMetadataUpdateOnSelected().catch((e) =>
               ztoolkit.log("[ReaderMenu] metadata update error:", e),
@@ -103,11 +93,22 @@ export function registerReaderMenu() {
         {
           tag: "menuitem",
           id: "zotwanglele-itemmenu-translate",
-          label: "翻译 PDF",
+          label: "文献翻译",
           commandListener: () => {
             ztoolkit.log("[ReaderMenu] translate click");
             runTranslateOnSelected().catch((e) =>
               ztoolkit.log("[ReaderMenu] translate error:", e),
+            );
+          },
+        },
+        { tag: "menuseparator" },
+        {
+          tag: "menuitem",
+          id: "zotwanglele-itemmenu-review",
+          label: "文献综述",
+          commandListener: () => {
+            runLiteratureReviewOnSelected().catch((e) =>
+              ztoolkit.log("[ReaderMenu] review error:", e),
             );
           },
         },

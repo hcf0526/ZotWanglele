@@ -100,14 +100,26 @@ describe("startup", function () {
       assert.isNotNull(doc.getElementById("zwl-prompt-form"));
       assert.isNotNull(doc.getElementById("zotwanglele-adv-root"));
       assert.isNotNull(promptList);
+      const features = doc.getElementById("zwl-prompt-features");
+      assert.isNotNull(features);
+      assert.isAtLeast(features!.childElementCount, 1);
+      assert.include(features!.textContent ?? "", "论文精读");
       const firstPrompt = promptList!.firstElementChild as HTMLElement;
       firstPrompt.click();
       const nameView = doc.getElementById("zwl-prompt-name-view");
       const descriptionView = doc.getElementById("zwl-prompt-description-view");
       assert.include(["DIV", "html:div"], nameView?.tagName);
       assert.include(["DIV", "html:div"], descriptionView?.tagName);
-      assert.isNull(doc.querySelector("input#zwl-prompt-name"));
-      assert.isNull(doc.querySelector("input#zwl-prompt-description"));
+      const nameInput = doc.getElementById(
+        "zwl-prompt-name",
+      ) as HTMLInputElement | null;
+      const descriptionInput = doc.getElementById(
+        "zwl-prompt-description",
+      ) as HTMLInputElement | null;
+      assert.isNotNull(nameInput);
+      assert.isNotNull(descriptionInput);
+      assert.isTrue(nameInput!.hidden);
+      assert.isTrue(descriptionInput!.hidden);
       assert.equal(nameView?.textContent, "论文精读");
 
       const item = new Zotero.Item("journalArticle");

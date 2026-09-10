@@ -6,7 +6,7 @@ href="chrome://zotwanglele/content/dashboard.css"?>
   xmlns:html="http://www.w3.org/1999/xhtml"
   title="ZotWanglele 仪表盘"
   windowtype="zotwanglele:dashboard"
-  width="980"
+  width="1100"
   height="720"
   persist="screenX screenY width height"
   onload="window.opener.Zotero.__addonInstance__.hooks.onDashboardLoad(window)"
@@ -213,25 +213,66 @@ href="chrome://zotwanglele/content/dashboard.css"?>
               />
             </html:div>
             <html:div class="zwl-prompts-workspace">
-              <html:div
-                id="zwl-prompt-list"
-                class="zwl-prompt-list"
-                role="list"
-              ></html:div>
+              <html:div class="zwl-prompt-pane zwl-prompt-features-pane">
+                <html:p
+                  class="zwl-prompt-pane-label"
+                  data-l10n-id="dashboard-prompts-features"
+                />
+                <html:div
+                  id="zwl-prompt-features"
+                  class="zwl-prompt-features"
+                  role="list"
+                ></html:div>
+              </html:div>
+              <html:div class="zwl-prompt-pane zwl-prompt-templates-pane">
+                <html:p
+                  class="zwl-prompt-pane-label"
+                  data-l10n-id="dashboard-prompts-templates"
+                />
+                <html:div
+                  id="zwl-prompt-list"
+                  class="zwl-prompt-list"
+                  role="list"
+                ></html:div>
+              </html:div>
               <html:form id="zwl-prompt-form" class="zwl-prompt-editor">
                 <html:div class="zwl-field-row">
-                  <html:label data-l10n-id="dashboard-prompts-name" />
-                  <html:div
-                    id="zwl-prompt-name-view"
-                    class="zwl-prompt-static-value zwl-prompt-name-view"
-                  ></html:div>
+                  <html:label
+                    for="zwl-prompt-name"
+                    data-l10n-id="dashboard-prompts-name"
+                  />
+                  <html:div class="zwl-prompt-value-slot">
+                    <html:div
+                      id="zwl-prompt-name-view"
+                      class="zwl-prompt-static-value zwl-prompt-name-view"
+                    ></html:div>
+                    <html:input
+                      id="zwl-prompt-name"
+                      class="zwl-prompt-text-input"
+                      type="text"
+                      hidden="hidden"
+                      autocomplete="off"
+                    />
+                  </html:div>
                 </html:div>
                 <html:div class="zwl-field-row">
-                  <html:label data-l10n-id="dashboard-prompts-description" />
-                  <html:div
-                    id="zwl-prompt-description-view"
-                    class="zwl-prompt-static-value zwl-prompt-description-view"
-                  ></html:div>
+                  <html:label
+                    for="zwl-prompt-description"
+                    data-l10n-id="dashboard-prompts-description"
+                  />
+                  <html:div class="zwl-prompt-value-slot">
+                    <html:div
+                      id="zwl-prompt-description-view"
+                      class="zwl-prompt-static-value zwl-prompt-description-view"
+                    ></html:div>
+                    <html:input
+                      id="zwl-prompt-description"
+                      class="zwl-prompt-text-input"
+                      type="text"
+                      hidden="hidden"
+                      autocomplete="off"
+                    />
+                  </html:div>
                 </html:div>
                 <html:div class="zwl-field-stack zwl-field-header">
                   <html:div class="zwl-field-label-row">
@@ -277,6 +318,12 @@ href="chrome://zotwanglele/content/dashboard.css"?>
                     id="zwl-prompt-status"
                     aria-live="polite"
                   ></html:span>
+                  <html:button
+                    id="zwl-prompt-use"
+                    type="button"
+                    hidden="hidden"
+                    data-l10n-id="dashboard-prompts-use"
+                  />
                   <html:button
                     id="zwl-prompt-reset"
                     type="button"

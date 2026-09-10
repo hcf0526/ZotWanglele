@@ -69,7 +69,7 @@ test/                            启动测试、翻译流程测试与 PDF 样例
 | `src/modules/dashboard/dashboard.ts`      | 仪表盘单例窗口与页签切换。                                                                                                                                                                                                                                                                |
 | `src/modules/dashboard/queue-panel.ts`    | 任务记录页：卡片列表、进度与详情。                                                                                                                                                                                                                                                        |
 | `src/modules/dashboard/advanced-panel.ts` | 高级设置页：翻译环境、引擎、输出与语言。                                                                                                                                                                                                                                                  |
-| `src/modules/dashboard/prompts-panel.ts`  | 提示词管理页：内置提示词编辑与自定义模板。                                                                                                                                                                                                                                                |
+| `src/modules/dashboard/prompts-panel.ts`  | 提示词管理页：按功能列出内置能力，中间管理该功能的模板，右侧编辑提示词。                                                                                                                                                                                                                  |
 | `src/modules/dashboard/overview-panel.ts` | 工作概览页：配置、模板、任务统计与常用操作。                                                                                                                                                                                                                                              |
 | `src/modules/ui/toolbar.ts`               | Zotero 主工具栏的仪表盘按钮。                                                                                                                                                                                                                                                             |
 | `addon/content/preferences.css`           | 设置页面纸感主题（米色画布、纸质面板、衬线字体、红/苔绿点缀）。                                                                                                                                                                                                                           |
@@ -150,3 +150,11 @@ npm test
 
 文档需要区分已有实现与后续计划。新增功能完成后，应同步更新根 README、对应
 阶段文档和测试说明。
+
+<claude-mem-context>
+# Memory Context
+
+# [ZotWanglele] recent context, 2026-09-10 11:36pm GMT+8
+
+No previous sessions found.
+</claude-mem-context>

@@ -1,17 +1,15 @@
-editor-title = 编辑配置档
-editor-subtitle = 设置 API 连接方式、模型和生成参数
+editor-title = 编辑供应商
+editor-subtitle = 管理供应商的 API Key、可用模型和生成参数
 editor-section-connection = 连接信息
 editor-section-generation = 生成参数
 editor-field-name = 名称
-editor-field-preset = 模型预设
+editor-field-supplier = 供应商
 editor-field-format = API 格式
 editor-field-baseurl = Base URL
 editor-field-apikey = API Key
 editor-field-model = 模型名称
 editor-field-temperature = Temperature
 editor-field-maxtokens = Max Tokens
-editor-preset-custom =
-    .label = 自定义
 editor-btn-test =
     .label = 测试连接
 editor-btn-cancel =
@@ -21,3 +19,6 @@ editor-btn-save =
 editor-validate-name-required = 请填写配置档名称
 editor-validate-baseurl-required = 请填写 Base URL
 editor-validate-model-required = 请填写模型名称
+
+editor-keys-heading = API Key 与模型
+editor-add-key = 添加 Key

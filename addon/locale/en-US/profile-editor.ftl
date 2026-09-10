@@ -1,17 +1,15 @@
-editor-title = Edit Profile
+editor-title = Edit Provider
 editor-subtitle = Configure the API connection, model, and generation settings
 editor-section-connection = Connection
 editor-section-generation = Generation settings
 editor-field-name = Name
-editor-field-preset = Preset
+editor-field-supplier = Provider
 editor-field-format = API Format
 editor-field-baseurl = Base URL
 editor-field-apikey = API Key
 editor-field-model = Model
 editor-field-temperature = Temperature
 editor-field-maxtokens = Max Tokens
-editor-preset-custom =
-    .label = Custom
 editor-btn-test =
     .label = Test Connection
 editor-btn-cancel =
@@ -21,3 +19,6 @@ editor-btn-save =
 editor-validate-name-required = Please enter a profile name
 editor-validate-baseurl-required = Please enter Base URL
 editor-validate-model-required = Please enter model name
+
+editor-keys-heading = API keys and models
+editor-add-key = Add Key

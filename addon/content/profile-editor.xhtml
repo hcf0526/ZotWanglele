@@ -4,10 +4,10 @@ href="chrome://zotwanglele/content/profile-editor.css"?>
 <window
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
-  title="ZotWanglele - 编辑配置档"
+  title="ZotWanglele - 编辑供应商"
   windowtype="zotwanglele:profile-editor"
-  width="600"
-  height="600"
+  width="720"
+  height="740"
   persist="screenX screenY width height"
   onload="
     window.opener.Zotero.__addonInstance__.hooks.onProfileEditorLoad(window)
@@ -39,103 +39,23 @@ href="chrome://zotwanglele/content/profile-editor.css"?>
 
     <vbox class="zwl-profile-editor-fields">
       <hbox align="center" class="zwl-editor-field">
-        <html:label for="zwl-editor-name" data-l10n-id="editor-field-name" />
-        <html:input
-          type="text"
-          id="zwl-editor-name"
-          placeholder="如：DeepSeek 主账号"
-        />
-      </hbox>
-
-      <hbox align="center" class="zwl-editor-field">
         <html:label
-          for="zwl-editor-preset"
-          data-l10n-id="editor-field-preset"
+          for="zwl-editor-supplier"
+          data-l10n-id="editor-field-supplier"
         />
-        <menulist id="zwl-editor-preset">
-          <menupopup>
-            <menuitem
-              data-l10n-id="editor-preset-custom"
-              value="custom"
-              oncommand="window.zwlEditorPresetChange(this.value)"
-            />
-            <menuitem
-              label="OpenAI"
-              value="openai"
-              oncommand="window.zwlEditorPresetChange(this.value)"
-            />
-            <menuitem
-              label="Claude"
-              value="claude"
-              oncommand="window.zwlEditorPresetChange(this.value)"
-            />
-            <menuitem
-              label="DeepSeek"
-              value="deepseek"
-              oncommand="window.zwlEditorPresetChange(this.value)"
-            />
-            <menuitem
-              label="Gemini"
-              value="gemini"
-              oncommand="window.zwlEditorPresetChange(this.value)"
-            />
-            <menuitem
-              label="SiliconFlow"
-              value="siliconflow"
-              oncommand="window.zwlEditorPresetChange(this.value)"
-            />
-            <menuitem
-              label="Ollama"
-              value="ollama"
-              oncommand="window.zwlEditorPresetChange(this.value)"
-            />
-          </menupopup>
-        </menulist>
-      </hbox>
-
-      <hbox align="center" class="zwl-editor-field">
-        <html:label
-          for="zwl-editor-format"
-          data-l10n-id="editor-field-format"
-        />
-        <menulist id="zwl-editor-format">
-          <menupopup>
-            <menuitem label="Chat Completions" value="chat-completions" />
-            <menuitem label="Responses" value="responses" />
-          </menupopup>
-        </menulist>
-      </hbox>
-
-      <hbox align="center" class="zwl-editor-field">
-        <html:label
-          for="zwl-editor-baseUrl"
-          data-l10n-id="editor-field-baseurl"
-        />
-        <html:input
-          type="text"
-          id="zwl-editor-baseUrl"
-          placeholder="https://api.example.com"
-        />
-      </hbox>
-
-      <hbox align="center" class="zwl-editor-field">
-        <html:label
-          for="zwl-editor-apiKey"
-          data-l10n-id="editor-field-apikey"
-        />
-        <html:input
-          type="password"
-          id="zwl-editor-apiKey"
-          placeholder="sk-..."
-        />
-      </hbox>
-
-      <hbox align="center" class="zwl-editor-field">
-        <html:label for="zwl-editor-model" data-l10n-id="editor-field-model" />
-        <html:input type="text" id="zwl-editor-model" placeholder="gpt-4o" />
+        <html:input type="text" id="zwl-editor-supplier" />
       </hbox>
     </vbox>
 
+    <html:div class="zwl-key-heading">
+      <html:strong data-l10n-id="editor-keys-heading" />
+      <html:button
+        type="button"
+        id="zwl-editor-add-key"
+        data-l10n-id="editor-add-key"
+      />
+    </html:div>
+    <html:div id="zwl-editor-keys" />
     <html:div
       class="zwl-profile-editor-section-heading zwl-profile-editor-section-heading-spaced"
     >
@@ -174,15 +94,7 @@ href="chrome://zotwanglele/content/profile-editor.css"?>
       </hbox>
     </vbox>
 
-    <spacer flex="1" />
-
     <hbox align="center" class="zwl-profile-editor-footer">
-      <button
-        id="zwl-editor-test"
-        class="zwl-editor-button zwl-editor-button-secondary"
-        data-l10n-id="editor-btn-test"
-        oncommand="window.zwlEditorTest()"
-      />
       <html:span id="zwl-editor-test-status" class="zwl-editor-test-status" />
       <spacer flex="1" />
       <button

@@ -3,17 +3,17 @@ import { openDashboard } from "./dashboard/dashboard";
 import {
   ensureDefaultProfile,
   listProfiles,
-  addProfile,
-  updateProfile,
-  deleteProfile,
+  saveSupplier,
+  deleteSupplier,
+  getSupplierName,
+  listModelProfiles,
   moveProfile,
   getActiveId,
   setActiveId,
   getProfile,
-  ApiProfile,
+  groupProfilesBySupplier,
 } from "./ai/profiles";
 import { openProfileEditor } from "./ai/profile-editor";
-import { getProviderLabel, PROVIDER_ORDER } from "./ai/presets";
 
 function bindButton(
   el: Element | null,
@@ -100,39 +100,23 @@ function bindProfileList(doc: Document, ref: string, win: Window) {
     // 清空子项
     while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
 
-    const profiles = listProfiles();
-    const activeId = getActiveId();
+    const profiles = listModelProfiles();
+    const active = getProfile(getActiveId());
 
-    // 按 provider 分组
-    const groups = new Map<string, ApiProfile[]>();
-    for (const p of profiles) {
-      const key = p.provider || "custom";
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(p);
-    }
-
-    // 按 PROVIDER_ORDER 顺序渲染，未在顺序表中的 Provider 附在末尾
-    const orderedKeys: string[] = [];
-    for (const key of PROVIDER_ORDER) {
-      if (groups.has(key)) orderedKeys.push(key);
-    }
-    for (const key of groups.keys()) {
-      if (!orderedKeys.includes(key)) orderedKeys.push(key);
-    }
-
-    for (const providerKey of orderedKeys) {
+    const groups = groupProfilesBySupplier(profiles);
+    for (const [supplier, supplierProfiles] of groups) {
       // 分组头（不可选）
       const header = doc.createXULElement("richlistitem") as any;
       header.setAttribute("disabled", "true");
       header.setAttribute("data-header", "1");
       const headerLabel = doc.createXULElement("label") as any;
-      headerLabel.setAttribute("value", `▼ ${getProviderLabel(providerKey)}`);
+      headerLabel.setAttribute("value", `▼ ${supplier || "未填写供应商"}`);
       headerLabel.setAttribute("class", "zwl-profile-group-label");
       header.appendChild(headerLabel);
       listEl.appendChild(header);
 
       // 该组下的配置
-      for (const p of groups.get(providerKey)!) {
+      for (const p of supplierProfiles) {
         const item = doc.createXULElement("richlistitem") as any;
         item.setAttribute("value", p.id);
 
@@ -142,16 +126,17 @@ function bindProfileList(doc: Document, ref: string, win: Window) {
 
         const nameLabel = doc.createXULElement("label") as any;
         nameLabel.setAttribute("class", "zwl-profile-item-name");
-        const isActive = p.id === activeId;
+        const isActive =
+          active?.model === p.model && getSupplierName(active) === supplier;
         nameLabel.setAttribute(
           "value",
-          `${isActive ? "★ " : "  "}${p.name || "(未命名)"}`,
+          `${isActive ? "★ " : "  "}${p.model || "尚未添加模型"}`,
         );
         item.setAttribute("data-active", String(isActive));
 
         const detailLabel = doc.createXULElement("label") as any;
         detailLabel.setAttribute("class", "zwl-profile-item-detail");
-        detailLabel.setAttribute("value", `${p.model || "未填模型"}`);
+        detailLabel.setAttribute("value", supplier || "未填写供应商");
 
         const formatLabel = doc.createXULElement("label") as any;
         formatLabel.setAttribute("class", "zwl-profile-item-detail");
@@ -204,6 +189,10 @@ function bindProfileList(doc: Document, ref: string, win: Window) {
       toastWarn("已是当前使用的配置档");
       return;
     }
+    if (!getProfile(id)?.model) {
+      toastWarn("请编辑供应商并获取或填写模型");
+      return;
+    }
     setActiveId(id);
     refreshList();
     toastSuccess("已设为当前配置");
@@ -225,20 +214,20 @@ function bindProfileList(doc: Document, ref: string, win: Window) {
         return;
       }
       const profiles = listProfiles();
-      if (profiles.length <= 1) {
-        toastFail("至少需要保留一个配置档");
+      if (groupProfilesBySupplier(profiles).size <= 1) {
+        toastFail("至少需要保留一个供应商");
         return;
       }
       if (
         !confirmDialog(
           win,
-          "删除配置档",
-          "确定要删除选中的配置档吗？此操作无法撤销。",
+          "删除供应商",
+          "确定删除所选模型所属供应商及其全部 Key 和模型？",
         )
       ) {
         return;
       }
-      deleteProfile(id);
+      deleteSupplier(id);
       refreshList();
     },
   );
@@ -253,7 +242,7 @@ function bindProfileList(doc: Document, ref: string, win: Window) {
 function addNewProfile(win: Window, refresh: () => void, listEl: any) {
   const draft = openProfileEditor(win, null);
   if (!draft) return;
-  const newProfile = addProfile(draft);
+  const newProfile = saveSupplier(draft);
   // 不自动设为 active，仅选中该项供用户决定
   refresh();
   selectProfileInList(listEl, newProfile.id);
@@ -264,7 +253,7 @@ function editProfile(win: Window, id: string, refresh: () => void) {
   if (!profile) return;
   const draft = openProfileEditor(win, profile);
   if (!draft) return;
-  updateProfile(id, draft);
+  saveSupplier(draft, getSupplierName(profile));
   refresh();
 }
 

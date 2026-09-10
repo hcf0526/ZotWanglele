@@ -9,7 +9,7 @@ import { AiClient, ChatMessage } from "../ai/ai-client";
 import { ApiFormat, getPreset } from "../ai/presets";
 import { getActiveProfile } from "../ai/profiles";
 import { getPdfText, getItemMeta } from "./pdf-extractor";
-import { getTemplate, renderPrompt } from "../ai/prompts";
+import { getActiveTemplate, renderPrompt } from "../ai/prompts";
 import { getGeneratedNoteTag } from "./reading-notes";
 
 export interface GenerateOptions {
@@ -59,7 +59,7 @@ export async function generateNoteForItem(
     };
   }
 
-  const template = getTemplate(templateId);
+  const template = getActiveTemplate(templateId);
   if (!template) {
     return {
       ok: false,

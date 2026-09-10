@@ -11,7 +11,17 @@ export interface PromptTemplate {
   systemPrompt: string;
   userPrompt: string;
   builtin: boolean;
+  /** 归属的内置功能 ID；内置模板的 featureId 等于自身 id。 */
+  featureId: string;
 }
+
+export interface PromptFeature {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export const UNGROUPED_FEATURE_ID = "ungrouped";
 
 export interface PromptVariables {
   title?: string;
@@ -71,6 +81,7 @@ const BUILTIN_TEMPLATES: PromptTemplate[] = [
 **年份**：{{year}}
 **摘要**：{{abstract}}`,
     builtin: true,
+    featureId: "paper-reading",
   },
   {
     id: "quick-summary",
@@ -92,6 +103,7 @@ const BUILTIN_TEMPLATES: PromptTemplate[] = [
 
 **适合谁读**：什么背景的人值得读这篇。`,
     builtin: true,
+    featureId: "quick-summary",
   },
   {
     id: "method-analysis",
@@ -111,6 +123,7 @@ const BUILTIN_TEMPLATES: PromptTemplate[] = [
 3. 与已有方法相比的创新之处
 4. 方法的适用范围和局限性`,
     builtin: true,
+    featureId: "method-analysis",
   },
   {
     id: "multi-round",
@@ -126,6 +139,7 @@ const BUILTIN_TEMPLATES: PromptTemplate[] = [
 
 请先简要介绍这篇论文的研究背景和动机。`,
     builtin: true,
+    featureId: "multi-round",
   },
   {
     id: "literature-review",
@@ -143,6 +157,7 @@ const BUILTIN_TEMPLATES: PromptTemplate[] = [
 3. 研究趋势总结
 4. 现有研究的不足和未来方向`,
     builtin: true,
+    featureId: "literature-review",
   },
   {
     id: "translate-title",
@@ -154,6 +169,7 @@ const BUILTIN_TEMPLATES: PromptTemplate[] = [
 
 {{title}}`,
     builtin: true,
+    featureId: "translate-title",
   },
   {
     id: "auto-tag",
@@ -167,6 +183,7 @@ const BUILTIN_TEMPLATES: PromptTemplate[] = [
 **摘要**: {{abstract}}
 **关键词**: {{keywords}}`,
     builtin: true,
+    featureId: "auto-tag",
   },
 ];
 
@@ -176,6 +193,7 @@ const BUILTIN_TEMPLATES: PromptTemplate[] = [
 
 const CUSTOM_PROMPTS_PREF = `extensions.zotero.${config.addonRef}.ai.customPrompts`;
 const BUILTIN_OVERRIDES_PREF = `extensions.zotero.${config.addonRef}.ai.builtinPromptOverrides`;
+const ACTIVE_PROMPTS_PREF = `extensions.zotero.${config.addonRef}.ai.activePrompts`;
 
 type BuiltinPromptOverride = Partial<
   Pick<PromptTemplate, "systemPrompt" | "userPrompt">
@@ -183,6 +201,22 @@ type BuiltinPromptOverride = Partial<
 
 let customTemplates: PromptTemplate[] | null = null;
 let builtinOverrides: Record<string, BuiltinPromptOverride> | null = null;
+let activeTemplateIds: Record<string, string> | null = null;
+
+const BUILTIN_FEATURE_IDS = new Set(
+  BUILTIN_TEMPLATES.map((template) => template.id),
+);
+
+// Hide these features from prompt management while retaining saved templates.
+const HIDDEN_FEATURE_IDS = new Set(["method-analysis", "multi-round"]);
+
+function isKnownFeatureId(id: string): boolean {
+  return BUILTIN_FEATURE_IDS.has(id);
+}
+
+function normalizeFeatureId(value: unknown): string {
+  return typeof value === "string" && isKnownFeatureId(value) ? value : "";
+}
 
 function readBuiltinOverrides(): Record<string, BuiltinPromptOverride> {
   if (builtinOverrides) return builtinOverrides;
@@ -214,6 +248,7 @@ function readCustomTemplates(): PromptTemplate[] {
       ? parsed.filter(isStoredCustomTemplate).map((template) => ({
           ...template,
           builtin: false,
+          featureId: normalizeFeatureId(template.featureId),
         }))
       : [];
   } catch {
@@ -241,8 +276,102 @@ function persistCustomTemplates(): void {
   );
 }
 
+function readActiveTemplateIds(): Record<string, string> {
+  if (activeTemplateIds) return activeTemplateIds;
+  try {
+    const stored = (Zotero.Prefs as any).get(ACTIVE_PROMPTS_PREF, true);
+    const parsed = JSON.parse(typeof stored === "string" ? stored : "{}");
+    activeTemplateIds = parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    activeTemplateIds = {};
+  }
+  return activeTemplateIds ?? {};
+}
+
+function persistActiveTemplateIds(): void {
+  (Zotero.Prefs as any).set(
+    ACTIVE_PROMPTS_PREF,
+    JSON.stringify(readActiveTemplateIds()),
+    true,
+  );
+}
+
 export function getBuiltinTemplateName(id: string): string | undefined {
   return BUILTIN_TEMPLATES.find((template) => template.id === id)?.name;
+}
+
+export function getPromptFeatures(): PromptFeature[] {
+  const features: PromptFeature[] = BUILTIN_TEMPLATES.filter(
+    (template) => !HIDDEN_FEATURE_IDS.has(template.id),
+  ).map((template) => ({
+    id: template.id,
+    name: template.name,
+    description: template.description,
+  }));
+  if (
+    readCustomTemplates().some(
+      (template) => !isKnownFeatureId(template.featureId),
+    )
+  ) {
+    features.push({
+      id: UNGROUPED_FEATURE_ID,
+      name: "未分组",
+      description: "尚未归入具体功能的模板",
+    });
+  }
+  return features;
+}
+
+export function getTemplatesForFeature(featureId: string): PromptTemplate[] {
+  if (featureId === UNGROUPED_FEATURE_ID) {
+    return getCustomTemplates().filter(
+      (template) => !isKnownFeatureId(template.featureId),
+    );
+  }
+  return getAllTemplates().filter(
+    (template) => template.featureId === featureId,
+  );
+}
+
+export function getActiveTemplateId(featureId: string): string {
+  if (!isKnownFeatureId(featureId)) {
+    return getTemplatesForFeature(featureId)[0]?.id ?? "";
+  }
+  const stored = readActiveTemplateIds()[featureId];
+  const templates = getTemplatesForFeature(featureId);
+  if (stored && templates.some((template) => template.id === stored)) {
+    return stored;
+  }
+  return featureId;
+}
+
+export function getActiveTemplate(
+  featureId: string,
+): PromptTemplate | undefined {
+  const activeId = getActiveTemplateId(featureId);
+  return (
+    getTemplatesForFeature(featureId).find(
+      (template) => template.id === activeId,
+    ) ?? getTemplate(featureId)
+  );
+}
+
+export function setActiveTemplate(
+  featureId: string,
+  templateId: string,
+): boolean {
+  if (!isKnownFeatureId(featureId)) return false;
+  const template = getTemplatesForFeature(featureId).find(
+    (item) => item.id === templateId,
+  );
+  if (!template) return false;
+  if (templateId === featureId) {
+    delete readActiveTemplateIds()[featureId];
+  } else {
+    readActiveTemplateIds()[featureId] = templateId;
+  }
+  persistActiveTemplateIds();
+  return true;
 }
 
 export function getAllTemplates(): PromptTemplate[] {
@@ -297,9 +426,15 @@ export function resetBuiltinTemplate(id: string): boolean {
 }
 
 export function addCustomTemplate(
-  template: Omit<PromptTemplate, "builtin">,
+  template: Omit<PromptTemplate, "builtin" | "featureId"> & {
+    featureId?: string;
+  },
 ): void {
-  readCustomTemplates().push({ ...template, builtin: false });
+  readCustomTemplates().push({
+    ...template,
+    builtin: false,
+    featureId: normalizeFeatureId(template.featureId),
+  });
   persistCustomTemplates();
 }
 
@@ -310,7 +445,13 @@ export function updateCustomTemplate(
   const templates = readCustomTemplates();
   const idx = templates.findIndex((t) => t.id === id);
   if (idx === -1) return false;
-  templates[idx] = { ...templates[idx], ...updates };
+  templates[idx] = {
+    ...templates[idx],
+    ...updates,
+    featureId: normalizeFeatureId(
+      updates.featureId ?? templates[idx].featureId,
+    ),
+  };
   persistCustomTemplates();
   return true;
 }
@@ -319,13 +460,26 @@ export function deleteCustomTemplate(id: string): boolean {
   const templates = readCustomTemplates();
   const idx = templates.findIndex((t) => t.id === id);
   if (idx === -1) return false;
-  templates.splice(idx, 1);
+  const [removed] = templates.splice(idx, 1);
   persistCustomTemplates();
+  if (removed?.featureId) {
+    const active = readActiveTemplateIds();
+    if (active[removed.featureId] === id) {
+      delete active[removed.featureId];
+      persistActiveTemplateIds();
+    }
+  }
   return true;
 }
 
 export function loadCustomTemplates(templates: PromptTemplate[]): void {
-  customTemplates = templates.filter((t) => !t.builtin);
+  customTemplates = templates
+    .filter((t) => !t.builtin)
+    .map((template) => ({
+      ...template,
+      builtin: false,
+      featureId: normalizeFeatureId(template.featureId),
+    }));
   persistCustomTemplates();
 }
 

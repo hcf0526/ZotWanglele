@@ -117,15 +117,43 @@
 
 .zwl-prompts-workspace {
   display: grid;
-  grid-template-columns: minmax(210px, 30%) minmax(0, 1fr);
+  grid-template-columns: minmax(168px, 22%) minmax(188px, 24%) minmax(0, 1fr);
   height: calc(100% - 50px);
   margin-top: 8px;
   border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
 }
 
+.zwl-prompt-pane {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.zwl-prompt-pane-label {
+  margin: 0;
+  padding: 10px 0 8px;
+  color: color-mix(in srgb, currentColor 62%, transparent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.zwl-prompt-features,
 .zwl-prompt-list {
+  min-height: 0;
+  flex: 1;
   overflow-y: auto;
-  padding: 10px 12px 10px 0;
+  padding: 4px 12px 10px 0;
+}
+
+.zwl-prompt-features-pane,
+.zwl-prompt-templates-pane {
+  padding-right: 10px;
+  border-right: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.zwl-prompt-templates-pane {
+  padding-left: 18px;
 }
 
 .zwl-prompt-row {
@@ -198,6 +226,10 @@
   width: 100%;
 }
 
+.zwl-prompt-value-slot {
+  min-width: 0;
+}
+
 .zwl-prompt-static-value {
   display: flex;
   align-items: center;
@@ -206,6 +238,22 @@
   padding: 4px 0;
   overflow-wrap: anywhere;
   color: inherit;
+}
+
+.zwl-prompt-text-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 29px;
+  padding: 4px 9px;
+  border: 1px solid #d2c1a9;
+  border-radius: 6px;
+  color: var(--zwl-ink, inherit);
+  background: #fffdf8;
+  font: inherit;
+}
+
+.zwl-is-hidden {
+  display: none !important;
 }
 
 .zwl-prompt-name-view {
@@ -259,8 +307,15 @@
     overflow-y: auto;
   }
 
+  .zwl-prompt-features,
   .zwl-prompt-list {
     max-height: 180px;
+  }
+
+  .zwl-prompt-features-pane,
+  .zwl-prompt-templates-pane {
+    padding-right: 0;
+    border-right: 0;
   }
 
   .zwl-prompt-editor {
@@ -1830,11 +1885,12 @@
 }
 
 .zwl-prompts-workspace {
-  grid-template-columns: minmax(228px, 31%) minmax(0, 1fr);
+  grid-template-columns: minmax(176px, 22%) minmax(196px, 24%) minmax(0, 1fr);
   height: calc(100% - 57px);
   margin-top: 14px;
 }
 
+.zwl-prompt-features,
 .zwl-prompt-list {
   padding: 4px 16px 10px 0;
 }
@@ -2543,7 +2599,7 @@
 }
 
 #zotwanglele-dashboard-prompts-list {
-  padding: 24px 26px;
+  padding: 28px 30px;
   background: var(--zwl-paper);
 }
 
@@ -2578,13 +2634,31 @@
 }
 
 .zwl-prompts-workspace {
-  grid-template-columns: minmax(228px, 31%) minmax(0, 1fr);
+  grid-template-columns: minmax(176px, 22%) minmax(196px, 24%) minmax(0, 1fr);
   height: calc(100% - 58px);
   margin-top: 15px;
 }
 
+.zwl-prompt-pane-label {
+  color: #8a7460;
+  font-family: var(--zwl-serif);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.zwl-prompt-features-pane,
+.zwl-prompt-templates-pane {
+  border-right-color: var(--zwl-rule-soft);
+}
+
+.zwl-prompt-templates-pane {
+  padding-left: 20px;
+  padding-right: 14px;
+}
+
+.zwl-prompt-features,
 .zwl-prompt-list {
-  padding: 4px 17px 10px 0;
+  padding: 4px 8px 10px 0;
 }
 
 .zwl-prompt-row {
@@ -2617,6 +2691,10 @@
   font-weight: 700;
 }
 
+.zwl-prompt-row span.is-active {
+  color: var(--zwl-moss);
+}
+
 .zwl-prompt-editor {
   gap: 14px;
   padding: 16px 0 0 23px;
@@ -2641,6 +2719,14 @@
   font-weight: 800;
 }
 
+.zwl-prompt-text-input {
+  border-color: #d2c1a9;
+  color: var(--zwl-ink);
+  background: #fffdf8;
+  font-family: var(--zwl-serif);
+  box-shadow: inset 0 1px 2px rgba(73, 53, 29, 0.055);
+}
+
 .zwl-field-stack textarea {
   padding: 10px 11px;
   border-color: #d2c1a9;
@@ -2650,15 +2736,23 @@
   box-shadow: inset 0 1px 2px rgba(73, 53, 29, 0.055);
 }
 
-.zwl-field-stack textarea:focus {
+.zwl-field-stack textarea:focus,
+.zwl-prompt-text-input:focus {
   border-color: #c87968;
   outline-color: #f1d4ca;
 }
 
-#zwl-prompt-reset {
+#zwl-prompt-reset,
+#zwl-prompt-use {
   border-color: #cbb99f;
   color: #735f4d;
   background: #fffaf2;
+}
+
+#zwl-prompt-use:hover {
+  border-color: #c87968;
+  color: var(--zwl-red-deep);
+  background: #f9e9e2;
 }
 
 #zwl-prompt-delete {
@@ -2934,12 +3028,21 @@
   }
 
   .zwl-prompts-workspace {
+    grid-template-columns: 1fr;
     height: calc(100% - 58px);
+  }
+
+  .zwl-prompt-features-pane,
+  .zwl-prompt-templates-pane {
+    max-height: 190px;
+    padding-left: 0;
+    padding-right: 0;
+    border-right: 0;
   }
 
   .zwl-prompt-editor {
     padding: 17px 0 0;
-    border-top-color: var(--zwl-rule-soft);
+    border-top: 1px solid var(--zwl-rule-soft);
   }
 }
 
@@ -2979,9 +3082,19 @@
 .zwl-prompts-workspace {
   min-height: 0;
   flex: 1;
+  grid-template-columns: minmax(176px, 22%) minmax(196px, 24%) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
 }
 
+.zwl-prompt-pane {
+  min-height: 0;
+}
+
+.zwl-prompt-templates-pane {
+  padding-left: 20px;
+}
+
+.zwl-prompt-features,
 .zwl-prompt-list {
   min-height: 0;
   overflow-y: auto;
@@ -2992,7 +3105,9 @@
    scrollbar from the textarea scrollbar beside it. */
 .zwl-prompt-editor {
   min-height: 0;
+  padding-left: 18px;
   padding-right: 20px;
+  border-left: 0;
   overflow-y: auto;
 }
 
@@ -3002,6 +3117,11 @@
 
 .zwl-prompt-editor > .zwl-field-grow {
   flex: none;
+}
+
+/* Keep button borders and shadows inside the editor's scrollable area. */
+.zwl-prompt-editor > .zwl-editor-actions {
+  padding-bottom: 12px;
 }
 
 .zwl-field-grow textarea {
@@ -3059,4 +3179,24 @@
   border-color: var(--zwl-red-deep);
   color: #ffffff;
   background: var(--zwl-red-deep);
+}
+
+@media (max-width: 760px) {
+  .zwl-prompts-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .zwl-prompt-features-pane,
+  .zwl-prompt-templates-pane {
+    max-height: 190px;
+    padding-left: 0;
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .zwl-prompt-editor {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--zwl-rule-soft);
+  }
 }

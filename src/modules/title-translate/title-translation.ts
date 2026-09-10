@@ -1,6 +1,6 @@
 import { config } from "../../../package.json";
 import { AiClient } from "../ai/ai-client";
-import { getTemplate, renderPrompt } from "../ai/prompts";
+import { getActiveTemplate, renderPrompt } from "../ai/prompts";
 import { ApiProfile, getActiveProfile } from "../ai/profiles";
 import {
   addTask,
@@ -59,7 +59,7 @@ export async function translateItemTitle(
   const profileError = validateProfile(profile);
   if (profileError) return { ok: false, message: profileError };
 
-  const template = getTemplate("translate-title");
+  const template = getActiveTemplate("translate-title");
   if (!template) return { ok: false, message: "标题翻译模板缺失" };
   const client = createClient(profile!);
   let response;

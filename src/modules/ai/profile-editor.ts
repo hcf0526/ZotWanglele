@@ -1,221 +1,216 @@
 import { config } from "../../../package.json";
-import { ApiProfile, ApiProfileDraft } from "./profiles";
-import { getPreset, ApiFormat } from "./presets";
+import {
+  ApiProfile,
+  SupplierDraft,
+  SupplierKey,
+  getSupplierDraft,
+} from "./profiles";
+import { ApiFormat } from "./presets";
 import { AiClient } from "./ai-client";
 
-/**
- * 编辑器结果对象，通过 window.arguments 在父子窗口之间传递。
- */
 export interface ProfileEditorResult {
   saved: boolean;
-  draft: ApiProfileDraft | null;
+  draft: SupplierDraft | null;
 }
 
-/**
- * 编辑器输入参数。
- */
-export interface ProfileEditorInput {
-  /** 要编辑的 profile，新建时为 null */
-  profile: ApiProfile | null;
-}
-
-/**
- * 打开编辑器弹窗（模态）。返回保存的 draft 或 null（取消）。
- */
 export function openProfileEditor(
   parentWin: Window,
   profile: ApiProfile | null,
-): ApiProfileDraft | null {
-  const ref = config.addonRef;
-  const url = `chrome://${ref}/content/profile-editor.xhtml`;
-
-  const input: ProfileEditorInput = { profile };
+): SupplierDraft | null {
   const result: ProfileEditorResult = { saved: false, draft: null };
-
   (parentWin as any).openDialog(
-    url,
+    `chrome://${config.addonRef}/content/profile-editor.xhtml`,
     "zotwanglele-profile-editor",
     "chrome,centerscreen,modal,resizable=yes",
-    input,
+    { profile },
     result,
   );
-
   return result.saved ? result.draft : null;
 }
 
-/**
- * 编辑器窗口加载时调用（由 hooks.ts 转发）。
- */
 export function onProfileEditorLoad(win: Window) {
   const doc = win.document;
   const args = (win as any).arguments;
-  const input: ProfileEditorInput = args?.[0] ?? { profile: null };
+  const initial: SupplierDraft = args?.[0]?.profile
+    ? getSupplierDraft(args[0].profile)
+    : { supplier: "", keys: [], temperature: 70, maxTokens: 4096 };
   const result: ProfileEditorResult = args?.[1] ?? {
     saved: false,
     draft: null,
   };
-
-  const initial: ApiProfileDraft = input.profile ?? {
-    name: "",
-    provider: "custom",
-    baseUrl: "",
-    apiKey: "",
-    model: "",
-    format: "chat-completions",
-    temperature: 70,
-    maxTokens: 4096,
+  const input = (id: string) =>
+    doc.getElementById(`zwl-editor-${id}`) as HTMLInputElement;
+  input("supplier").value = initial.supplier;
+  input("temperature").value = String(initial.temperature);
+  input("maxTokens").value = String(initial.maxTokens);
+  const refreshTemperature = () => {
+    doc.getElementById("zwl-editor-temperature-value")!.textContent = (
+      Number(input("temperature").value) / 100
+    ).toFixed(2);
   };
-
-  // 填充字段
-  setVal(doc, "name", initial.name);
-  setVal(doc, "preset", initial.provider || "custom");
-  setVal(doc, "format", initial.format);
-  setVal(doc, "baseUrl", initial.baseUrl);
-  setVal(doc, "apiKey", initial.apiKey);
-  setVal(doc, "model", initial.model);
-  setVal(doc, "temperature", String(initial.temperature));
-  setVal(doc, "maxTokens", String(initial.maxTokens));
-  refreshTemperatureLabel(doc);
-
-  // Temperature 滑块联动（input 事件在 HTML range 上可靠）
-  const slider = doc.querySelector(
-    "#zwl-editor-temperature",
-  ) as HTMLInputElement | null;
-  slider?.addEventListener("input", () => refreshTemperatureLabel(doc));
-
-  // 把 handler 暴露到 window 上，供 XHTML 中 inline oncommand 调用。
-  // 这是 XUL 最可靠的事件接线方式（dashboard 的 close 也是这样做）。
-  const w = win as any;
-
-  w.zwlEditorPresetChange = (presetKey?: string) => {
-    // 优先用 menuitem 直接传过来的值，避免读 menulist.value 时尚未同步
-    const value =
-      presetKey ?? (doc.querySelector("#zwl-editor-preset") as any)?.value;
-    ztoolkit.log("[ProfileEditor] preset change:", value);
-    if (!value || value === "custom") return;
-    const preset = getPreset(value);
-    if (!preset) return;
-    setVal(doc, "baseUrl", preset.baseUrl);
-    setVal(doc, "model", preset.defaultModel);
-    setVal(doc, "format", preset.defaultFormat);
-  };
-
-  w.zwlEditorTest = async () => {
-    const statusEl = doc.querySelector(
-      "#zwl-editor-test-status",
-    ) as HTMLElement | null;
-    const setStatus = (text: string, color?: string) => {
-      if (!statusEl) return;
-      statusEl.textContent = text;
-      statusEl.style.color = color ?? "";
+  refreshTemperature();
+  input("temperature").addEventListener("input", refreshTemperature);
+  const root = doc.getElementById("zwl-editor-keys")!;
+  const status = doc.getElementById("zwl-editor-test-status")!;
+  let closed = false;
+  win.addEventListener(
+    "unload",
+    () => {
+      closed = true;
+    },
+    { once: true },
+  );
+  const create = <K extends keyof HTMLElementTagNameMap>(tag: K) =>
+    doc.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      tag,
+    ) as HTMLElementTagNameMap[K];
+  const rows: Array<{ element: HTMLElement; read: () => SupplierKey }> = [];
+  const addKey = (
+    key: SupplierKey = {
+      apiKey: "",
+      baseUrl: "",
+      format: "chat-completions",
+      models: [],
+    },
+  ) => {
+    const card = create("section");
+    card.className = "zwl-key-card";
+    const header = create("div");
+    header.className = "zwl-key-header";
+    const title = create("strong");
+    title.textContent = "API Key";
+    const remove = create("button");
+    remove.type = "button";
+    remove.textContent = "移除";
+    header.append(title, remove);
+    card.append(header);
+    const field = (labelText: string, element: HTMLElement) => {
+      const label = create("label");
+      label.className = "zwl-key-field";
+      const text = create("span");
+      text.textContent = labelText;
+      label.append(text, element);
+      card.append(label);
     };
-
-    const draft = readDraft(doc);
-    if (!draft.baseUrl || !draft.apiKey || !draft.model) {
-      setStatus("❌ 请先填写 Base URL / API Key / 模型名称", "#d83b01");
-      return;
+    const url = create("input");
+    url.type = "url";
+    url.value = key.baseUrl;
+    url.placeholder = "https://api.example.com/v1";
+    field("Base URL", url);
+    const secret = create("input");
+    secret.type = "password";
+    secret.value = key.apiKey;
+    secret.autocomplete = "off";
+    field("API Key", secret);
+    const format = create("select");
+    for (const [value, label] of [
+      ["chat-completions", "Chat Completions"],
+      ["responses", "Responses"],
+    ]) {
+      const option = create("option");
+      option.value = value;
+      option.textContent = label;
+      format.append(option);
     }
-
-    const startTime = Date.now();
-    setStatus("⏳ 正在测试连接… (0.0s)", "");
-    const tickTimer = setInterval(() => {
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      setStatus(`⏳ 正在测试连接… (${elapsed}s)`, "");
-    }, 100);
-
-    const client = new AiClient({
-      baseUrl: draft.baseUrl,
-      apiKey: draft.apiKey,
-      model: draft.model,
-      format: draft.format as ApiFormat,
-      maxRetries: 0,
+    format.value = key.format;
+    field("API 格式", format);
+    const models = create("textarea");
+    models.rows = 3;
+    models.value = key.models.join("\n");
+    models.placeholder = "每行一个模型名称，可获取列表或手动填写";
+    field("可用模型", models);
+    const actions = create("div");
+    actions.className = "zwl-key-header";
+    const fetchButton = create("button");
+    fetchButton.type = "button";
+    fetchButton.textContent = "获取模型";
+    const feedback = create("span");
+    feedback.setAttribute("aria-live", "polite");
+    actions.append(fetchButton, feedback);
+    card.append(actions);
+    const row = {
+      element: card,
+      read: (): SupplierKey => ({
+        baseUrl: url.value.trim(),
+        apiKey: secret.value.trim(),
+        format: format.value as ApiFormat,
+        models: [
+          ...new Set(
+            models.value
+              .split(/\r?\n/)
+              .map((s) => s.trim())
+              .filter(Boolean),
+          ),
+        ],
+      }),
+    };
+    remove.addEventListener("click", () => {
+      rows.splice(rows.indexOf(row), 1);
+      card.remove();
     });
-
-    try {
-      const r = await client.testConnection();
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      setStatus(
-        r.ok
-          ? `✅ 成功 (${elapsed}s)：${r.message}`
-          : `❌ 失败 (${elapsed}s)：${r.message}`,
-        r.ok ? "#107c10" : "#d83b01",
-      );
-    } catch (err: any) {
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      setStatus(
-        `❌ 异常 (${elapsed}s)：${err?.message ?? String(err)}`,
-        "#d83b01",
-      );
-    } finally {
-      clearInterval(tickTimer);
-    }
+    fetchButton.addEventListener("click", async () => {
+      const value = row.read();
+      if (!/^https?:\/\//i.test(value.baseUrl) || !value.apiKey) {
+        feedback.textContent = "请填写有效的 Base URL 和 API Key";
+        return;
+      }
+      const snapshot = JSON.stringify(value);
+      fetchButton.disabled = true;
+      feedback.textContent = "正在获取模型…";
+      try {
+        const fetched = await new AiClient({
+          ...value,
+          model: "",
+          maxRetries: 0,
+        }).listModels();
+        if (closed || !card.isConnected) return;
+        if (JSON.stringify(row.read()) !== snapshot) {
+          feedback.textContent = "内容已修改，请重新获取模型";
+          return;
+        }
+        if (fetched.length) models.value = fetched.join("\n");
+        feedback.textContent = fetched.length
+          ? `已获取 ${fetched.length} 个模型`
+          : "返回列表为空，已保留现有模型";
+      } catch {
+        if (!closed && card.isConnected)
+          feedback.textContent =
+            "获取失败，请检查地址、Key 与网络；现有模型已保留";
+      } finally {
+        if (!closed && card.isConnected) fetchButton.disabled = false;
+      }
+    });
+    rows.push(row);
+    root.append(card);
   };
-
-  w.zwlEditorSave = () => {
-    const draft = readDraft(doc);
-    if (!draft.name) {
-      showToast("❌ 请填写配置档名称", "fail", 3000);
+  for (const key of initial.keys.length ? initial.keys : [undefined])
+    addKey(key);
+  doc
+    .getElementById("zwl-editor-add-key")!
+    .addEventListener("click", () => addKey());
+  (win as any).zwlEditorSave = () => {
+    const supplier = input("supplier").value.trim();
+    if (!supplier) {
+      status.textContent = "请填写供应商";
+      input("supplier").focus();
       return;
     }
-    if (!draft.baseUrl) {
-      showToast("❌ 请填写 Base URL", "fail", 3000);
-      return;
-    }
-    if (!draft.model) {
-      showToast("❌ 请填写模型名称", "fail", 3000);
+    const keys = rows.map((row) => row.read());
+    if (
+      !keys.length ||
+      keys.some((key) => !key.apiKey || !/^https?:\/\//i.test(key.baseUrl))
+    ) {
+      status.textContent = "请为每个 Key 填写有效的 Base URL 和 API Key";
       return;
     }
     result.saved = true;
-    result.draft = draft;
+    result.draft = {
+      supplier,
+      keys,
+      temperature: Number(input("temperature").value),
+      maxTokens: Number(input("maxTokens").value) || 4096,
+    };
     win.close();
   };
-  // 取消按钮直接 oncommand="window.close()"，无需暴露 handler
-}
-
-// ============================================================
-// Helpers
-// ============================================================
-
-function setVal(doc: Document, idSuffix: string, value: string) {
-  const el = doc.querySelector(`#zwl-editor-${idSuffix}`) as any;
-  if (el) el.value = value;
-}
-
-function getVal(doc: Document, idSuffix: string): string {
-  const el = doc.querySelector(`#zwl-editor-${idSuffix}`) as any;
-  return el?.value ?? "";
-}
-
-function readDraft(doc: Document): ApiProfileDraft {
-  return {
-    name: getVal(doc, "name").trim(),
-    provider: getVal(doc, "preset") || "custom",
-    baseUrl: getVal(doc, "baseUrl").trim(),
-    apiKey: getVal(doc, "apiKey").trim(),
-    model: getVal(doc, "model").trim(),
-    format: (getVal(doc, "format") || "chat-completions") as ApiFormat,
-    temperature: parseInt(getVal(doc, "temperature") || "70", 10),
-    maxTokens: parseInt(getVal(doc, "maxTokens") || "4096", 10),
-  };
-}
-
-function refreshTemperatureLabel(doc: Document) {
-  const slider = doc.querySelector(
-    "#zwl-editor-temperature",
-  ) as HTMLInputElement | null;
-  const label = doc.querySelector("#zwl-editor-temperature-value");
-  if (slider && label) {
-    label.textContent = (parseInt(slider.value || "70") / 100).toFixed(2);
-  }
-}
-
-function showToast(
-  text: string,
-  type: "default" | "success" | "fail",
-  ms: number,
-) {
-  new ztoolkit.ProgressWindow("ZotWanglele")
-    .createLine({ text, type, progress: 100 })
-    .show()
-    .startCloseTimer(ms);
 }

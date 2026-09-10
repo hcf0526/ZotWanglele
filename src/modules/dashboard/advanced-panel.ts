@@ -16,6 +16,7 @@ import {
   saveTranslateConfig,
 } from "../translate/config";
 import { checkEnv } from "../translate/uv-manager";
+import { getSupplierName } from "../ai/profiles";
 
 /**
  * 在仪表盘窗口里挂载高级设置面板。返回卸载函数。
@@ -108,7 +109,7 @@ function loadIntoForm(doc: Document) {
     for (const profile of getChatProfilesForTranslation()) {
       const option = doc.createElement("option");
       option.value = profile.id;
-      option.textContent = `${profile.name} · ${profile.model || "未设置模型"}`;
+      option.textContent = `${getSupplierName(profile) || "未填写供应商"}/${profile.model}`;
       option.selected = profile.id === cfg.aiProfileId;
       select.append(option);
     }

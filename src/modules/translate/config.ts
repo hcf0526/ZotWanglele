@@ -3,7 +3,13 @@
  */
 
 import { config as pkg } from "../../../package.json";
-import { ApiProfile, getActiveProfile } from "../ai/profiles";
+import {
+  ApiProfile,
+  getActiveProfile,
+  getProfile,
+  getSupplierName,
+  listModelProfiles,
+} from "../ai/profiles";
 
 const PREF_PREFIX = `extensions.zotero.${pkg.addonRef}.`;
 
@@ -52,13 +58,9 @@ function setPref(key: string, value: string | number | boolean): void {
 
 function getChatProfiles(): ApiProfile[] {
   try {
-    const raw = (Zotero.Prefs as any).get(`${PREF_PREFIX}ai.profiles`, true);
-    const profiles = JSON.parse(typeof raw === "string" ? raw : "[]");
-    return Array.isArray(profiles)
-      ? profiles.filter(
-          (profile: ApiProfile) => profile?.format === "chat-completions",
-        )
-      : [];
+    return listModelProfiles("chat-completions").filter(
+      (profile) => profile.model && profile.apiKey,
+    );
   } catch {
     return [];
   }
@@ -71,7 +73,11 @@ export function getChatProfilesForTranslation(): ApiProfile[] {
 export function getActiveChatProfile(): ApiProfile | null {
   const active = getActiveProfile();
   return active?.format === "chat-completions"
-    ? active
+    ? (getChatProfiles().find(
+        (p) =>
+          getSupplierName(p) === getSupplierName(active) &&
+          p.model === active.model,
+      ) ?? null)
     : (getChatProfiles()[0] ?? null);
 }
 export function loadTranslateConfig(): TranslateConfig {
@@ -82,8 +88,15 @@ export function loadTranslateConfig(): TranslateConfig {
     .filter((s): s is OutputKind => s === "mono" || s === "dual");
 
   const storedProfileId = getPref<string>("translate.aiProfileId", "");
+  const storedProfile = getProfile(storedProfileId);
   const selectedProfile =
     getChatProfiles().find((profile) => profile.id === storedProfileId) ??
+    (storedProfile &&
+      getChatProfiles().find(
+        (profile) =>
+          getSupplierName(profile) === getSupplierName(storedProfile) &&
+          profile.model === storedProfile.model,
+      )) ??
     getActiveChatProfile();
   const legacyThreads = Number(getPref<number>("translate.threads", 4)) || 4;
   const qps = Number(getPref<number>("translate.qps", 4)) || 4;

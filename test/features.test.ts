@@ -13,11 +13,16 @@ import {
 import {
   addCustomTemplate,
   deleteCustomTemplate,
+  getActiveTemplate,
+  getActiveTemplateId,
   getBuiltinTemplateName,
   getCustomTemplates,
+  getPromptFeatures,
   getTemplate,
+  getTemplatesForFeature,
   loadCustomTemplates,
   PromptTemplate,
+  setActiveTemplate,
   updateBuiltinTemplate,
   updateCustomTemplate,
 } from "../src/modules/ai/prompts";
@@ -384,6 +389,7 @@ describe("feature helpers", function () {
       id,
       name: "测试模板",
       description: "测试持久化",
+      featureId: "paper-reading",
       systemPrompt: "系统内容",
       userPrompt: "用户内容 {{title}}",
     });
@@ -395,5 +401,36 @@ describe("feature helpers", function () {
     );
     assert.isTrue(deleteCustomTemplate(id));
     assert.isFalse(getCustomTemplates().some((item) => item.id === id));
+  });
+
+  it("groups templates by feature and remembers the active template", function () {
+    const id = `test-active-${Date.now()}`;
+    const originalActive = getActiveTemplateId("paper-reading");
+    addCustomTemplate({
+      id,
+      name: "精读变体",
+      description: "测试当前模板",
+      featureId: "paper-reading",
+      systemPrompt: "变体系统提示词",
+      userPrompt: "变体用户提示词 {{title}}",
+    });
+    try {
+      assert.isTrue(
+        getPromptFeatures().some((feature) => feature.id === "paper-reading"),
+      );
+      assert.isTrue(
+        getTemplatesForFeature("paper-reading").some((item) => item.id === id),
+      );
+      assert.equal(getActiveTemplateId("paper-reading"), "paper-reading");
+      assert.isTrue(setActiveTemplate("paper-reading", id));
+      assert.equal(getActiveTemplateId("paper-reading"), id);
+      assert.equal(
+        getActiveTemplate("paper-reading")?.systemPrompt,
+        "变体系统提示词",
+      );
+    } finally {
+      deleteCustomTemplate(id);
+      setActiveTemplate("paper-reading", originalActive);
+    }
   });
 });
