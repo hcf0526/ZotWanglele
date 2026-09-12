@@ -22,6 +22,12 @@ import {
   unregisterTitleTranslationColumn,
 } from "./modules/title-translate/title-translation";
 import { createZToolkit } from "./utils/ztoolkit";
+import { unmountProfileManagers } from "./modules/ai/profile-manager";
+import {
+  registerSelectionTranslation,
+  unregisterSelectionTranslation,
+  disposeSelectionWindow,
+} from "./modules/selection-translate/reader";
 
 async function onStartup() {
   await Promise.all([
@@ -31,6 +37,7 @@ async function onStartup() {
   ]);
 
   initLocale();
+  registerSelectionTranslation();
 
   try {
     await registerTitleTranslationColumn();
@@ -102,10 +109,13 @@ async function onMainWindowLoad(win: _ZoteroTypes.MainWindow): Promise<void> {
 }
 
 async function onMainWindowUnload(_win: Window): Promise<void> {
+  disposeSelectionWindow(_win);
   ztoolkit.unregisterAll();
 }
 
 function onShutdown(): void {
+  unmountProfileManagers();
+  unregisterSelectionTranslation();
   unregisterNotePreviewSection();
   unregisterTitleTranslationColumn();
   ztoolkit.unregisterAll();

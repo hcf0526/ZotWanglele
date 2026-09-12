@@ -5,6 +5,15 @@ const PREF_PREFIX = `extensions.zotero.${config.addonRef}.`;
 const PREF_PROFILES = "ai.profiles";
 const PREF_ACTIVE = "ai.activeProfileId";
 
+/** Observe persisted changes across the preferences window and dashboard. */
+export function subscribeProfiles(listener: () => void): () => void {
+  const observers = [PREF_PROFILES, PREF_ACTIVE].map((key) =>
+    Zotero.Prefs.registerObserver(PREF_PREFIX + key, listener, true),
+  );
+  return () =>
+    observers.forEach((observer) => Zotero.Prefs.unregisterObserver(observer));
+}
+
 export interface ApiProfile {
   id: string;
   name: string;

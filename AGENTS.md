@@ -19,7 +19,8 @@ AI 调用采用 OpenAI 兼容协议。PDF 翻译采用 PDFMathTranslate 系列�
 | AI 客户端 | 已实现 | Chat Completions、Responses、SSE 和重试           |
 | PDF 精读  | 基础版 | 索引文本、单轮生成、子笔记和串行批处理            |
 | PDF 翻译  | 基础版 | 子进程、服务端、逐篇任务记录和结果附件            |
-| 仪表盘    | 已实现 | 概览、任务记录、提示词管理与高级设置              |
+| 划词翻译  | 已实现 | 四类服务、选区浮层、阅读侧栏、取消与会话缓存      |
+| 仪表盘    | 已实现 | 概览、AI 配置、任务记录、提示词管理与两类翻译设置 |
 | 文献综述  | 基础版 | 多条目上下文、AI 生成与独立笔记                   |
 | 标题翻译  | 已实现 | 批量翻译、Extra 存储与 Zotero 自定义列            |
 | 管理工具  | 待开发 | `src/modules/tools/` 仅含 `.gitkeep`              |
@@ -27,6 +28,11 @@ AI 调用采用 OpenAI 兼容协议。PDF 翻译采用 PDFMathTranslate 系列�
 | 阅读侧栏  | 已实现 | Zotero 条目面板中的 AI 笔记预览、生成、刷新和打开 |
 
 ## 代码结构
+
+划词翻译位于 `src/modules/selection-translate/`，由 `src/hooks.ts` 注册原生选区事件
+和条目面板区块。该模块支持 AI、Google（实验性）、DeepL 与百度，按阅读器实例管理
+会话。设置使用 `selectionTranslate.*`，AI 提示词功能 ID 为 `selection-translate`。
+更改阅读器映射、请求取消或样式时，需检查浮层与侧栏同步及独立窗口行为。
 
 ```text
 src/index.ts                     插件入口与全局对象
@@ -68,7 +74,7 @@ test/                            启动测试、翻译流程测试与 PDF 样例
 | `src/modules/translate/`                  | PDF 翻译：配置读取、`uv` 环境探测、pdf2zh 子进程与服务端执行器。                                                                                                                                                                                                                          |
 | `src/modules/dashboard/dashboard.ts`      | 仪表盘单例窗口与页签切换。                                                                                                                                                                                                                                                                |
 | `src/modules/dashboard/queue-panel.ts`    | 任务记录页：卡片列表、进度与详情。                                                                                                                                                                                                                                                        |
-| `src/modules/dashboard/advanced-panel.ts` | 高级设置页：翻译环境、引擎、输出与语言。                                                                                                                                                                                                                                                  |
+| `src/modules/dashboard/advanced-panel.ts` | 文献翻译设置页：翻译环境、引擎、输出与语言。                                                                                                                                                                                                                                              |
 | `src/modules/dashboard/prompts-panel.ts`  | 提示词管理页：按功能列出内置能力，中间管理该功能的模板，右侧编辑提示词。                                                                                                                                                                                                                  |
 | `src/modules/dashboard/overview-panel.ts` | 工作概览页：配置、模板、任务统计与常用操作。                                                                                                                                                                                                                                              |
 | `src/modules/ui/confirm-dialog.ts`        | 统一操作确认窗口：删除供应商、删除自定义模板与恢复内置模板。                                                                                                                                                                                                                              |
@@ -78,7 +84,12 @@ test/                            启动测试、翻译流程测试与 PDF 样例
 | `addon/content/dashboard.css`             | 仪表盘纸感主题与任务卡片样式。                                                                                                                                                                                                                                                            |
 | `addon/content/profile-editor.css`        | 配置编辑器纸感表单、Key 卡片与操作区样式。                                                                                                                                                                                                                                                |
 | `addon/content/metadata-dialog.css`       | Crossref 候选、字段对比、处理结果与操作确认窗口的共享样式。                                                                                                                                                                                                                               |
-| `addon/content/progress-window.css`       | 插件进度提示的纸感样式，由 ztoolkit 初始化逻辑注入。                                                                                                                                                                                                                                      |
+| `addon/content/progress-window.css`       | 插件进度提示的衬线字体，保留 Zotero 默认背景、颜色和布局，由 ztoolkit 初始化逻辑注入。                                                                                                                                                                                                    |
+
+AI 配置由 `src/modules/ai/profile-manager.ts` 在插件设置页面与仪表盘共用，
+样式位于 `addon/content/ai-config.css`。供应商及当前模型变化通过偏好观察器同步，
+窗口卸载时清理观察器与事件。仪表盘页签顺序为概览、AI 配置、任务记录、提示词管理、
+文献翻译设置和划词翻译设置；划词翻译设置仅在仪表盘挂载，继续使用 `selectionTranslate.*`。
 
 ## 界面区域称呼
 

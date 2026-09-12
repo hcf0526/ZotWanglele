@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="chrome://global/skin/global.css"?> <?xml-stylesheet
 href="chrome://zotwanglele/content/paper-theme.css"?> <?xml-stylesheet
-href="chrome://zotwanglele/content/dashboard.css"?>
+href="chrome://zotwanglele/content/dashboard.css"?> <?xml-stylesheet
+href="chrome://zotwanglele/content/ai-config.css"?>
 <window
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
@@ -38,6 +39,10 @@ href="chrome://zotwanglele/content/dashboard.css"?>
           data-l10n-id="dashboard-tab-overview"
         />
         <tab
+          class="zwl-dashboard-tab zwl-dashboard-tab-ai"
+          data-l10n-id="dashboard-tab-ai"
+        />
+        <tab
           class="zwl-dashboard-tab zwl-dashboard-tab-queue"
           data-l10n-id="dashboard-tab-queue"
         />
@@ -48,6 +53,10 @@ href="chrome://zotwanglele/content/dashboard.css"?>
         <tab
           class="zwl-dashboard-tab zwl-dashboard-tab-advanced"
           data-l10n-id="dashboard-tab-advanced"
+        />
+        <tab
+          class="zwl-dashboard-tab zwl-dashboard-tab-selection"
+          data-l10n-id="dashboard-tab-selection"
         />
       </tabs>
       <tabpanels flex="1">
@@ -152,6 +161,18 @@ href="chrome://zotwanglele/content/dashboard.css"?>
           </html:div>
         </tabpanel>
 
+        <!-- AI 配置 -->
+        <tabpanel
+          id="zotwanglele-dashboard-ai"
+          class="zwl-dashboard-panel"
+          orient="vertical"
+          flex="1"
+        >
+          <html:div
+            id="zotwanglele-dashboard-ai-root"
+            class="zwl-dashboard-ai-root"
+          />
+        </tabpanel>
         <!-- 任务记录 -->
         <tabpanel
           id="zotwanglele-dashboard-queue"
@@ -313,6 +334,12 @@ href="chrome://zotwanglele/content/dashboard.css"?>
                     rows="10"
                     required="required"
                   ></html:textarea>
+                  <html:small
+                    id="zwl-prompt-selection-variables"
+                    hidden="hidden"
+                  >
+                    {{text}} · {{sourceLang}} · {{targetLang}}
+                  </html:small>
                 </html:div>
                 <html:div class="zwl-editor-actions">
                   <html:span
@@ -347,7 +374,7 @@ href="chrome://zotwanglele/content/dashboard.css"?>
           </html:div>
         </tabpanel>
 
-        <!-- 高级设置：翻译配置 -->
+        <!-- 文献翻译设置 -->
         <tabpanel
           id="zotwanglele-dashboard-advanced"
           class="zwl-dashboard-panel"
@@ -355,7 +382,10 @@ href="chrome://zotwanglele/content/dashboard.css"?>
           flex="1"
         >
           <html:div id="zotwanglele-adv-root" class="zwl-advanced-root">
-            <html:h3 class="zwl-advanced-heading">翻译设置</html:h3>
+            <html:h3
+              class="zwl-advanced-heading"
+              data-l10n-id="dashboard-document-settings-title"
+            />
 
             <!-- 执行环境与检测 -->
             <html:fieldset class="zwl-settings-section">
@@ -480,6 +510,17 @@ href="chrome://zotwanglele/content/dashboard.css"?>
               ></html:span>
             </html:div>
           </html:div>
+        </tabpanel>
+        <tabpanel
+          id="zotwanglele-dashboard-selection"
+          class="zwl-dashboard-panel"
+          orient="vertical"
+          flex="1"
+        >
+          <html:div
+            id="zotwanglele-dashboard-selection-root"
+            class="zwl-dashboard-selection-root"
+          />
         </tabpanel>
       </tabpanels>
     </tabbox>

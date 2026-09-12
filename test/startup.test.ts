@@ -114,7 +114,9 @@ describe("startup", function () {
 
     try {
       const saveButton = await waitFor(
-        () => editor.document.getElementById("zwl-editor-save"),
+        () =>
+          editor.document.readyState === "complete" &&
+          editor.document.getElementById("zwl-editor-save"),
         5_000,
       );
       assert.isNotNull(saveButton);
@@ -138,7 +140,9 @@ describe("startup", function () {
 
     try {
       const closeButton = await waitFor(
-        () => metadataWindow.document.querySelector(".zwl-dialog-button-brand"),
+        () =>
+          metadataWindow.document.readyState === "complete" &&
+          metadataWindow.document.querySelector(".zwl-dialog-button-brand"),
         5_000,
       );
       assert.isNotNull(closeButton);
@@ -167,6 +171,36 @@ describe("startup", function () {
       assert.isNotNull(doc.getElementById("zotwanglele-queue-root"));
       assert.isNotNull(doc.getElementById("zwl-prompt-form"));
       assert.isNotNull(doc.getElementById("zotwanglele-adv-root"));
+      assert.isNotNull(
+        doc.querySelector("#zotwanglele-dashboard-ai-root .zwl-ai-manager"),
+      );
+      assert.isNotNull(
+        doc.querySelector(
+          "#zotwanglele-dashboard-selection-root #zwl-selection-settings",
+        ),
+      );
+      assert.deepEqual(
+        Array.from(doc.querySelectorAll("tabpanels > tabpanel")).map(
+          (panel) => panel.id,
+        ),
+        [
+          "zotwanglele-dashboard-overview",
+          "zotwanglele-dashboard-ai",
+          "zotwanglele-dashboard-queue",
+          "zotwanglele-dashboard-prompts",
+          "zotwanglele-dashboard-advanced",
+          "zotwanglele-dashboard-selection",
+        ],
+      );
+      for (const [tab, index] of [
+        ["ai", 1],
+        ["queue", 2],
+        ["selection", 5],
+      ] as const) {
+        openDashboard(Zotero.getMainWindow(), tab);
+        assert.equal((doc.querySelector("tabbox") as any).selectedIndex, index);
+      }
+      openDashboard(Zotero.getMainWindow(), "prompts");
       assert.isNotNull(promptList);
       const features = doc.getElementById("zwl-prompt-features");
       assert.isNotNull(features);

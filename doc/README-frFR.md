@@ -8,17 +8,19 @@ TypeScript, zotero-plugin-scaffold et zotero-plugin-toolkit.
 
 - Profils multiples pour les services compatibles OpenAI.
 - Formats Chat Completions et Responses.
+- Configuration IA partagée entre le deuxième onglet du tableau de bord et les préférences de l'extension.
+- Traduction du texte sélectionné dans un PDF avec IA, Google (expérimental), DeepL ou Baidu ; affichage dans la fenêtre de sélection et le panneau latéral, annulation, copie et cache de session.
 - Lecture d'un PDF à partir de l'index plein texte de Zotero.
 - Résumé et analyse enregistrés comme notes enfants.
 - Traduction avec `pdf2zh` ou `pdf2zh_next`.
 - Exécution locale avec `uv` ou utilisation d'un serveur zotero-pdf2zh.
 - Service de traduction `google` de PDFMathTranslate par défaut, indépendant
   des profils d'IA.
-- Tableau des tâches de traduction et réglages avancés.
+- Tableau des tâches et réglages distincts pour la traduction des documents et du texte sélectionné.
 
 ## État du projet
 
-La version actuelle est `0.1.5`. Le panneau latéral de notes IA, la gestion des
+La version actuelle est `0.1.7`. Le panneau latéral de notes IA, la gestion des
 prompts intégrés et les modèles personnalisés sont disponibles. L'analyse
 multimodale, le dialogue et les cartes mentales restent planifiés.
 

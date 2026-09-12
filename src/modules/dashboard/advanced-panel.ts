@@ -16,7 +16,7 @@ import {
   saveTranslateConfig,
 } from "../translate/config";
 import { checkEnv } from "../translate/uv-manager";
-import { getSupplierName } from "../ai/profiles";
+import { getSupplierName, subscribeProfiles } from "../ai/profiles";
 
 /**
  * 在仪表盘窗口里挂载高级设置面板。返回卸载函数。
@@ -34,6 +34,11 @@ export function mountAdvancedPanel(win: Window): () => void {
 
   // 2) 接线
   const cleanup: Array<() => void> = [];
+  cleanup.push(
+    subscribeProfiles(() =>
+      refreshModelOptions(doc, getValue(doc, "zwl-service")),
+    ),
+  );
 
   cleanup.push(
     bindClick(doc, "zwl-env-check", async () => {
@@ -103,25 +108,33 @@ function loadIntoForm(doc: Document) {
   setValue(doc, "zwl-lang-out", cfg.langOut);
   setValue(doc, "zwl-lang-in", cfg.langIn);
   setValue(doc, "zwl-service", cfg.service);
+  refreshModelOptions(doc, cfg.aiProfileId);
+  setValue(doc, "zwl-qps", String(cfg.qps));
+  setValue(doc, "zwl-pool-size", String(cfg.poolSize));
+}
+
+function refreshModelOptions(doc: Document, selectedId: string) {
   const select = doc.getElementById("zwl-service") as HTMLSelectElement | null;
   if (select) {
+    const profiles = getChatProfilesForTranslation();
+    const current = profiles.some((profile) => profile.id === selectedId)
+      ? selectedId
+      : getActiveChatProfile()?.id;
     select.replaceChildren();
-    for (const profile of getChatProfilesForTranslation()) {
+    for (const profile of profiles) {
       const option = doc.createElement("option");
       option.value = profile.id;
       option.textContent = `${getSupplierName(profile) || "未填写供应商"}/${profile.model}`;
-      option.selected = profile.id === cfg.aiProfileId;
+      option.selected = profile.id === current;
       select.append(option);
     }
     if (select.options.length === 0) {
       const option = doc.createElement("option");
       option.value = "";
-      option.textContent = "暂无 Chat 配置";
+      option.textContent = "暂无可用模型";
       select.append(option);
     }
   }
-  setValue(doc, "zwl-qps", String(cfg.qps));
-  setValue(doc, "zwl-pool-size", String(cfg.poolSize));
 }
 
 function saveFromForm(doc: Document) {

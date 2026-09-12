@@ -1,5 +1,9 @@
 import { getAllTemplates, getCustomTemplates } from "../ai/prompts";
-import { getActiveProfile, getSupplierName } from "../ai/profiles";
+import {
+  getActiveProfile,
+  getSupplierName,
+  subscribeProfiles,
+} from "../ai/profiles";
 import { getTasks, subscribe } from "../translate/task-store";
 import { getTranslatedTitleFromExtra } from "../title-translate/title-translation";
 
@@ -58,11 +62,13 @@ export function mountOverviewPanel(win: Window): () => void {
 
   win.addEventListener("zotwanglele-prompts-changed", render);
   const unsubscribe = subscribe(render);
+  const unsubscribeProfiles = subscribeProfiles(render);
   render();
 
   return () => {
     win.removeEventListener("zotwanglele-prompts-changed", render);
     unsubscribe();
+    unsubscribeProfiles();
   };
 }
 

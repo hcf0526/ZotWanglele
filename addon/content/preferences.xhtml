@@ -27,55 +27,5 @@
     />
   </hbox>
 
-  <html:div class="zwl-prefs-section-heading">
-    <html:img
-      class="zwl-prefs-section-icon"
-      src="chrome://zotwanglele/content/icons/preferences/profiles.svg"
-      alt=""
-    />
-    <html:div>
-      <html:h3 data-l10n-id="pref-ai-profiles-title" />
-      <html:p data-l10n-id="pref-ai-profiles-hint" />
-    </html:div>
-  </html:div>
-
-  <vbox class="zwl-prefs-profile-area">
-    <richlistbox
-      id="zotero-prefpane-__addonRef__-profile-list"
-      class="zwl-prefs-profile-list"
-    />
-    <hbox align="center" class="zwl-prefs-actions">
-      <button
-        id="zotero-prefpane-__addonRef__-profile-use"
-        class="zwl-prefs-button zwl-prefs-button-primary"
-        data-l10n-id="pref-ai-profile-use"
-      />
-      <button
-        id="zotero-prefpane-__addonRef__-profile-add"
-        class="zwl-prefs-button"
-        data-l10n-id="pref-ai-profile-add"
-      />
-      <button
-        id="zotero-prefpane-__addonRef__-profile-edit"
-        class="zwl-prefs-button"
-        data-l10n-id="pref-ai-profile-edit"
-      />
-      <button
-        id="zotero-prefpane-__addonRef__-profile-delete"
-        class="zwl-prefs-button zwl-prefs-button-danger"
-        data-l10n-id="pref-ai-profile-delete"
-      />
-      <spacer flex="1" class="zwl-prefs-actions-spring" />
-      <button
-        id="zotero-prefpane-__addonRef__-profile-up"
-        class="zwl-prefs-button"
-        data-l10n-id="pref-ai-profile-up"
-      />
-      <button
-        id="zotero-prefpane-__addonRef__-profile-down"
-        class="zwl-prefs-button"
-        data-l10n-id="pref-ai-profile-down"
-      />
-    </hbox>
-  </vbox>
+  <html:div id="zwl-prefs-ai-root" />
 </groupbox>

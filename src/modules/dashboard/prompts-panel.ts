@@ -109,6 +109,11 @@ export function mountPromptsPanel(win: Window): () => void {
     descriptionInput.placeholder = strings.newDescriptionPrompt;
     getField("zwl-prompt-system").value = values.systemPrompt;
     getField("zwl-prompt-user").value = values.userPrompt;
+    const variables = doc.getElementById(
+      "zwl-prompt-selection-variables",
+    ) as HTMLElement | null;
+    if (variables)
+      variables.hidden = selectedFeatureId !== "selection-translate";
     getField("zwl-prompt-system").disabled = false;
     getField("zwl-prompt-user").disabled = false;
     deleteButton.hidden = !!values.builtin || creating;

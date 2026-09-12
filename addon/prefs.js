@@ -11,6 +11,18 @@ pref("ai.profiles", "[]");
 pref("ai.activeProfileId", "");
 pref("ai.customPrompts", "[]");
 
+// PDF selection translation
+pref("selectionTranslate.enabled", true);
+pref("selectionTranslate.automatic", false);
+pref("selectionTranslate.provider", "ai");
+pref("selectionTranslate.aiProfileId", "");
+pref("selectionTranslate.sourceLang", "auto");
+pref("selectionTranslate.targetLang", "zh-CN");
+pref("selectionTranslate.deeplPlan", "free");
+pref("selectionTranslate.deeplKey", "");
+pref("selectionTranslate.baiduAppId", "");
+pref("selectionTranslate.baiduKey", "");
+
 // === 翻译模块 ===
 // 环境来源："uv-auto" | "uv-manual" | "bundle"
 pref("translate.envSource", "uv-auto");

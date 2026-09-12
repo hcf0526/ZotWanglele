@@ -29,15 +29,15 @@ function initZToolkit(_ztoolkit: ReturnType<typeof createZToolkit>) {
     "default",
     `chrome://${config.addonRef}/content/icons/favicon.png`,
   );
-  patchProgressWindowTheme(_ztoolkit);
+  patchProgressWindowFont(_ztoolkit);
 }
 
-function patchProgressWindowTheme(
+function patchProgressWindowFont(
   _ztoolkit: ReturnType<typeof createZToolkit>,
 ): void {
   const progressWindow = _ztoolkit.ProgressWindow as any;
   const prototype = progressWindow.prototype as any;
-  if (prototype.__zwlPaperThemePatched) return;
+  if (prototype.__zwlProgressFontPatched) return;
 
   const updateIcons = prototype.updateIcons;
   prototype.updateIcons = function (this: any, ...args: any[]) {
@@ -50,16 +50,18 @@ function patchProgressWindowTheme(
     if (doc) injectProgressWindowStyles(doc);
     return result;
   };
-  prototype.__zwlPaperThemePatched = true;
+  prototype.__zwlProgressFontPatched = true;
 }
 
 function injectProgressWindowStyles(doc: Document): void {
   const stylesheets = [
-    ["zotwanglele-progress-paper-theme", "paper-theme.css"],
     ["zotwanglele-progress-window-theme", "progress-window.css"],
   ] as const;
   const host = doc.documentElement;
   if (!host) return;
+  // Zotero 10 adds customtitlebar to its titlebar=no progress windows. On
+  // Windows this leaves unpainted non-client borders around the content.
+  if (Zotero.isWin) host.removeAttribute("customtitlebar");
   for (const [id, filename] of stylesheets) {
     if (doc.getElementById(id)) continue;
     const link = doc.createElementNS("http://www.w3.org/1999/xhtml", "link");

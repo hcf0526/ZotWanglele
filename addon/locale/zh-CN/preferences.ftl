@@ -1,6 +1,6 @@
 pref-title = ZotWanglele 设置
 pref-open-dashboard =
-    .label = ▦ 仪表盘
+    .label = 打开仪表盘
 pref-ai-profiles-title = AI 配置
 pref-ai-profiles-hint = 管理供应商的多个 Key 与模型，双击模型可编辑所属供应商
 pref-ai-profile-use =

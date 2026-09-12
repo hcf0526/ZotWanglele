@@ -1,6 +1,6 @@
 pref-title = ZotWanglele Settings
 pref-open-dashboard =
-    .label = ▦ Dashboard
+    .label = Open Dashboard
 pref-ai-profiles-title = AI Profiles
 pref-ai-profiles-hint = Manage models and API formats for each provider
 pref-ai-profile-use =

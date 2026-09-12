@@ -11,7 +11,9 @@ href="chrome://zotwanglele/content/profile-editor.css"?>
   height="740"
   persist="screenX screenY width height"
   onload="
-    window.opener.Zotero.__addonInstance__.hooks.onProfileEditorLoad(window)
+    ChromeUtils.importESModule(
+      'chrome://zotero/content/zotero.mjs',
+    ).Zotero.__addonInstance__.hooks.onProfileEditorLoad(window)
   "
 >
   <linkset>

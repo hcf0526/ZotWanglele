@@ -17,6 +17,16 @@ declare namespace _ZoteroTypes {
       "ai.profiles": string;
       "ai.activeProfileId": string;
       "ai.customPrompts": string;
+      "selectionTranslate.enabled": boolean;
+      "selectionTranslate.automatic": boolean;
+      "selectionTranslate.provider": string;
+      "selectionTranslate.aiProfileId": string;
+      "selectionTranslate.sourceLang": string;
+      "selectionTranslate.targetLang": string;
+      "selectionTranslate.deeplPlan": string;
+      "selectionTranslate.deeplKey": string;
+      "selectionTranslate.baiduAppId": string;
+      "selectionTranslate.baiduKey": string;
       "translate.envSource": string;
       "translate.uvPath": string;
       "translate.bundlePath": string;

@@ -1,4 +1,14 @@
 import { ApiFormat } from "./presets";
+import {
+  abortError,
+  cancellableDelay,
+  requestText,
+  RequestControls,
+  throwIfAborted,
+  timeoutError,
+} from "../../utils/request";
+
+export type ChatOptions = RequestControls;
 
 // ============================================================
 // Types
@@ -98,22 +108,43 @@ export class AiClient {
   async chat(
     messages: ChatMessage[],
     onStream?: StreamCallback,
+    options: ChatOptions = {},
   ): Promise<ChatResult> {
     const stream = !!onStream;
     const maxRetries = this.config.maxRetries ?? 2;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      throwIfAborted(options.signal);
+      let emitted = false;
+      const callback = onStream
+        ? (chunk: string) => {
+            throwIfAborted(options.signal);
+            emitted = true;
+            onStream(chunk);
+          }
+        : undefined;
       try {
         if (this.config.format === "responses") {
-          return await this.callResponsesApi(messages, stream, onStream);
+          return await this.callResponsesApi(
+            messages,
+            stream,
+            callback,
+            options,
+          );
         }
-        return await this.callChatCompletionsApi(messages, stream, onStream);
+        return await this.callChatCompletionsApi(
+          messages,
+          stream,
+          callback,
+          options,
+        );
       } catch (e: any) {
-        if (attempt === maxRetries) throw e;
+        throwIfAborted(options.signal);
+        if (attempt === maxRetries || emitted) throw e;
         const isRetryable =
           e?.status === 429 || e?.status === 500 || e?.status === 503;
         if (!isRetryable) throw e;
-        await this.delay(1000 * (attempt + 1));
+        await cancellableDelay(1000 * (attempt + 1), options.signal);
       }
     }
 
@@ -139,6 +170,7 @@ export class AiClient {
     messages: ChatMessage[],
     stream: boolean,
     onStream?: StreamCallback,
+    options: ChatOptions = {},
   ): Promise<ChatResult> {
     const url = `${this.normalizeBaseUrl()}/v1/chat/completions`;
     const body = {
@@ -150,7 +182,7 @@ export class AiClient {
     };
     log("[AiClient] POST", url, "model=", this.config.model);
 
-    const response = await this.fetch(url, body);
+    const response = await this.fetch(url, body, options);
     log("[AiClient] response status:", response.status);
 
     if (stream && onStream) {
@@ -158,8 +190,13 @@ export class AiClient {
     }
 
     const json = await this.readJson(response);
+    const content = json?.choices?.[0]?.message?.content;
+    if (json?.error || typeof content !== "string" || !content.trim())
+      throw new Error("AI response empty or invalid");
+    if (["length", "content_filter"].includes(json.choices[0].finish_reason))
+      throw new Error("AI response incomplete");
     return {
-      content: json.choices?.[0]?.message?.content ?? "",
+      content,
       usage: json.usage,
     };
   }
@@ -169,19 +206,30 @@ export class AiClient {
     onStream: StreamCallback,
   ): Promise<ChatResult> {
     let fullContent = "";
+    let completed = false;
     await this.readSSE(response, (data: string) => {
-      if (data === "[DONE]") return;
-      try {
-        const json = JSON.parse(data);
-        const delta = json.choices?.[0]?.delta?.content ?? "";
-        if (delta) {
-          fullContent += delta;
-          onStream(delta);
-        }
-      } catch {
-        // skip malformed chunks
+      if (data === "[DONE]") {
+        completed = true;
+        return;
+      }
+      const json = JSON.parse(data);
+      if (json.error) throw new Error("AI stream error");
+      const choice = json.choices?.[0];
+      if (
+        choice?.finish_reason === "length" ||
+        choice?.finish_reason === "content_filter"
+      ) {
+        throw new Error("AI response incomplete");
+      }
+      if (choice?.finish_reason) completed = true;
+      const delta = choice?.delta?.content ?? "";
+      if (typeof delta !== "string") throw new Error("AI response invalid");
+      if (delta) {
+        fullContent += delta;
+        onStream(delta);
       }
     });
+    if (!completed) throw new Error("AI stream ended before completion");
     return { content: fullContent };
   }
 
@@ -193,6 +241,7 @@ export class AiClient {
     messages: ChatMessage[],
     stream: boolean,
     onStream?: StreamCallback,
+    options: ChatOptions = {},
   ): Promise<ChatResult> {
     const url = `${this.normalizeBaseUrl()}/v1/responses`;
     const input = this.messagesToResponsesInput(messages);
@@ -206,14 +255,17 @@ export class AiClient {
       body.stream = true;
     }
 
-    const response = await this.fetch(url, body);
+    const response = await this.fetch(url, body, options);
 
     if (stream && onStream) {
       return this.parseResponsesStream(response, onStream);
     }
 
     const json = await this.readJson(response);
+    if (!json || json.error || ["failed", "incomplete"].includes(json.status))
+      throw new Error("AI response incomplete");
     const content = this.extractResponsesContent(json);
+    if (!content.trim()) throw new Error("AI response empty or invalid");
     return {
       content,
       usage: json.usage,
@@ -263,20 +315,24 @@ export class AiClient {
     onStream: StreamCallback,
   ): Promise<ChatResult> {
     let fullContent = "";
+    let completed = false;
     await this.readSSE(response, (data: string) => {
-      try {
-        const event = JSON.parse(data);
-        if (event.type === "response.output_text.delta") {
-          const delta = event.delta ?? "";
-          if (delta) {
-            fullContent += delta;
-            onStream(delta);
-          }
-        }
-      } catch {
-        // skip malformed chunks
+      if (data === "[DONE]") return;
+      const event = JSON.parse(data);
+      if (
+        ["error", "response.failed", "response.incomplete"].includes(event.type)
+      ) {
+        throw new Error("AI response incomplete");
+      }
+      if (event.type === "response.completed") completed = true;
+      if (event.type === "response.output_text.delta" && event.delta) {
+        if (typeof event.delta !== "string")
+          throw new Error("AI response invalid");
+        fullContent += event.delta;
+        onStream(event.delta);
       }
     });
+    if (!completed) throw new Error("AI stream ended before completion");
     return { content: fullContent };
   }
 
@@ -284,7 +340,11 @@ export class AiClient {
   // HTTP helpers
   // ============================================================
 
-  private async fetch(url: string, body: any): Promise<Response> {
+  private async fetch(
+    url: string,
+    body: any,
+    options: ChatOptions,
+  ): Promise<Response> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -294,16 +354,19 @@ export class AiClient {
 
     const isStream = !!body?.stream;
     if (isStream) {
-      return this.fetchStream(url, headers, JSON.stringify(body));
+      return this.fetchStream(url, headers, JSON.stringify(body), options);
     }
 
     log("[AiClient] Zotero.HTTP.request start", url);
-    const xhr: any = await (Zotero as any).HTTP.request("POST", url, {
-      headers,
-      body: JSON.stringify(body),
-      responseType: "text",
-      successCodes: false,
-    });
+    const xhr = await requestText(
+      "POST",
+      url,
+      {
+        headers,
+        body: JSON.stringify(body),
+      },
+      options,
+    );
     log("[AiClient] Zotero.HTTP.request done", xhr.status);
 
     const text: string = xhr.responseText ?? "";
@@ -332,79 +395,100 @@ export class AiClient {
     } as any as Response;
   }
 
-  // Streaming via XMLHttpRequest (Zotero.HTTP.request waits for full response)
+  // XHR exposes incremental text in the Zotero sandbox.
+  protected createXHR(): XMLHttpRequest {
+    const ctor = (Zotero.getMainWindow() as any).XMLHttpRequest;
+    return new ctor();
+  }
+
   private fetchStream(
     url: string,
     headers: Record<string, string>,
     body: string,
+    options: ChatOptions,
   ): Promise<Response> {
-    // Lazily provide a Response-like object whose body is a ReadableStream
-    // tied to incremental XHR progress events.
+    throwIfAborted(options.signal);
     return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", url, true);
-      for (const [k, v] of Object.entries(headers)) {
-        xhr.setRequestHeader(k, v);
-      }
-
-      let processedLen = 0;
-      let controller!: any;
-      const encoder = new TextEncoder();
-      const stream = new ReadableStream({
-        start(c: any) {
+      const xhr = this.createXHR();
+      let processed = 0;
+      let resolved = false;
+      let finished = false;
+      let controller!: ReadableStreamDefaultController<Uint8Array>;
+      const win = Zotero.getMainWindow() as any;
+      const encoder = new win.TextEncoder();
+      const cleanup = () =>
+        options.signal?.removeEventListener("abort", onAbort);
+      const fail = (error: Error) => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        if (resolved) controller.error(error);
+        else reject(error);
+      };
+      const onAbort = () => {
+        fail(abortError());
+        xhr.abort();
+      };
+      const stream = new win.ReadableStream({
+        start(c: ReadableStreamDefaultController<Uint8Array>) {
           controller = c;
         },
+        cancel() {
+          finished = true;
+          cleanup();
+          xhr.abort();
+        },
       });
-
-      let resolved = false;
-      const resolveOnce = () => {
-        if (resolved) return;
-        resolved = true;
-        const ok = xhr.status >= 200 && xhr.status < 300;
-        const fake: any = {
-          ok,
-          status: xhr.status,
-          statusText: xhr.statusText || "",
-          body: stream,
-          json: async () => null,
-          text: async () => "",
-        };
-        resolve(fake as Response);
-      };
-
-      xhr.onprogress = () => {
-        // Resolve as soon as we get any data, so downstream can read the stream
-        resolveOnce();
-        const text = xhr.responseText ?? "";
-        const chunk = text.slice(processedLen);
-        processedLen = text.length;
-        if (chunk) {
-          controller.enqueue(encoder.encode(chunk));
-        }
-      };
-      xhr.onload = () => {
-        resolveOnce();
-        const text = xhr.responseText ?? "";
-        const tail = text.slice(processedLen);
-        if (tail) controller.enqueue(encoder.encode(tail));
-        try {
-          controller.close();
-        } catch {
-          // already closed
-        }
-      };
-      xhr.onerror = () => {
+      const progress = (final = false) => {
+        if (finished || xhr.status < 200 || xhr.status >= 300) return;
         if (!resolved) {
-          reject(new Error(`Network error: ${xhr.statusText || "unknown"}`));
-        } else {
-          try {
-            controller.error(new Error("Network error"));
-          } catch {
-            // already closed
-          }
+          resolved = true;
+          resolve({
+            ok: true,
+            status: xhr.status,
+            body: stream,
+          } as Response);
         }
+        let chunk = (xhr.responseText || "").slice(processed);
+        if (!final && /[\uD800-\uDBFF]$/.test(chunk))
+          chunk = chunk.slice(0, -1);
+        processed += chunk.length;
+        if (chunk) controller.enqueue(encoder.encode(chunk));
       };
-      xhr.send(body);
+      xhr.open("POST", url, true);
+      xhr.timeout = options.timeoutMs ?? 60000;
+      for (const [key, value] of Object.entries(headers)) {
+        xhr.setRequestHeader(key, value);
+      }
+      xhr.onprogress = () => progress();
+      xhr.onload = () => {
+        if (finished) return;
+        if (xhr.status < 200 || xhr.status >= 300) {
+          fail(
+            Object.assign(new Error("HTTP " + xhr.status), {
+              status: xhr.status,
+            }),
+          );
+          return;
+        }
+        progress(true);
+        finished = true;
+        cleanup();
+        controller.close();
+      };
+      xhr.onerror = () => fail(new Error("Network error"));
+      xhr.ontimeout = () => fail(timeoutError());
+      xhr.onabort = () => fail(abortError());
+      options.signal?.addEventListener("abort", onAbort, { once: true });
+      if (options.signal?.aborted) {
+        onAbort();
+        return;
+      }
+      try {
+        xhr.send(body);
+      } catch (error) {
+        fail(error as Error);
+      }
     });
   }
 
@@ -419,36 +503,45 @@ export class AiClient {
     const reader = response.body?.getReader();
     if (!reader) throw new Error("No response body for SSE");
 
-    const decoder = new TextDecoder();
+    const decoder = new (Zotero.getMainWindow() as any).TextDecoder();
     let buffer = "";
+    let dataLines: string[] = [];
+    const dispatch = () => {
+      if (dataLines.length) onData(dataLines.join("\n"));
+      dataLines = [];
+    };
+    const consume = (line: string) => {
+      line = line.replace(/\r$/, "");
+      if (!line) dispatch();
+      else if (line.startsWith("data:"))
+        dataLines.push(line.slice(5).replace(/^ /, ""));
+    };
 
-    while (true) {
-      const { done, value } = await (reader as any).read();
-      if (done) break;
+    try {
+      while (true) {
+        const { done, value } = await (reader as any).read();
+        if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith("data: ")) {
-          onData(trimmed.slice(6));
+        for (const line of lines) {
+          consume(line);
         }
       }
-    }
 
-    if (buffer.trim().startsWith("data: ")) {
-      onData(buffer.trim().slice(6));
+      buffer += decoder.decode();
+      if (buffer) consume(buffer);
+      dispatch();
+    } finally {
+      await reader.cancel().catch(() => {});
+      reader.releaseLock();
     }
   }
 
   private normalizeBaseUrl(): string {
     return this.config.baseUrl.replace(/\/+$/, "");
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

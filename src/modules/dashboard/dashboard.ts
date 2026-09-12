@@ -3,10 +3,25 @@ import { mountQueuePanel } from "./queue-panel";
 import { mountAdvancedPanel } from "./advanced-panel";
 import { mountOverviewPanel } from "./overview-panel";
 import { mountPromptsPanel } from "./prompts-panel";
+import { mountProfileManager } from "../ai/profile-manager";
+import { mountSelectionPreferences } from "../selection-translate/preferences";
 
-export type DashboardTab = "overview" | "queue" | "prompts" | "advanced";
+export type DashboardTab =
+  | "overview"
+  | "ai"
+  | "queue"
+  | "prompts"
+  | "advanced"
+  | "selection";
 
-const TAB_ORDER: DashboardTab[] = ["overview", "queue", "prompts", "advanced"];
+const TAB_ORDER: DashboardTab[] = [
+  "overview",
+  "ai",
+  "queue",
+  "prompts",
+  "advanced",
+  "selection",
+];
 
 // 仪表盘窗口 → 卸载函数列表（保证关闭时解订）
 const unmounters = new WeakMap<Window, Array<() => void>>();
@@ -60,6 +75,20 @@ export function openDashboard(
 export function onDashboardLoad(win: Window) {
   ztoolkit.log("Dashboard loaded");
   const list: Array<() => void> = [];
+  try {
+    const host = win.document.getElementById("zotwanglele-dashboard-ai-root");
+    if (host) list.push(mountProfileManager(win, host));
+  } catch (e) {
+    ztoolkit.log("[Dashboard] mountProfileManager error:", e);
+  }
+  try {
+    const host = win.document.getElementById(
+      "zotwanglele-dashboard-selection-root",
+    );
+    if (host) list.push(mountSelectionPreferences(win.document, host));
+  } catch (e) {
+    ztoolkit.log("[Dashboard] mountSelectionPreferences error:", e);
+  }
   try {
     list.push(mountOverviewPanel(win));
   } catch (e) {

@@ -1,64 +1,13 @@
+/* Keep Zotero's native surface, colors, spacing and text sizes. */
 #zotero-progress {
-  min-width: 320px !important;
-  color: var(--zwl-ink);
-  background: var(--zwl-paper-canvas);
+  --zwl-serif:
+    "Source Han Serif SC", "Noto Serif CJK SC", "Noto Serif SC", "思源宋体",
+    "Songti SC", "STSong", "SimSun", serif;
   font-family: var(--zwl-serif);
 }
 
-#zotero-progress-text-box {
-  margin: 10px;
-  padding: 13px 15px 14px !important;
-  border: 1px solid #d1bea0;
-  border-top: 4px solid var(--zwl-red);
-  border-radius: 8px;
-  color: var(--zwl-ink);
-  background: var(--zwl-paper-soft);
-  box-shadow:
-    0 5px 0 #dfcfb8,
-    0 10px 18px rgba(73, 53, 29, 0.12);
-}
-
-#zotero-progress-text-headline {
-  min-height: 24px;
-  padding-bottom: 9px;
-  border-bottom: 1px solid var(--zwl-rule-soft);
-  color: var(--zwl-ink);
-  font-size: 14px;
-  font-weight: 800;
-}
-
-#zotero-progress-text-headline label {
-  margin: 0;
-  color: var(--zwl-ink);
-  font-family: var(--zwl-serif);
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.zotero-progress-item-hbox {
-  min-height: 24px;
-  gap: 9px;
-  align-items: center;
-  padding-top: 9px;
-  color: var(--zwl-ink-soft);
-}
-
+#zotero-progress-text-headline label,
 .zotero-progress-item-label,
 .zotero-progress-item-hbox description {
-  margin: 0;
-  color: var(--zwl-ink-soft);
   font-family: var(--zwl-serif);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.zotero-progress-item-hbox[parent="true"] .zotero-progress-item-label {
-  color: var(--zwl-ink);
-  font-weight: 700;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #zotero-progress-text-box {
-    scroll-behavior: auto;
-  }
 }

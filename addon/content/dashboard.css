@@ -3047,6 +3047,10 @@
 }
 
 /* Panel scroll containment: tall pages stay inside the window. */
+.zwl-dashboard-shell {
+  min-height: 0;
+}
+
 .zwl-dashboard-panel {
   position: relative;
   min-height: 0;
@@ -3199,4 +3203,67 @@
     border-left: 0;
     border-top: 1px solid var(--zwl-rule-soft);
   }
+}
+
+/* Six dashboard sections share the same tab rhythm and scroll within the page. */
+.zwl-dashboard-tabs tab {
+  flex: 1;
+  min-width: 0;
+  padding-inline: 33px 10px;
+  background-position: 10px center;
+}
+.zwl-dashboard-tab-ai {
+  background-image: url("chrome://zotwanglele/content/icons/dashboard/model.svg");
+}
+.zwl-dashboard-tab-selection {
+  background-image: url("chrome://zotwanglele/content/icons/preferences/profiles.svg");
+}
+.zwl-dashboard-ai-root,
+.zwl-dashboard-selection-root {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 24px 28px;
+}
+.zwl-dashboard-ai-root {
+  display: flex;
+  overflow: hidden;
+}
+.zwl-dashboard-selection-root {
+  overflow-y: auto;
+}
+.zwl-dashboard-selection-root .zwl-selection-settings {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.zwl-dashboard-selection-root .zwl-selection-settings h3 {
+  font-size: 20px;
+}
+.zwl-dashboard-selection-root .zwl-selection-settings-grid {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--zwl-rule-soft);
+  gap: 18px 24px;
+}
+@media (max-width: 880px) {
+  .zwl-dashboard-tabs tab {
+    padding-inline: 8px;
+    background-image: none;
+    font-size: 12px;
+  }
+}
+@media (max-width: 760px) {
+  .zwl-dashboard-ai-root,
+  .zwl-dashboard-selection-root {
+    padding: 18px;
+  }
+}
+.zwl-dashboard-ai-root,
+.zwl-dashboard-selection-root {
+  position: absolute;
+  inset: 0;
 }

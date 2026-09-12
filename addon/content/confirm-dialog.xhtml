@@ -11,7 +11,9 @@ href="chrome://zotwanglele/content/confirm-dialog.css"?>
   width="500"
   height="280"
   onload="
-    window.opener.Zotero.__addonInstance__.hooks.onConfirmDialogLoad(window)
+    ChromeUtils.importESModule(
+      'chrome://zotero/content/zotero.mjs',
+    ).Zotero.__addonInstance__.hooks.onConfirmDialogLoad(window)
   "
   ondialogcancel="window.zwlConfirmDialogCancel()"
 >
