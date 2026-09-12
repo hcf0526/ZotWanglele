@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?> <?xml-stylesheet
+href="chrome://zotwanglele/content/paper-theme.css"?> <?xml-stylesheet
+href="chrome://zotwanglele/content/metadata-dialog.css"?> <?xml-stylesheet
+href="chrome://zotwanglele/content/confirm-dialog.css"?>
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  title="ZotWanglele"
+  windowtype="zotwanglele:confirm-dialog"
+  width="500"
+  height="280"
+  onload="
+    window.opener.Zotero.__addonInstance__.hooks.onConfirmDialogLoad(window)
+  "
+  ondialogcancel="window.zwlConfirmDialogCancel()"
+>
+  <vbox flex="1" class="zwl-dialog-root">
+    <html:div class="zwl-confirm-shell">
+      <html:header class="zwl-dialog-header">
+        <html:img
+          class="zwl-dialog-brand-mark"
+          src="chrome://zotwanglele/content/icons/icon@32.png"
+          alt=""
+        />
+        <html:div class="zwl-dialog-heading-copy">
+          <html:h1 id="zwl-confirm-title" class="zwl-metadata-heading">
+            确认操作
+          </html:h1>
+          <html:p class="zwl-metadata-note">请确认是否继续当前操作</html:p>
+        </html:div>
+      </html:header>
+
+      <html:div class="zwl-confirm-message-card">
+        <html:span class="zwl-confirm-message-mark" aria-hidden="true"
+          >!</html:span
+        >
+        <html:p id="zwl-confirm-message" class="zwl-confirm-message"></html:p>
+      </html:div>
+
+      <html:div class="zwl-metadata-result-toolbar">
+        <button
+          id="zwl-confirm-cancel"
+          class="zwl-dialog-button"
+          label="取消"
+          oncommand="window.zwlConfirmDialogCancel()"
+        />
+        <button
+          id="zwl-confirm-apply"
+          class="zwl-dialog-button zwl-dialog-button-brand"
+          label="确认"
+          default="true"
+          oncommand="window.zwlConfirmDialogApply()"
+        />
+      </html:div>
+    </html:div>
+  </vbox>
+</window>

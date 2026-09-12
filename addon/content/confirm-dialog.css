@@ -1,0 +1,55 @@
+.zwl-confirm-shell {
+  display: flex;
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 20px 16px;
+  color: var(--zwl-ink);
+  background: var(--zwl-paper-canvas);
+  font-family: var(--zwl-serif);
+}
+
+.zwl-confirm-message-card {
+  display: flex;
+  min-height: 82px;
+  flex: 1;
+  gap: 13px;
+  align-items: flex-start;
+  padding: 17px 18px;
+  border: 1px solid #d8c9b5;
+  border-radius: 7px;
+  background: var(--zwl-paper-soft);
+  box-shadow: 0 4px 9px rgba(73, 53, 29, 0.045);
+}
+
+.zwl-confirm-message-mark {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border: 1px solid #d6a396;
+  border-radius: 6px;
+  color: var(--zwl-red-deep);
+  background: #f9e7df;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.zwl-confirm-message {
+  margin: 3px 0 0;
+  color: var(--zwl-ink);
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 440px) {
+  .zwl-confirm-shell {
+    padding: 14px;
+  }
+}

@@ -1,36 +1,45 @@
 :root {
-  color-scheme: light;
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-  background: #f4f7fb;
-  color: #1f2937;
+  background: var(--zwl-paper-canvas);
+  color: var(--zwl-ink);
+}
+
+.zwl-profile-editor-shell,
+.zwl-profile-editor-shell button,
+.zwl-profile-editor-shell input,
+.zwl-profile-editor-shell menulist,
+.zwl-profile-editor-shell select,
+.zwl-profile-editor-shell textarea {
+  font-family: var(--zwl-serif);
 }
 
 .zwl-profile-editor-shell {
+  display: flex;
   box-sizing: border-box;
+  height: 100%;
   min-width: 0;
-  padding: 18px;
-  background: #f4f7fb;
-  color: #1f2937;
+  min-height: 0;
+  flex-direction: column;
+  padding: 18px 20px 16px;
+  overflow: hidden;
+  color: var(--zwl-ink);
+  background: var(--zwl-paper-canvas);
 }
 
 .zwl-profile-editor-header {
-  gap: 11px;
   min-height: 48px;
-  padding: 2px 2px 14px;
-  border-bottom: 1px solid #dce4ec;
+  flex: none;
+  gap: 12px;
+  padding: 0 4px 14px;
+  border-bottom: 1px solid #d9c9b2;
 }
 
 .zwl-profile-editor-mark {
-  width: 34px;
-  height: 34px;
-  border: 1px solid #d8e2eb;
-  border-radius: 7px;
-  background: #ffffff;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #c7b59b;
+  border-radius: 8px;
+  background: var(--zwl-paper-soft);
+  box-shadow: 0 4px 10px rgba(73, 53, 29, 0.12);
   object-fit: contain;
 }
 
@@ -41,25 +50,28 @@
 
 .zwl-profile-editor-heading h2 {
   margin: 0;
-  color: #162536;
-  font-size: 18px;
+  color: var(--zwl-ink);
+  font-size: 20px;
+  font-weight: 800;
   line-height: 1.2;
 }
 
 .zwl-profile-editor-heading p {
   margin: 0;
-  color: #718096;
+  color: var(--zwl-ink-soft);
   font-size: 11px;
+  line-height: 1.4;
 }
 
 .zwl-profile-editor-section-heading {
   display: flex;
-  gap: 8px;
+  flex: none;
+  gap: 9px;
   align-items: center;
-  margin: 16px 0 9px;
-  color: #41566a;
+  margin: 16px 2px 9px;
+  color: #735f4d;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .zwl-profile-editor-section-heading-spaced {
@@ -68,35 +80,39 @@
 
 .zwl-profile-editor-section-icon {
   display: grid;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   place-items: center;
-  border: 1px solid #bcd7e7;
-  border-radius: 5px;
-  color: #2368a2;
-  background: #eef6fb;
-  font-size: 14px;
+  border: 1px solid #d6a396;
+  border-radius: 6px;
+  color: var(--zwl-red-deep);
+  background: #f9e7df;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  font-size: 13px;
 }
 
 .zwl-profile-editor-fields,
 .zwl-profile-editor-options {
-  gap: 9px;
-  padding: 13px 14px;
-  border: 1px solid #dce4ec;
+  flex: none;
+  gap: 10px;
+  padding: 14px 15px;
+  border: 1px solid #d8c9b5;
   border-radius: 7px;
-  background: #ffffff;
+  background: var(--zwl-paper-soft);
+  box-shadow: 0 4px 9px rgba(73, 53, 29, 0.04);
 }
 
 .zwl-editor-field {
-  gap: 12px;
-  min-height: 30px;
+  min-height: 32px;
+  gap: 13px;
 }
 
 .zwl-editor-field > label {
-  width: 96px;
-  flex: 0 0 96px;
-  color: #526477;
+  width: 100px;
+  flex: 0 0 100px;
+  color: #735f4d;
   font-size: 12px;
+  font-weight: 700;
 }
 
 .zwl-editor-field > input[type="text"],
@@ -110,34 +126,40 @@
 
 .zwl-editor-field > input[type="text"],
 .zwl-editor-field > input[type="password"],
-.zwl-editor-field > input[type="number"] {
-  min-height: 28px;
-  padding: 4px 8px;
-  border: 1px solid #cbd6e1;
-  border-radius: 4px;
-  color: #1f2937;
-  background: #ffffff;
+.zwl-editor-field > input[type="number"],
+.zwl-editor-field > menulist,
+.zwl-key-field input,
+.zwl-key-field select,
+.zwl-key-field textarea {
+  min-height: 31px;
+  padding: 5px 9px;
+  border: 1px solid #d2c1a9;
+  border-radius: 6px;
+  color: var(--zwl-ink);
+  background: #fffdf8;
+  box-shadow: inset 0 1px 2px rgba(73, 53, 29, 0.045);
 }
 
 .zwl-editor-field > input:focus,
-.zwl-editor-field > menulist:focus {
-  border-color: #5b9bc4;
-  outline: 2px solid #d9edf8;
+.zwl-editor-field > menulist:focus,
+.zwl-key-field input:focus,
+.zwl-key-field select:focus,
+.zwl-key-field textarea:focus {
+  border-color: var(--zwl-focus);
+  outline: 2px solid var(--zwl-focus-soft);
   outline-offset: 0;
 }
 
 .zwl-editor-field > input[type="range"] {
   min-width: 0;
   flex: 1;
-  accent-color: #167d68;
+  accent-color: var(--zwl-red);
 }
 
 #zwl-editor-temperature-value {
-  min-width: 42px;
-  color: #167d68;
-  font:
-    650 12px ui-monospace,
-    monospace;
+  min-width: 44px;
+  color: var(--zwl-moss);
+  font: 700 12px/1 var(--zwl-mono);
   text-align: right;
 }
 
@@ -145,66 +167,198 @@
   flex: 0 0 150px;
 }
 
-.zwl-profile-editor-footer {
-  gap: 8px;
-  min-height: 36px;
-  padding-top: 14px;
-  border-top: 1px solid #dce4ec;
+.zwl-key-heading,
+.zwl-key-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
-.zwl-editor-button {
-  min-height: 30px;
-  padding: 5px 12px;
-  border: 1px solid #cbd6e1;
-  border-radius: 5px;
-  color: #263746;
-  background: #ffffff;
+.zwl-key-heading {
+  flex: none;
+  margin: 15px 2px 9px;
+  color: #735f4d;
+}
+
+.zwl-key-heading strong,
+.zwl-key-header strong {
+  color: var(--zwl-ink);
   font-size: 12px;
-  cursor: pointer;
+  font-weight: 800;
 }
 
-.zwl-editor-button:hover {
-  border-color: #8fb4cf;
-  background: #eef5fb;
+#zwl-editor-keys {
+  min-height: 116px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 2px 7px 10px 1px;
+  scrollbar-color: #b9a78d var(--zwl-paper-deep);
+  scrollbar-width: thin;
 }
 
-.zwl-editor-button-secondary {
-  border-color: #8ab8a8;
-  color: #126b59;
+.zwl-key-card {
+  margin-bottom: 12px;
+  padding: 14px 15px;
+  border: 1px solid #d8c9b5;
+  border-top: 3px solid var(--zwl-plum);
+  border-radius: 7px;
+  color: var(--zwl-ink);
+  background: var(--zwl-paper-soft);
+  box-shadow: 0 4px 9px rgba(73, 53, 29, 0.05);
 }
 
-.zwl-editor-button-primary {
-  border-color: #2368a2;
-  color: #ffffff;
-  background: #2368a2;
-  font-weight: 650;
+.zwl-key-field {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 13px;
+  align-items: start;
+  margin: 10px 0;
+  color: #735f4d;
+  font-size: 12px;
+  font-weight: 700;
 }
 
-.zwl-editor-button-primary:hover {
-  border-color: #185481;
-  color: #ffffff;
-  background: #185481;
-}
-
-.zwl-editor-test-status {
+.zwl-key-field input,
+.zwl-key-field select,
+.zwl-key-field textarea {
+  box-sizing: border-box;
+  width: 100%;
   min-width: 0;
-  max-width: 245px;
+  font: inherit;
+  font-weight: 400;
+}
+
+.zwl-key-field textarea {
+  min-height: 74px;
+  resize: vertical;
+}
+
+.zwl-key-header span {
+  min-width: 0;
   overflow: hidden;
-  color: #6b7b8c;
+  color: var(--zwl-ink-soft);
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.zwl-key-heading button,
+.zwl-key-card button,
+.zwl-editor-button {
+  min-height: 30px;
+  padding: 4px 12px;
+  border: 1px solid #c7b69e;
+  border-radius: 6px;
+  color: #735f4d;
+  background: var(--zwl-paper-soft);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.zwl-key-heading button:hover,
+.zwl-key-card button:hover,
+.zwl-editor-button:hover {
+  border-color: #c87968;
+  color: var(--zwl-red-deep);
+  background: #f9e9e2;
+}
+
+.zwl-key-button-danger {
+  border-color: #d6a396 !important;
+  color: var(--zwl-red-deep) !important;
+  background: #fff4ef !important;
+}
+
+.zwl-key-button-danger:hover {
+  border-color: var(--zwl-red-deep) !important;
+  color: #ffffff !important;
+  background: var(--zwl-red-deep) !important;
+}
+
+.zwl-key-card button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.zwl-profile-editor-footer {
+  min-height: 42px;
+  flex: none;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid #d9c9b2;
+}
+
+.zwl-editor-button-primary {
+  border-color: var(--zwl-moss);
+  color: #fffaf2;
+  background: var(--zwl-moss);
+  box-shadow: 0 3px 0 #2f5543;
+  font-weight: 800;
+}
+
+.zwl-editor-button-primary:hover {
+  border-color: #2f5543;
+  color: #ffffff;
+  background: #2f5543;
+}
+
+.zwl-editor-button[disabled] {
+  border-color: var(--zwl-rule) !important;
+  color: #6f6255 !important;
+  background: #e9dfd0 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  opacity: 1;
+}
+
+.zwl-editor-test-status {
+  min-width: 0;
+  max-width: 270px;
+  overflow: hidden;
+  color: var(--zwl-ink-soft);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zwl-profile-editor-shell button:focus-visible,
+.zwl-profile-editor-shell input:focus-visible,
+.zwl-profile-editor-shell menulist:focus-visible,
+.zwl-profile-editor-shell select:focus-visible,
+.zwl-profile-editor-shell textarea:focus-visible {
+  outline: 2px solid var(--zwl-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zwl-key-heading button,
+  .zwl-key-card button,
+  .zwl-editor-button {
+    transition: none;
+  }
+}
+
 @media (max-width: 560px) {
   .zwl-profile-editor-shell {
-    padding: 12px;
+    padding: 14px;
+  }
+
+  .zwl-profile-editor-header {
+    padding-right: 0;
+    padding-left: 0;
   }
 
   .zwl-editor-field {
     align-items: flex-start;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
   }
 
   .zwl-editor-field > label {
@@ -221,6 +375,11 @@
     flex-basis: auto;
   }
 
+  .zwl-key-field {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
   .zwl-profile-editor-footer {
     flex-wrap: wrap;
   }
@@ -230,76 +389,4 @@
     flex-basis: 100%;
     order: 3;
   }
-}
-
-/* The key list owns scrolling so supplier details and save actions stay visible. */
-.zwl-profile-editor-shell {
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-#zwl-editor-keys {
-  min-height: 100px;
-  flex: 1;
-  overflow-y: auto;
-  padding: 4px 8px 12px 0;
-}
-.zwl-key-heading,
-.zwl-key-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-.zwl-key-heading {
-  margin: 14px 0 8px;
-}
-.zwl-key-card {
-  padding: 14px;
-  margin-bottom: 12px;
-  border: 1px solid #d2c1a9;
-  border-radius: 8px;
-  background: #fffdf8;
-}
-.zwl-key-field {
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  align-items: start;
-  gap: 12px;
-  margin: 10px 0;
-}
-.zwl-key-field input,
-.zwl-key-field select,
-.zwl-key-field textarea {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  padding: 6px 8px;
-  border: 1px solid #d2c1a9;
-  border-radius: 5px;
-  background: #fffdf8;
-  color: #35291f;
-  font: inherit;
-}
-.zwl-key-field textarea {
-  resize: vertical;
-  min-height: 70px;
-}
-.zwl-key-heading button,
-.zwl-key-card button {
-  padding: 5px 12px;
-  border: 1px solid #cbb99f;
-  border-radius: 5px;
-  background: #fffaf2;
-  color: #735f4d;
-  cursor: pointer;
-}
-.zwl-key-card button:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-.zwl-profile-editor-footer {
-  flex: none;
 }

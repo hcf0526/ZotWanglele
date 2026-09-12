@@ -16,6 +16,7 @@ import {
   unregisterNotePreviewSection,
 } from "./modules/reader/note-preview";
 import { registerDashboardToolbarButton } from "./modules/ui/toolbar";
+import { onConfirmDialogLoad } from "./modules/ui/confirm-dialog";
 import {
   registerTitleTranslationColumn,
   unregisterTitleTranslationColumn,
@@ -153,4 +154,5 @@ export default {
   onMetadataDialogLoad,
   onMetadataCandidateDialogLoad,
   onMetadataResultDialogLoad,
+  onConfirmDialogLoad,
 };

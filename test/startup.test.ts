@@ -2,6 +2,15 @@ import { assert } from "chai";
 import { config } from "../package.json";
 import { openDashboard } from "../src/modules/dashboard/dashboard";
 
+interface ProfileEditorResult {
+  saved: boolean;
+  draft: null;
+}
+
+interface MetadataResultDialogResult {
+  selectedIndex: number;
+}
+
 describe("startup", function () {
   it("should have plugin instance defined", function () {
     assert.isNotEmpty(Zotero[config.addonInstance]);
@@ -70,7 +79,15 @@ describe("startup", function () {
       );
       assert.isNotNull(preview);
       assert.include(preview?.textContent ?? "", "侧栏预览正文");
-      assert.lengthOf(body.querySelectorAll(".zwl-note-preview-tab"), 2);
+      const templateTrigger = body.querySelector(
+        ".zwl-note-preview-dropdown-trigger",
+      );
+      assert.isNotNull(templateTrigger);
+      assert.equal(templateTrigger?.getAttribute("aria-expanded"), "false");
+      assert.lengthOf(
+        body.querySelectorAll(".zwl-note-preview-dropdown-option"),
+        2,
+      );
       assert.isNotNull(body.querySelector(".zwl-note-preview-font-controls"));
       assert.isNotNull(body.querySelector(".zwl-note-preview-resize-handle"));
       assert.include(
@@ -81,6 +98,57 @@ describe("startup", function () {
       section.onDestroy?.({ body });
       body.remove();
       await item.eraseTx();
+    }
+  });
+
+  it("should render readable custom button surfaces", async function () {
+    this.timeout(15_000);
+    const editorResult: ProfileEditorResult = { saved: false, draft: null };
+    const editor = (Zotero.getMainWindow() as any).openDialog(
+      `chrome://${config.addonRef}/content/profile-editor.xhtml`,
+      "zotwanglele-profile-editor-button-test",
+      "chrome,centerscreen,resizable=yes,dialog=no",
+      { profile: null },
+      editorResult,
+    ) as Window;
+
+    try {
+      const saveButton = await waitFor(
+        () => editor.document.getElementById("zwl-editor-save"),
+        5_000,
+      );
+      assert.isNotNull(saveButton);
+
+      const enabledStyle = editor.getComputedStyle(saveButton!);
+      assert.equal(enabledStyle.appearance, "none");
+      assert.equal(enabledStyle.color, "rgb(255, 250, 242)");
+      assert.equal(enabledStyle.backgroundColor, "rgb(61, 107, 85)");
+    } finally {
+      editor.close();
+    }
+
+    const metadataResult: MetadataResultDialogResult = { selectedIndex: -1 };
+    const metadataWindow = (Zotero.getMainWindow() as any).openDialog(
+      `chrome://${config.addonRef}/content/metadata-result-dialog.xhtml`,
+      "zotwanglele-metadata-result-button-test",
+      "chrome,centerscreen,resizable=yes,dialog=no",
+      [],
+      metadataResult,
+    ) as Window;
+
+    try {
+      const closeButton = await waitFor(
+        () => metadataWindow.document.querySelector(".zwl-dialog-button-brand"),
+        5_000,
+      );
+      assert.isNotNull(closeButton);
+
+      const closeStyle = metadataWindow.getComputedStyle(closeButton!);
+      assert.equal(closeStyle.appearance, "none");
+      assert.equal(closeStyle.color, "rgb(255, 250, 242)");
+      assert.equal(closeStyle.backgroundColor, "rgb(182, 75, 55)");
+    } finally {
+      metadataWindow.close();
     }
   });
 

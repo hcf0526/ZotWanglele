@@ -1000,7 +1000,8 @@ export function onMetadataResultDialogLoad(win: Window): void {
         HTML_NAMESPACE,
         "button",
       ) as HTMLButtonElement;
-      choose.className = "zwl-metadata-result-choose";
+      choose.className =
+        "zwl-metadata-result-choose zwl-dialog-button zwl-dialog-button-primary";
       choose.textContent = "选择";
       choose.addEventListener("click", () => {
         dialogResult.selectedIndex = results.indexOf(itemResult);

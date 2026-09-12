@@ -14,6 +14,7 @@ import {
   groupProfilesBySupplier,
 } from "./ai/profiles";
 import { openProfileEditor } from "./ai/profile-editor";
+import { openConfirmDialog } from "./ui/confirm-dialog";
 
 function bindButton(
   el: Element | null,
@@ -46,16 +47,22 @@ export async function registerPrefsScripts(_window: Window) {
 
 /**
  * Zotero 解析偏好面板 XHTML 片段时会丢弃顶部的 xml-stylesheet 声明，
- * preferences.css 因此不会被加载；改为运行时注入 link 引入样式表。
+ * 样式表因此不会被加载；改为运行时注入 link 引入纸感主题与页面样式。
  */
 function injectPrefsStylesheet(doc: Document, ref: string) {
-  const linkId = `zwl-prefs-css-${ref}`;
-  if (doc.getElementById(linkId)) return;
-  const link = doc.createElementNS("http://www.w3.org/1999/xhtml", "link");
-  link.id = linkId;
-  link.setAttribute("rel", "stylesheet");
-  link.setAttribute("href", `chrome://${ref}/content/preferences.css`);
-  (doc.documentElement || doc.body)?.appendChild(link);
+  const stylesheets = [
+    [`zwl-paper-theme-css-${ref}`, "paper-theme.css"],
+    [`zwl-prefs-css-${ref}`, "preferences.css"],
+  ] as const;
+  const host = doc.documentElement || doc.body;
+  for (const [linkId, filename] of stylesheets) {
+    if (doc.getElementById(linkId)) continue;
+    const link = doc.createElementNS("http://www.w3.org/1999/xhtml", "link");
+    link.id = linkId;
+    link.setAttribute("rel", "stylesheet");
+    link.setAttribute("href", `chrome://${ref}/content/${filename}`);
+    host?.appendChild(link);
+  }
 }
 
 function bindOpenDashboard(doc: Document, ref: string, win: Window) {
@@ -119,6 +126,7 @@ function bindProfileList(doc: Document, ref: string, win: Window) {
       for (const p of supplierProfiles) {
         const item = doc.createXULElement("richlistitem") as any;
         item.setAttribute("value", p.id);
+        item.setAttribute("class", "zwl-profile-item");
 
         const vbox = doc.createXULElement("vbox") as any;
         vbox.setAttribute("flex", "1");
@@ -128,32 +136,15 @@ function bindProfileList(doc: Document, ref: string, win: Window) {
         nameLabel.setAttribute("class", "zwl-profile-item-name");
         const isActive =
           active?.model === p.model && getSupplierName(active) === supplier;
-        nameLabel.setAttribute(
-          "value",
-          `${isActive ? "★ " : "  "}${p.model || "尚未添加模型"}`,
-        );
+        nameLabel.setAttribute("value", p.model || "尚未添加模型");
         item.setAttribute("data-active", String(isActive));
 
-        const detailLabel = doc.createXULElement("label") as any;
-        detailLabel.setAttribute("class", "zwl-profile-item-detail");
-        detailLabel.setAttribute("value", supplier || "未填写供应商");
-
-        const formatLabel = doc.createXULElement("label") as any;
-        formatLabel.setAttribute("class", "zwl-profile-item-detail");
-        formatLabel.setAttribute(
-          "value",
-          p.format === "responses" ? "Responses" : "Chat Completions",
-        );
-
         vbox.appendChild(nameLabel);
-        vbox.appendChild(detailLabel);
-        vbox.appendChild(formatLabel);
         item.appendChild(vbox);
         listEl.appendChild(item);
       }
     }
-    // 不自动选中 active：active 由 ★ 标记体现，
-    // 选中是用户操作行为，避免 Mozilla 非焦点选中灰化文字
+    // 当前模型使用苔绿色标记；选中状态仍保留给用户操作。
   };
 
   refreshList();
@@ -219,11 +210,11 @@ function bindProfileList(doc: Document, ref: string, win: Window) {
         return;
       }
       if (
-        !confirmDialog(
-          win,
-          "删除供应商",
-          "确定删除所选模型所属供应商及其全部 Key 和模型？",
-        )
+        !openConfirmDialog(win, {
+          title: "删除供应商",
+          message: "确定删除所选模型所属供应商及其全部 Key 和模型？",
+          confirmLabel: "删除",
+        })
       ) {
         return;
       }
@@ -317,8 +308,4 @@ function toastSuccess(text: string) {
     .createLine({ text: `✅ ${text}`, type: "success", progress: 100 })
     .show()
     .startCloseTimer(2000);
-}
-
-function confirmDialog(win: Window, title: string, text: string): boolean {
-  return (Services as any).prompt.confirm(win, title, text);
 }

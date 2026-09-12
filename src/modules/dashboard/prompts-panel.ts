@@ -12,6 +12,7 @@ import {
   updateBuiltinTemplate,
   updateCustomTemplate,
 } from "../ai/prompts";
+import { openConfirmDialog } from "../ui/confirm-dialog";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -321,7 +322,14 @@ export function mountPromptsPanel(win: Window): () => void {
   const onReset = () => {
     if (!selectedId) return;
     const template = currentTemplate();
-    if (!template?.builtin || !win.confirm(strings.confirmReset(template.name)))
+    if (
+      !template?.builtin ||
+      !openConfirmDialog(win, {
+        title: strings.resetDialogTitle,
+        message: strings.confirmReset(template.name),
+        confirmLabel: strings.resetDialogAction,
+      })
+    )
       return;
     resetBuiltinTemplate(selectedId);
     renderFeatures();
@@ -345,7 +353,14 @@ export function mountPromptsPanel(win: Window): () => void {
     if (!selectedId) return;
     const template = currentTemplate();
     if (!template || template.builtin) return;
-    if (!win.confirm(`删除自定义模板“${template.name}”？`)) return;
+    if (
+      !openConfirmDialog(win, {
+        title: strings.deleteDialogTitle,
+        message: strings.confirmDelete(template.name),
+        confirmLabel: strings.deleteDialogAction,
+      })
+    )
+      return;
     deleteCustomTemplate(selectedId);
     const remaining = getTemplatesForFeature(selectedFeatureId);
     if (!remaining.length) {
@@ -416,7 +431,12 @@ function getStrings() {
       reset: "Restored built-in template",
       deleted: "Template deleted",
       activated: "This template is now in use",
+      resetDialogTitle: "Restore template",
+      resetDialogAction: "Restore",
       confirmReset: (name: string) => `Restore built-in template “${name}”?`,
+      deleteDialogTitle: "Delete template",
+      deleteDialogAction: "Delete",
+      confirmDelete: (name: string) => `Delete custom template “${name}”?`,
     };
   }
   return {
@@ -437,7 +457,12 @@ function getStrings() {
     reset: "已恢复内置模板",
     deleted: "模板已删除",
     activated: "已设为当前使用的模板",
+    resetDialogTitle: "恢复内置模板",
+    resetDialogAction: "恢复",
     confirmReset: (name: string) => `恢复模板“${name}”的内置内容？`,
+    deleteDialogTitle: "删除自定义模板",
+    deleteDialogAction: "删除",
+    confirmDelete: (name: string) => `删除自定义模板“${name}”？`,
   };
 }
 

@@ -29,6 +29,57 @@ function initZToolkit(_ztoolkit: ReturnType<typeof createZToolkit>) {
     "default",
     `chrome://${config.addonRef}/content/icons/favicon.png`,
   );
+  patchProgressWindowTheme(_ztoolkit);
+}
+
+function patchProgressWindowTheme(
+  _ztoolkit: ReturnType<typeof createZToolkit>,
+): void {
+  const progressWindow = _ztoolkit.ProgressWindow as any;
+  const prototype = progressWindow.prototype as any;
+  if (prototype.__zwlPaperThemePatched) return;
+
+  const updateIcons = prototype.updateIcons;
+  prototype.updateIcons = function (this: any, ...args: any[]) {
+    const result = updateIcons.apply(this, args);
+    const doc = this.lines
+      ?.map((line: any) => line?._hbox?.ownerDocument)
+      .find((value: Document | undefined) => Boolean(value)) as
+      | Document
+      | undefined;
+    if (doc) injectProgressWindowStyles(doc);
+    return result;
+  };
+  prototype.__zwlPaperThemePatched = true;
+}
+
+function injectProgressWindowStyles(doc: Document): void {
+  const stylesheets = [
+    ["zotwanglele-progress-paper-theme", "paper-theme.css"],
+    ["zotwanglele-progress-window-theme", "progress-window.css"],
+  ] as const;
+  const host = doc.documentElement;
+  if (!host) return;
+  for (const [id, filename] of stylesheets) {
+    if (doc.getElementById(id)) continue;
+    const link = doc.createElementNS("http://www.w3.org/1999/xhtml", "link");
+    link.id = id;
+    link.setAttribute("rel", "stylesheet");
+    link.setAttribute(
+      "href",
+      `chrome://${config.addonRef}/content/${filename}`,
+    );
+    link.addEventListener(
+      "load",
+      () => {
+        const popup = doc.defaultView as any;
+        popup?.sizeToContent?.();
+        (Zotero.ProgressWindowSet as any).tile?.(popup);
+      },
+      { once: true },
+    );
+    host.appendChild(link);
+  }
 }
 
 import { BasicTool, unregister } from "zotero-plugin-toolkit";

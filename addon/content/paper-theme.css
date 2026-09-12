@@ -1,0 +1,81 @@
+:root {
+  color-scheme: light;
+  --zwl-paper-canvas: #eee4d1;
+  --zwl-paper: #fbf8f0;
+  --zwl-paper-deep: #f5ecdc;
+  --zwl-paper-soft: #fffaf2;
+  --zwl-ink: #2b241e;
+  --zwl-ink-soft: #6c5d4f;
+  --zwl-rule: #d3c2a8;
+  --zwl-rule-soft: #e5d9c7;
+  --zwl-red: #b64b37;
+  --zwl-red-deep: #873627;
+  --zwl-plum: #69537e;
+  --zwl-moss: #3d6b55;
+  --zwl-ochre: #ac762a;
+  --zwl-info: #2368a2;
+  --zwl-success: #23844d;
+  --zwl-warning: #8a5e00;
+  --zwl-danger: #b42318;
+  --zwl-serif:
+    "Source Han Serif SC", "Noto Serif CJK SC", "Noto Serif SC", "思源宋体",
+    "Songti SC", "STSong", "SimSun", serif;
+  --zwl-mono:
+    ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  --zwl-focus: #c87968;
+  --zwl-focus-soft: #f1d4ca;
+  --zwl-radius-control: 6px;
+  --zwl-radius-panel: 8px;
+}
+
+/*
+ * XUL buttons retain the operating-system surface unless their native
+ * appearance is explicitly removed. A custom foreground color can otherwise
+ * be painted over the untouched native background, which makes light labels
+ * disappear on primary actions.
+ */
+.zwl-dashboard-shell button,
+.zwl-profile-editor-shell button,
+.zwl-prefs-root button,
+.zwl-dialog-root button,
+.zwl-dashboard-close-button,
+.zwl-editor-button,
+.zwl-prefs-dashboard-button,
+.zwl-prefs-button,
+.zwl-dialog-button {
+  appearance: none;
+  -moz-appearance: none;
+  -moz-default-appearance: none;
+  box-sizing: border-box;
+  background-image: none;
+  text-shadow: none;
+}
+
+.zwl-dashboard-shell button:disabled,
+.zwl-dashboard-shell button[disabled],
+.zwl-profile-editor-shell button:disabled,
+.zwl-profile-editor-shell button[disabled],
+.zwl-prefs-root button:disabled,
+.zwl-prefs-root button[disabled],
+.zwl-dialog-root button:disabled,
+.zwl-dialog-root button[disabled],
+.zwl-dashboard-close-button:disabled,
+.zwl-dashboard-close-button[disabled],
+.zwl-editor-button:disabled,
+.zwl-editor-button[disabled],
+.zwl-key-button:disabled,
+.zwl-key-button[disabled],
+.zwl-prefs-dashboard-button:disabled,
+.zwl-prefs-dashboard-button[disabled],
+.zwl-prefs-button:disabled,
+.zwl-prefs-button[disabled],
+.zwl-dialog-button:disabled,
+.zwl-dialog-button[disabled] {
+  border-color: var(--zwl-rule) !important;
+  color: #6f6255 !important;
+  background: #e9dfd0 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  cursor: default;
+  opacity: 1;
+}

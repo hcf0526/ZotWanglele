@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?> <?xml-stylesheet
+href="chrome://zotwanglele/content/paper-theme.css"?> <?xml-stylesheet
+href="chrome://zotwanglele/content/metadata-dialog.css"?>
 <window
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
@@ -13,44 +15,23 @@
   "
   ondialogcancel="window.zwlMetadataCancel()"
 >
-  <html:style>
-    html|body { margin: 0; padding: 0; font-family: sans-serif; color:
-    -moz-DialogText; background: -moz-Dialog; } .zwl-metadata-shell { display:
-    flex; flex-direction: column; gap: 10px; height: 100%; box-sizing:
-    border-box; padding: 16px; } .zwl-metadata-heading { margin: 0; font-size:
-    17px; font-weight: 600; overflow: hidden; text-overflow: ellipsis;
-    white-space: nowrap; } .zwl-metadata-note { margin: 0; color: #666;
-    font-size: 12px; } .zwl-metadata-table { display: flex; flex-direction:
-    column; gap: 8px; flex: 1; min-height: 0; overflow-y: auto; padding-right:
-    4px; } .zwl-metadata-header, .zwl-metadata-row { display: grid;
-    grid-template-columns: 70px minmax(0, 1fr) minmax(0, 1fr) 52px; gap: 8px;
-    align-items: stretch; } .zwl-metadata-header { position: sticky; top: 0;
-    z-index: 1; padding: 6px 8px; border-bottom: 1px solid #c8c8c8; background:
-    -moz-Dialog; color: #555; font-size: 12px; font-weight: 600; }
-    .zwl-metadata-row { border: 1px solid #d5d5d5; border-radius: 4px; padding:
-    8px; background: rgba(255, 255, 255, 0.55); } .zwl-metadata-field {
-    padding-top: 22px; font-weight: 600; word-break: break-word; }
-    .zwl-metadata-value-block { min-width: 0; } .zwl-metadata-caption {
-    margin-bottom: 4px; color: #777; font-size: 11px; } .zwl-metadata-value {
-    box-sizing: border-box; min-height: 42px; max-height: 150px; margin: 0;
-    padding: 7px; border: 1px solid #ddd; border-radius: 3px; overflow: auto;
-    background: rgba(255, 255, 255, 0.85); font: inherit; font-size: 12px;
-    line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .zwl-metadata-choice { display: flex; align-items: center; justify-content:
-    center; } .zwl-metadata-choice input { width: 16px; height: 16px; }
-    .zwl-metadata-empty { margin: auto; color: #666; font-size: 13px; }
-    .zwl-metadata-toolbar { display: flex; align-items: center; gap: 8px; }
-    .zwl-metadata-spacer { flex: 1; }
-  </html:style>
-
-  <vbox flex="1" style="padding: 0">
+  <vbox flex="1" class="zwl-dialog-root">
     <html:div class="zwl-metadata-shell">
-      <html:h1 id="zwl-metadata-title" class="zwl-metadata-heading">
-        更新文献信息
-      </html:h1>
-      <html:p class="zwl-metadata-note">
-        勾选需要写入 Zotero 的字段。当前值会保留到你确认应用为止。
-      </html:p>
+      <html:header class="zwl-dialog-header">
+        <html:img
+          class="zwl-dialog-brand-mark"
+          src="chrome://zotwanglele/content/icons/icon@32.png"
+          alt=""
+        />
+        <html:div class="zwl-dialog-heading-copy">
+          <html:h1 id="zwl-metadata-title" class="zwl-metadata-heading">
+            更新文献信息
+          </html:h1>
+          <html:p class="zwl-metadata-note">
+            勾选需要写入 Zotero 的字段。当前值会保留到你确认应用为止。
+          </html:p>
+        </html:div>
+      </html:header>
 
       <html:div class="zwl-metadata-header">
         <html:div>字段</html:div>
@@ -69,14 +50,24 @@
       </html:div>
 
       <html:div class="zwl-metadata-toolbar">
-        <button label="全选" oncommand="window.zwlMetadataSelectAll(true)" />
         <button
+          class="zwl-dialog-button"
+          label="全选"
+          oncommand="window.zwlMetadataSelectAll(true)"
+        />
+        <button
+          class="zwl-dialog-button"
           label="取消全选"
           oncommand="window.zwlMetadataSelectAll(false)"
         />
         <html:div class="zwl-metadata-spacer" />
-        <button label="取消" oncommand="window.zwlMetadataCancel()" />
         <button
+          class="zwl-dialog-button"
+          label="取消"
+          oncommand="window.zwlMetadataCancel()"
+        />
+        <button
+          class="zwl-dialog-button zwl-dialog-button-primary"
           label="应用所选"
           default="true"
           oncommand="window.zwlMetadataApply()"

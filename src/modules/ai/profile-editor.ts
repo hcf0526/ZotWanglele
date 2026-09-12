@@ -82,6 +82,7 @@ export function onProfileEditorLoad(win: Window) {
     title.textContent = "API Key";
     const remove = create("button");
     remove.type = "button";
+    remove.className = "zwl-key-button zwl-key-button-danger";
     remove.textContent = "移除";
     header.append(title, remove);
     card.append(header);
@@ -124,6 +125,7 @@ export function onProfileEditorLoad(win: Window) {
     actions.className = "zwl-key-header";
     const fetchButton = create("button");
     fetchButton.type = "button";
+    fetchButton.className = "zwl-key-button";
     fetchButton.textContent = "获取模型";
     const feedback = create("span");
     feedback.setAttribute("aria-live", "polite");
