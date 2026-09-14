@@ -1,12 +1,12 @@
 import { AiClient } from "../ai/ai-client";
-import { getActiveProfile, getProfile } from "../ai/profiles";
+import { getActiveProfile, getProfile, getModelLabel } from "../ai/profiles";
 import { getActiveTemplate, renderPrompt } from "../ai/prompts";
 import {
   cancellableDelay,
   requestText,
   throwIfAborted,
 } from "../../utils/request";
-import { TranslationSettings } from "./config";
+import { TranslationSettings, TranslationTarget } from "./config";
 import { TranslationError, tr } from "./locale";
 import { splitText } from "./text";
 
@@ -24,6 +24,14 @@ export interface TranslationRequest {
 export interface PreparedTranslator {
   fingerprint: string;
   translate(request: TranslationRequest): Promise<TranslationResult>;
+}
+
+export function targetLabel(target: TranslationTarget): string {
+  if (target.provider !== "ai") return tr(`provider-${target.provider}`);
+  const profile = target.aiProfileId
+    ? getProfile(target.aiProfileId)
+    : getActiveProfile();
+  return profile ? getModelLabel(profile) : tr("missing-model");
 }
 
 export function baiduSignature(
@@ -105,10 +113,14 @@ export function prepareTranslator(
   settings: TranslationSettings,
 ): PreparedTranslator {
   const saved = { ...settings };
-  const profile = saved.aiProfileId
-    ? getProfile(saved.aiProfileId)
-    : getActiveProfile();
-  const template = getActiveTemplate("selection-translate");
+  const profile =
+    saved.provider !== "ai"
+      ? null
+      : saved.aiProfileId
+        ? getProfile(saved.aiProfileId)
+        : getActiveProfile();
+  const template =
+    saved.provider === "ai" ? getActiveTemplate("selection-translate") : null;
   if (
     saved.provider === "ai" &&
     (!profile?.baseUrl || !profile.model || !template)
@@ -125,8 +137,22 @@ export function prepareTranslator(
   // Credentials influence cache validity, but only a digest is kept in the cache key.
   const fingerprint = Zotero.Utilities.Internal.md5(
     JSON.stringify([
-      saved,
-      saved.provider === "ai" ? [profile, template] : null,
+      "selection-translation-v2",
+      saved.provider,
+      saved.provider === "ai"
+        ? [
+            profile?.baseUrl,
+            profile?.apiKey,
+            profile?.model,
+            profile?.format,
+            profile?.temperature,
+            profile?.maxTokens,
+            template?.systemPrompt,
+            template?.userPrompt,
+          ]
+        : null,
+      saved.provider === "deepl" ? [saved.deeplKey, saved.deeplPlan] : null,
+      saved.provider === "baidu" ? [saved.baiduAppId, saved.baiduKey] : null,
     ]),
   );
   return {

@@ -69,7 +69,7 @@ describe("AI configuration surfaces", function () {
       assert.equal(getActiveId(), "beta");
       assert.equal(
         dashboard.document.getElementById("zwl-overview-model")?.textContent,
-        "beta",
+        "供应商甲/beta",
       );
       assert.isTrue(
         (host.querySelector('[id$="-profile-use"]') as any).disabled,

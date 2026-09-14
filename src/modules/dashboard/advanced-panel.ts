@@ -16,7 +16,7 @@ import {
   saveTranslateConfig,
 } from "../translate/config";
 import { checkEnv } from "../translate/uv-manager";
-import { getSupplierName, subscribeProfiles } from "../ai/profiles";
+import { getModelLabel, subscribeProfiles } from "../ai/profiles";
 
 /**
  * 在仪表盘窗口里挂载高级设置面板。返回卸载函数。
@@ -124,7 +124,7 @@ function refreshModelOptions(doc: Document, selectedId: string) {
     for (const profile of profiles) {
       const option = doc.createElement("option");
       option.value = profile.id;
-      option.textContent = `${getSupplierName(profile) || "未填写供应商"}/${profile.model}`;
+      option.textContent = getModelLabel(profile);
       option.selected = profile.id === current;
       select.append(option);
     }

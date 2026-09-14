@@ -22,6 +22,13 @@ pref("selectionTranslate.deeplPlan", "free");
 pref("selectionTranslate.deeplKey", "");
 pref("selectionTranslate.baiduAppId", "");
 pref("selectionTranslate.baiduKey", "");
+pref("selectionTranslate.historyLimit", 100);
+pref("selectionTranslate.historyMaxMB", 50);
+pref("selectionTranslate.comparisonEnabled", false);
+pref("selectionTranslate.comparisonTargets", "[]");
+pref("selectionTranslate.lengthRulesEnabled", false);
+pref("selectionTranslate.rulesConfigured", false);
+pref("selectionTranslate.lengthRules", "[]");
 
 // === 翻译模块 ===
 // 环境来源："uv-auto" | "uv-manual" | "bundle"

@@ -1,6 +1,6 @@
 import { AiClient, ChatMessage } from "../ai/ai-client";
 import { getActiveTemplate, renderPrompt } from "../ai/prompts";
-import { ApiProfile, getActiveProfile } from "../ai/profiles";
+import { ApiProfile, getActiveProfile, getModelLabel } from "../ai/profiles";
 import { markdownToHtmlMinimal } from "../reader/note-generator";
 import { getItemMeta, getPdfText } from "../reader/pdf-extractor";
 import {
@@ -73,7 +73,7 @@ export async function generateLiteratureReview(
     },
   ];
 
-  options.onProgress?.(`正在调用 ${profile!.name} · ${profile!.model}`);
+  options.onProgress?.(`正在调用 ${getModelLabel(profile!)}`);
   const client = createClient(profile!);
   let response;
   try {
@@ -217,7 +217,7 @@ export function formatReviewSource(
 function validateProfile(profile: ApiProfile | null): string | null {
   if (!profile) return "请在偏好设置中选择 AI 配置档";
   if (!profile.baseUrl || !profile.apiKey || !profile.model) {
-    return `AI 配置档“${profile.name}”的信息尚未填写完整`;
+    return `AI 配置档“${getModelLabel(profile)}”的信息尚未填写完整`;
   }
   return null;
 }

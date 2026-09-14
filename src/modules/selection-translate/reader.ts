@@ -5,6 +5,7 @@ import { TranslationSession } from "./session";
 import { mountTranslationView, element } from "./view";
 import { removeSelectionStyles } from "./styles";
 import { unmountSelectionPreferences } from "./preferences";
+import { translationHistory } from "./history";
 
 type Reader = _ZoteroTypes.ReaderInstance;
 interface ReaderSession {
@@ -145,7 +146,11 @@ export function registerSelectionTranslation(): void {
     prefObservers.push(
       Zotero.Prefs.registerObserver(
         PREF_PREFIX + name,
-        preferencesChanged,
+        name === "historyLimit" || name === "historyMaxMB"
+          ? () => {
+              void translationHistory.trim().catch(() => {});
+            }
+          : preferencesChanged,
         true,
       ),
     );

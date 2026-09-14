@@ -190,6 +190,12 @@ export function getSupplierName(profile: ApiProfileDraft): string {
     : (BUILTIN_PRESETS[profile.provider]?.name ?? profile.provider ?? "");
 }
 
+/** A single display name for model selectors, results and progress messages. */
+export function getModelLabel(profile: ApiProfileDraft): string {
+  const chinese = Zotero.locale?.startsWith("zh");
+  return `${getSupplierName(profile) || (chinese ? "未填写供应商" : "Unnamed provider")}/${profile.model || (chinese ? "尚未选择模型" : "No model selected")}`;
+}
+
 /** 按供应商首次出现的顺序分组，保留组内配置顺序。 */
 export function groupProfilesBySupplier(profiles: ApiProfile[]) {
   const groups = new Map<string, ApiProfile[]>();
