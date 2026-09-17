@@ -6,6 +6,7 @@ import {
   PREF_PREFIX,
 } from "../src/modules/selection-translate/config";
 import { TranslationSession } from "../src/modules/selection-translate/session";
+import { TranslationHistory } from "../src/modules/selection-translate/history";
 import {
   normalizeSelection,
   splitText,
@@ -76,6 +77,10 @@ describe("selection translation", function () {
     const instance = new TranslationSession(
       () => settings,
       () => ({ fingerprint: fingerprint(), translate }),
+      new TranslationHistory(
+        { read: async () => [], write: async () => {} },
+        () => 50,
+      ),
     );
     live.push(instance);
     return instance;
@@ -130,10 +135,12 @@ describe("selection translation", function () {
     instance.setSelection("first");
     const first = instance.run();
     await instance.run();
+    await sleep(0);
     assert.lengthOf(requests, 1);
     instance.setSelection("second");
     assert.isTrue(requests[0].signal.aborted);
     const second = instance.run();
+    await sleep(0);
     requests[0].onChunk?.("stale");
     finish[0]({ text: "old" });
     await first;
@@ -162,11 +169,11 @@ describe("selection translation", function () {
     await left.run();
     assert.isTrue(left.snapshot.fromCache);
     assert.equal(calls, 2);
-    await left.run(true);
-    assert.equal(calls, 3);
+    await left.run();
+    assert.equal(calls, 2);
     fingerprint = "model-b";
     await left.run();
-    assert.equal(calls, 4);
+    assert.equal(calls, 3);
     for (let i = 0; i < 51; i++) {
       left.setSelection(`text ${i}`);
       await left.run();
@@ -219,6 +226,7 @@ describe("selection translation", function () {
     });
     instance.setSelection("source");
     const work = instance.run();
+    await sleep(0);
     request.onChunk?.("partial");
     instance.stop();
     assert.isTrue(request.signal.aborted);
@@ -227,6 +235,7 @@ describe("selection translation", function () {
     assert.equal(instance.snapshot.status, "cancelled");
     assert.equal(instance.snapshot.text, "partial");
     const retry = instance.run();
+    await sleep(0);
     assert.equal(calls, 2);
     instance.dispose();
     assert.isTrue(request.signal.aborted);
@@ -354,16 +363,13 @@ describe("selection translation", function () {
       mountSelectionPreferences(doc, host);
       assert.lengthOf(host.querySelectorAll("#zwl-selection-settings"), 1);
       const field = host.querySelector(
-        '[data-pref="provider"]',
+        '[data-pref="targetLang"]',
       ) as HTMLSelectElement;
-      field.value = "deepl";
+      field.value = "en";
       field.dispatchEvent(
         new (doc.defaultView as any).Event("change", { bubbles: true }),
       );
-      assert.equal(getSettings().provider, "deepl");
-      assert.isFalse(
-        (host.querySelector('[data-provider="deepl"]') as HTMLElement).hidden,
-      );
+      assert.equal(getSettings().targetLang, "en");
     } finally {
       unmountSelectionPreferences();
       host.remove();
@@ -480,8 +486,30 @@ describe("selection translation", function () {
       await sleep(50);
       assert.include(bodies[0].textContent!, "译文 source 100");
       assert.include(bodies[1].textContent!, "译文 source 101");
-      assert.notInclude(bodies[0].textContent!, "source 101");
+      assert.notInclude(
+        bodies[0].querySelector(".zwl-selection-results")!.textContent!,
+        "source 101",
+      );
       assert.include(popupHosts[2].textContent!, "译文 source 102");
+      const savedHistory = (await IOUtils.readJSON(
+        PathUtils.join(
+          (PathUtils as any).profileDir,
+          "zotwanglele-selection-history.json",
+        ),
+      )) as any;
+      assert.equal(savedHistory.version, 1);
+      assert.isTrue(
+        savedHistory.entries.some(
+          (entry: any) =>
+            entry.sourceText === "source 100" &&
+            entry.results.some(
+              (result: any) => result.text === "译文 source 100",
+            ),
+        ),
+      );
+      assert.isNull(
+        bodies[0].querySelector('.zwl-selection-history [data-error="true"]'),
+      );
       popupHosts[0].remove();
       await sleep(20);
       assert.include(bodies[0].textContent!, "译文 source 100");

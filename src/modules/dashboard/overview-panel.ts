@@ -2,6 +2,7 @@ import { getAllTemplates, getCustomTemplates } from "../ai/prompts";
 import {
   getActiveProfile,
   getSupplierName,
+  getModelLabel,
   subscribeProfiles,
 } from "../ai/profiles";
 import { getTasks, subscribe } from "../translate/task-store";
@@ -22,7 +23,11 @@ export function mountOverviewPanel(win: Window): () => void {
     setText(
       doc,
       "zwl-overview-model",
-      profile?.model || (isChinese ? "尚未配置模型" : "Model not configured"),
+      profile?.model
+        ? getModelLabel(profile)
+        : isChinese
+          ? "尚未配置模型"
+          : "Model not configured",
     );
     setText(doc, "zwl-overview-prompts", String(getAllTemplates().length));
     setText(

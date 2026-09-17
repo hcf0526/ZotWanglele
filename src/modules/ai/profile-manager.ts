@@ -7,6 +7,7 @@ import {
   getActiveId,
   getProfile,
   getSupplierName,
+  getModelLabel,
   setActiveId,
   saveSupplier,
   deleteSupplier,
@@ -139,8 +140,9 @@ export function mountProfileManager(win: Window, host: Element): () => void {
     const scrollTop = list.scrollTop;
     const active = getProfile(getActiveId());
     list.replaceChildren();
-    currentName.textContent =
-      active?.model || text("尚未配置模型", "Model not configured");
+    currentName.textContent = active?.model
+      ? getModelLabel(active)
+      : text("尚未配置模型", "Model not configured");
     currentSupplier.textContent = active ? getSupplierName(active) : "";
     for (const [supplier, profiles] of groupProfilesBySupplier(
       listModelProfiles(),
@@ -168,7 +170,9 @@ export function mountProfileManager(win: Window, host: Element): () => void {
           class: "zwl-ai-model",
           "data-active": String(isActive),
         });
-        const name = profile.model || text("尚未添加模型", "No model added");
+        const name = profile.model
+          ? getModelLabel(profile)
+          : text("尚未添加模型", "No model added");
         item.appendChild(
           xul("label", {
             value: name,

@@ -27,6 +27,13 @@ declare namespace _ZoteroTypes {
       "selectionTranslate.deeplKey": string;
       "selectionTranslate.baiduAppId": string;
       "selectionTranslate.baiduKey": string;
+      "selectionTranslate.historyLimit": number;
+      "selectionTranslate.historyMaxMB": number;
+      "selectionTranslate.comparisonEnabled": boolean;
+      "selectionTranslate.comparisonTargets": string;
+      "selectionTranslate.lengthRulesEnabled": boolean;
+      "selectionTranslate.rulesConfigured": boolean;
+      "selectionTranslate.lengthRules": string;
       "translate.envSource": string;
       "translate.uvPath": string;
       "translate.bundlePath": string;

@@ -16,9 +16,12 @@ import {
 describe("AI configuration surfaces", function () {
   it("shares model selection, explicit activation and ordering across both windows", async function () {
     this.timeout(15_000);
-    const keys = ["ai.profiles", "ai.activeProfileId"].map(
-      (key) => `${config.prefsPrefix}.${key}`,
-    );
+    const keys = [
+      "ai.profiles",
+      "ai.activeProfileId",
+      "selectionTranslate.lengthRules",
+      "selectionTranslate.rulesConfigured",
+    ].map((key) => `${config.prefsPrefix}.${key}`);
     const original = keys.map((key) => Zotero.Prefs.get(key, true));
     const profile = (id: string, supplier = "供应商甲"): ApiProfile => ({
       id,
@@ -38,6 +41,20 @@ describe("AI configuration surfaces", function () {
       profile("gamma", "供应商乙"),
     ]);
     setActiveId("alpha");
+    Zotero.Prefs.set(
+      keys[2],
+      JSON.stringify([
+        {
+          id: "profile-sync",
+          unit: "words",
+          min: 0,
+          max: null,
+          targets: [{ provider: "ai", aiProfileId: "alpha" }],
+        },
+      ]),
+      true,
+    );
+    Zotero.Prefs.set(keys[3], true, true);
     const main = Zotero.getMainWindow();
     const host = main.document.createElementNS(
       "http://www.w3.org/1999/xhtml",
@@ -69,7 +86,7 @@ describe("AI configuration surfaces", function () {
       assert.equal(getActiveId(), "beta");
       assert.equal(
         dashboard.document.getElementById("zwl-overview-model")?.textContent,
-        "beta",
+        "供应商甲/beta",
       );
       assert.isTrue(
         (host.querySelector('[id$="-profile-use"]') as any).disabled,
@@ -103,7 +120,7 @@ describe("AI configuration surfaces", function () {
       assert.equal(getActiveId(), "alpha");
       assert.lengthOf(
         dashboard.document.querySelectorAll(
-          '#zwl-selection-settings [data-pref="aiProfileId"] option',
+          '#zwl-selection-settings [data-field="aiProfileId"] option',
         ),
         4,
       );
@@ -116,7 +133,7 @@ describe("AI configuration surfaces", function () {
       await waitFor(
         () =>
           dashboard.document.querySelectorAll(
-            '#zwl-selection-settings [data-pref="aiProfileId"] option',
+            '#zwl-selection-settings [data-field="aiProfileId"] option',
           ).length === 5,
       );
       assert.lengthOf(

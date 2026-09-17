@@ -97,7 +97,7 @@ export function onProfileEditorLoad(win: Window) {
     const url = create("input");
     url.type = "url";
     url.value = key.baseUrl;
-    url.placeholder = "https://api.example.com/v1";
+    url.placeholder = "https://api.example.com";
     field("Base URL", url);
     const secret = create("input");
     secret.type = "password";

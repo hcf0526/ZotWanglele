@@ -6,8 +6,8 @@
  */
 
 import { AiClient, ChatMessage } from "../ai/ai-client";
-import { ApiFormat, getPreset } from "../ai/presets";
-import { getActiveProfile } from "../ai/profiles";
+import { ApiFormat } from "../ai/presets";
+import { getActiveProfile, getModelLabel } from "../ai/profiles";
 import { getPdfText, getItemMeta } from "./pdf-extractor";
 import { getActiveTemplate, renderPrompt } from "../ai/prompts";
 import { getGeneratedNoteTag } from "./reading-notes";
@@ -55,7 +55,7 @@ export async function generateNoteForItem(
   if (!profile.baseUrl || !profile.apiKey || !profile.model) {
     return {
       ok: false,
-      message: `配置档「${profile.name}」缺少 Base URL / API Key / 模型`,
+      message: `配置档「${getModelLabel(profile)}」缺少 Base URL / API Key / 模型`,
     };
   }
 
@@ -99,7 +99,7 @@ export async function generateNoteForItem(
   ];
 
   // 4. 调 AI
-  log(`正在调用 ${getProviderName(profile.provider)} (${profile.model})…`);
+  log(`正在调用 ${getModelLabel(profile)}…`);
   const client = new AiClient({
     baseUrl: profile.baseUrl,
     apiKey: profile.apiKey,
@@ -139,11 +139,6 @@ export async function generateNoteForItem(
 // ============================================================
 // helpers
 // ============================================================
-
-function getProviderName(provider: string): string {
-  if (provider === "custom") return "自定义";
-  return getPreset(provider)?.name ?? provider;
-}
 
 /**
  * 把 Markdown 内容存为目标条目的子笔记。
