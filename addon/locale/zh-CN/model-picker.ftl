@@ -1,0 +1,9 @@
+model-picker-title = 选择模型
+model-picker-subtitle = 选择需要添加到当前 API Key 的模型
+model-picker-available = 未添加模型
+model-picker-existing = 已添加模型
+model-picker-empty-available = 暂无未添加模型
+model-picker-empty-existing = 暂无已添加模型
+model-picker-hint = 已添加模型默认保持选中，确认后将按当前选择更新列表
+model-picker-cancel = 取消
+model-picker-apply = 应用选择

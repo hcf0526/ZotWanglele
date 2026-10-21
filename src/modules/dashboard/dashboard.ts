@@ -5,6 +5,7 @@ import { mountOverviewPanel } from "./overview-panel";
 import { mountPromptsPanel } from "./prompts-panel";
 import { mountProfileManager } from "../ai/profile-manager";
 import { mountSelectionPreferences } from "../selection-translate/preferences";
+import { mountSyncPanel } from "./sync-panel";
 
 export type DashboardTab =
   | "overview"
@@ -12,7 +13,8 @@ export type DashboardTab =
   | "queue"
   | "prompts"
   | "advanced"
-  | "selection";
+  | "selection"
+  | "sync";
 
 const TAB_ORDER: DashboardTab[] = [
   "overview",
@@ -21,6 +23,7 @@ const TAB_ORDER: DashboardTab[] = [
   "prompts",
   "advanced",
   "selection",
+  "sync",
 ];
 
 // 仪表盘窗口 → 卸载函数列表（保证关闭时解订）
@@ -108,6 +111,11 @@ export function onDashboardLoad(win: Window) {
     list.push(mountAdvancedPanel(win));
   } catch (e) {
     ztoolkit.log("[Dashboard] mountAdvancedPanel error:", e);
+  }
+  try {
+    list.push(mountSyncPanel(win));
+  } catch (e) {
+    ztoolkit.log("[Dashboard] mountSyncPanel error:", e);
   }
   unmounters.set(win, list);
 }

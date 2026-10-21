@@ -3,15 +3,23 @@ import {
   ApiProfile,
   SupplierDraft,
   SupplierKey,
+  isValidBaseUrl,
+  normalizeBaseUrl,
   getSupplierDraft,
 } from "./profiles";
 import { ApiFormat } from "./presets";
 import { AiClient } from "./ai-client";
+import { onModelPickerLoad, openModelPicker } from "../ui/model-picker";
 
 export interface ProfileEditorResult {
   saved: boolean;
   draft: SupplierDraft | null;
 }
+
+const FORMAT_OPTIONS: Array<[ApiFormat, string]> = [
+  ["chat-completions", "Chat Completions"],
+  ["responses", "Responses"],
+];
 
 export function openProfileEditor(
   parentWin: Window,
@@ -31,6 +39,10 @@ export function openProfileEditor(
 export function onProfileEditorLoad(win: Window) {
   const doc = win.document;
   const args = (win as any).arguments;
+  if (args?.[0]?.modelPicker) {
+    onModelPickerLoad(win);
+    return;
+  }
   const initial: SupplierDraft = args?.[0]?.profile
     ? getSupplierDraft(args[0].profile)
     : { supplier: "", keys: [], temperature: 70, maxTokens: 4096 };
@@ -70,7 +82,7 @@ export function onProfileEditorLoad(win: Window) {
     key: SupplierKey = {
       apiKey: "",
       baseUrl: "",
-      format: "chat-completions",
+      formats: ["chat-completions"],
       models: [],
     },
   ) => {
@@ -97,25 +109,36 @@ export function onProfileEditorLoad(win: Window) {
     const url = create("input");
     url.type = "url";
     url.value = key.baseUrl;
-    url.placeholder = "https://api.example.com";
+    url.placeholder = "https://api.example.com/v1";
+    url.title = "请输入以 /v1 结尾的 OpenAI 兼容接口地址";
     field("Base URL", url);
     const secret = create("input");
     secret.type = "password";
     secret.value = key.apiKey;
     secret.autocomplete = "off";
     field("API Key", secret);
-    const format = create("select");
-    for (const [value, label] of [
-      ["chat-completions", "Chat Completions"],
-      ["responses", "Responses"],
-    ]) {
-      const option = create("option");
-      option.value = value;
-      option.textContent = label;
-      format.append(option);
+    const formatBox = create("div");
+    formatBox.className = "zwl-key-formats";
+    const selectedFormats = new Set<ApiFormat>(
+      key.formats?.length ? key.formats : ["chat-completions"],
+    );
+    const formatChecks: Array<{ value: ApiFormat; input: HTMLInputElement }> =
+      [];
+    for (const [value, label] of FORMAT_OPTIONS) {
+      const option = create("label");
+      option.className = "zwl-key-format-option";
+      const checkbox = create("input");
+      checkbox.type = "checkbox";
+      checkbox.dataset.format = value;
+      checkbox.checked = selectedFormats.has(value);
+      option.append(checkbox, doc.createTextNode(label));
+      formatBox.append(option);
+      formatChecks.push({ value, input: checkbox });
     }
-    format.value = key.format;
-    field("API 格式", format);
+    if (!formatChecks.some((item) => item.input.checked)) {
+      formatChecks[0].input.checked = true;
+    }
+    field("API 格式（可多选）", formatBox);
     const models = create("textarea");
     models.rows = 3;
     models.value = key.models.join("\n");
@@ -133,19 +156,25 @@ export function onProfileEditorLoad(win: Window) {
     card.append(actions);
     const row = {
       element: card,
-      read: (): SupplierKey => ({
-        baseUrl: url.value.trim(),
-        apiKey: secret.value.trim(),
-        format: format.value as ApiFormat,
-        models: [
-          ...new Set(
-            models.value
-              .split(/\r?\n/)
-              .map((s) => s.trim())
-              .filter(Boolean),
-          ),
-        ],
-      }),
+      read: (): SupplierKey => {
+        let formats = formatChecks
+          .filter((item) => item.input.checked)
+          .map((item) => item.value);
+        if (!formats.length) formats = ["chat-completions"];
+        return {
+          baseUrl: normalizeBaseUrl(url.value),
+          apiKey: secret.value.trim(),
+          formats,
+          models: [
+            ...new Set(
+              models.value
+                .split(/\r?\n/)
+                .map((s) => s.trim())
+                .filter(Boolean),
+            ),
+          ],
+        };
+      },
     };
     remove.addEventListener("click", () => {
       rows.splice(rows.indexOf(row), 1);
@@ -153,8 +182,8 @@ export function onProfileEditorLoad(win: Window) {
     });
     fetchButton.addEventListener("click", async () => {
       const value = row.read();
-      if (!/^https?:\/\//i.test(value.baseUrl) || !value.apiKey) {
-        feedback.textContent = "请填写有效的 Base URL 和 API Key";
+      if (!isValidBaseUrl(value.baseUrl) || !value.apiKey) {
+        feedback.textContent = "请填写以 /v1 结尾的 Base URL 和 API Key";
         return;
       }
       const snapshot = JSON.stringify(value);
@@ -162,8 +191,10 @@ export function onProfileEditorLoad(win: Window) {
       feedback.textContent = "正在获取模型…";
       try {
         const fetched = await new AiClient({
-          ...value,
+          baseUrl: value.baseUrl,
+          apiKey: value.apiKey,
           model: "",
+          format: value.formats[0] ?? "chat-completions",
           maxRetries: 0,
         }).listModels();
         if (closed || !card.isConnected) return;
@@ -171,10 +202,21 @@ export function onProfileEditorLoad(win: Window) {
           feedback.textContent = "内容已修改，请重新获取模型";
           return;
         }
-        if (fetched.length) models.value = fetched.join("\n");
-        feedback.textContent = fetched.length
-          ? `已获取 ${fetched.length} 个模型`
-          : "返回列表为空，已保留现有模型";
+        const selected = openModelPicker(win, {
+          fetchedModels: fetched,
+          currentModels: value.models,
+        });
+        if (closed || !card.isConnected) return;
+        if (JSON.stringify(row.read()) !== snapshot) {
+          feedback.textContent = "内容已修改，请重新获取模型";
+          return;
+        }
+        if (selected === null) {
+          feedback.textContent = "已取消模型选择，现有模型已保留";
+          return;
+        }
+        models.value = selected.join("\n");
+        feedback.textContent = `已获取 ${fetched.length} 个模型，已选择 ${selected.length} 个`;
       } catch {
         if (!closed && card.isConnected)
           feedback.textContent =
@@ -201,9 +243,13 @@ export function onProfileEditorLoad(win: Window) {
     const keys = rows.map((row) => row.read());
     if (
       !keys.length ||
-      keys.some((key) => !key.apiKey || !/^https?:\/\//i.test(key.baseUrl))
+      keys.some((key) => !key.apiKey || !isValidBaseUrl(key.baseUrl))
     ) {
-      status.textContent = "请为每个 Key 填写有效的 Base URL 和 API Key";
+      status.textContent = "请为每个 Key 填写以 /v1 结尾的 Base URL 和 API Key";
+      return;
+    }
+    if (keys.some((key) => !key.formats.length)) {
+      status.textContent = "请为每个 Key 至少勾选一种 API 格式";
       return;
     }
     result.saved = true;

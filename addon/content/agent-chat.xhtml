@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?> <?xml-stylesheet
+href="chrome://zotwanglele/content/paper-theme.css"?> <?xml-stylesheet
+href="chrome://zotwanglele/content/agent-chat.css"?>
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  title="ZotWanglele - AGENT 对话"
+  windowtype="zotwanglele:agent-chat"
+  width="860"
+  height="720"
+  persist="screenX screenY width height"
+  onload="
+    ChromeUtils.importESModule(
+      'chrome://zotero/content/zotero.mjs',
+    ).Zotero.__addonInstance__.hooks.onAgentChatLoad(window)
+  "
+>
+  <vbox class="zwl-agent-window-shell" flex="1">
+    <html:header class="zwl-agent-window-header">
+      <html:img
+        class="zwl-agent-window-mark"
+        src="chrome://zotwanglele/content/icons/icon@32.png"
+        alt=""
+      />
+      <html:div class="zwl-agent-window-heading">
+        <html:h1>AGENT 对话</html:h1>
+        <html:p>
+          多轮学术对话。文献与划词会加入上下文；发送时记住快照，可随时修改。
+        </html:p>
+      </html:div>
+    </html:header>
+    <html:div id="zwl-agent-chat-host" class="zwl-agent-window-host" flex="1" />
+  </vbox>
+</window>

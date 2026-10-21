@@ -16,6 +16,7 @@ import {
 } from "./profiles";
 import { openProfileEditor } from "./profile-editor";
 import { openConfirmDialog } from "../ui/confirm-dialog";
+import { AiClient } from "./ai-client";
 
 const mounts = new Map<Element, () => void>();
 
@@ -23,7 +24,7 @@ export function unmountProfileManagers(): void {
   for (const cleanup of [...mounts.values()]) cleanup();
 }
 
-/** Both entry points render the same supplier/model controls and actions. */
+/** Both entry points render the same configuration and model controls. */
 export function mountProfileManager(win: Window, host: Element): () => void {
   mounts.get(host)?.();
   ensureDefaultProfile();
@@ -55,8 +56,8 @@ export function mountProfileManager(win: Window, host: Element): () => void {
       "p",
       "zwl-ai-hint",
       text(
-        "按供应商管理 API Key 与模型，双击模型可编辑所属供应商。",
-        "Manage API keys and models by provider. Double-click a model to edit its provider.",
+        "管理多个 API Key 与模型，双击模型可编辑关联信息。",
+        "Manage API keys and models. Double-click a model to edit its association.",
       ),
     ),
   );
@@ -71,7 +72,7 @@ export function mountProfileManager(win: Window, host: Element): () => void {
   const list = xul("richlistbox", {
     id: id("list"),
     class: "zwl-ai-list",
-    "aria-label": text("供应商与模型", "Providers and models"),
+    "aria-label": text("配置与模型", "Configurations and models"),
   });
   const actions = html("div", "zwl-ai-actions");
   const status = html("p", "zwl-ai-status");
@@ -79,6 +80,9 @@ export function mountProfileManager(win: Window, host: Element): () => void {
   root.append(heading, current, list, actions, status);
   host.appendChild(root);
   const cleanups: Array<() => void> = [];
+  let disposed = false;
+  let testSerial = 0;
+  let testInFlight = false;
   const on = (el: EventTarget, event: string, handler: EventListener) => {
     el.addEventListener(event, handler);
     cleanups.push(() => el.removeEventListener(event, handler));
@@ -125,6 +129,7 @@ export function mountProfileManager(win: Window, host: Element): () => void {
       active &&
       getSupplierName(selected) === getSupplierName(active);
     buttons.get("use").disabled = !selected?.model || !!same;
+    buttons.get("test").disabled = !selected?.model || testInFlight;
     buttons.get("edit").disabled = !selected;
     buttons.get("delete").disabled =
       !selected || groupProfilesBySupplier(listProfiles()).size <= 1;
@@ -154,7 +159,7 @@ export function mountProfileManager(win: Window, host: Element): () => void {
       });
       header.appendChild(
         xul("label", {
-          value: supplier || text("未填写供应商", "Unnamed provider"),
+          value: supplier || text("未命名配置", "Unnamed configuration"),
           crop: "end",
           flex: "1",
         }),
@@ -203,7 +208,58 @@ export function mountProfileManager(win: Window, host: Element): () => void {
     if (!draft) return;
     const saved = saveSupplier(draft, getSupplierName(profile));
     select(saved.id);
-    message(text("供应商已保存", "Provider saved"));
+    message(text("配置已保存", "Configuration saved"));
+  };
+  const testConnection = async () => {
+    const selected = getProfile(selectedId() || "");
+    if (!selected?.model || testInFlight) return;
+    const serial = ++testSerial;
+    testInFlight = true;
+    updateActions();
+    message(text("正在测试连接…", "Testing connection…"));
+    try {
+      const result = await new AiClient({
+        baseUrl: selected.baseUrl,
+        apiKey: selected.apiKey,
+        model: selected.model,
+        format: selected.format,
+        temperature: selected.temperature / 100,
+        maxTokens: selected.maxTokens,
+        maxRetries: 0,
+      }).testConnection();
+      if (disposed || serial !== testSerial) return;
+      if (result.ok) {
+        message(
+          text(
+            `连接成功，延迟 ${result.latencyMs} ms`,
+            `Connection succeeded, ${result.latencyMs} ms`,
+          ),
+        );
+      } else {
+        message(
+          text(
+            `连接失败，延迟 ${result.latencyMs} ms，${result.message.slice(0, 120)}`,
+            `Connection failed after ${result.latencyMs} ms, ${result.message.slice(0, 120)}`,
+          ),
+          true,
+        );
+      }
+    } catch (error) {
+      if (disposed || serial !== testSerial) return;
+      const detail = error instanceof Error ? error.message : String(error);
+      message(
+        text(
+          `连接失败，${detail.slice(0, 120)}`,
+          `Connection failed, ${detail.slice(0, 120)}`,
+        ),
+        true,
+      );
+    } finally {
+      if (serial === testSerial) {
+        testInFlight = false;
+        if (!disposed) updateActions();
+      }
+    }
   };
   button(
     "use",
@@ -216,34 +272,37 @@ export function mountProfileManager(win: Window, host: Element): () => void {
     },
     "zwl-ai-button-primary",
   );
-  button("add", text("添加供应商", "Add provider"), () => {
+  button("test", text("测试连接", "Test connection"), () => {
+    void testConnection();
+  });
+  button("add", text("添加", "Add"), () => {
     const draft = openProfileEditor(win, null);
     if (!draft) return;
     const saved = saveSupplier(draft);
     select(saved.id);
-    message(text("供应商已添加", "Provider added"));
+    message(text("配置已添加", "Configuration added"));
   });
-  button("edit", text("编辑供应商", "Edit provider"), edit);
+  button("edit", text("编辑", "Edit"), edit);
   button(
     "delete",
-    text("删除供应商", "Delete provider"),
+    text("删除", "Delete"),
     () => {
       const selected = selectedId();
       if (!selected || groupProfilesBySupplier(listProfiles()).size <= 1)
         return;
       if (
         !openConfirmDialog(win, {
-          title: text("删除供应商", "Delete provider"),
+          title: text("删除配置", "Delete configuration"),
           message: text(
-            "确定删除所选模型所属供应商及其全部 Key 和模型？",
-            "Delete this provider and all of its API keys and models?",
+            "确定删除所选模型所属配置及其全部 Key 和模型？",
+            "Delete this configuration and all of its API keys and models?",
           ),
           confirmLabel: text("删除", "Delete"),
         })
       )
         return;
       deleteSupplier(selected);
-      message(text("供应商已删除", "Provider deleted"));
+      message(text("配置已删除", "Configuration deleted"));
     },
     "zwl-ai-button-danger",
   );
@@ -260,14 +319,19 @@ export function mountProfileManager(win: Window, host: Element): () => void {
     );
   }
   actions.appendChild(order);
-  on(list, "select", () => updateActions());
+  on(list, "select", () => {
+    if (testInFlight) {
+      testSerial++;
+      testInFlight = false;
+    }
+    updateActions();
+  });
   on(list, "dblclick", (event: Event) => {
     const item = (event.target as Element).closest("richlistitem");
     if (item && !item.hasAttribute("data-header")) edit();
   });
   refresh();
   cleanups.push(subscribeProfiles(refresh));
-  let disposed = false;
   const cleanup = () => {
     if (disposed) return;
     disposed = true;

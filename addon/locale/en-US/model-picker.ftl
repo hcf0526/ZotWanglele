@@ -1,0 +1,9 @@
+model-picker-title = Choose Models
+model-picker-subtitle = Choose the models to add to this API key
+model-picker-available = Available to add
+model-picker-existing = Already added
+model-picker-empty-available = No models are available to add
+model-picker-empty-existing = No models have been added
+model-picker-hint = Added models stay selected by default. Apply the current selection to update the list.
+model-picker-cancel = Cancel
+model-picker-apply = Apply Selection

@@ -2378,9 +2378,13 @@
 }
 
 .zwl-metrics {
-  grid-template-columns: repeat(4, minmax(145px, 1fr));
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
   gap: 14px;
   margin: 20px 0 0;
+}
+
+.zwl-metric:first-child {
+  grid-column: span 2;
 }
 
 .zwl-metric {
@@ -3104,6 +3108,72 @@
   overflow-y: auto;
 }
 
+/* Keep the task header fixed while records and long messages scroll inside
+   their own paper surfaces. */
+.zwl-task-records {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.zwl-task-records-header {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.zwl-task-records-list {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.zwl-task-card {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.zwl-task-card-toggle {
+  align-items: start;
+}
+
+.zwl-task-target-count,
+.zwl-task-card-title,
+.zwl-task-card-summary,
+.zwl-task-current-step,
+.zwl-task-item-title {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.zwl-task-card-title {
+  display: block;
+  text-overflow: clip;
+}
+
+.zwl-task-status,
+.zwl-task-progress-value,
+.zwl-task-chevron {
+  margin-top: 1px;
+}
+
+.zwl-task-card-details {
+  min-width: 0;
+}
+
+.zwl-task-message {
+  max-width: 100%;
+  max-height: 180px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
 /* Editor column scrolls as a whole; textareas stack naturally, action
    bar stays below them in flow. Right padding separates this column
    scrollbar from the textarea scrollbar beside it. */
@@ -3205,7 +3275,7 @@
   }
 }
 
-/* Six dashboard sections share the same tab rhythm and scroll within the page. */
+/* Dashboard sections share the same tab rhythm and scroll within the page. */
 .zwl-dashboard-tabs tab {
   flex: 1;
   min-width: 0;
@@ -3215,8 +3285,23 @@
 .zwl-dashboard-tab-ai {
   background-image: url("chrome://zotwanglele/content/icons/dashboard/model.svg");
 }
+.zwl-dashboard-tab-overview {
+  background-image: url("chrome://zotwanglele/content/icons/dashboard/overview.svg");
+}
+.zwl-dashboard-tab-queue {
+  background-image: url("chrome://zotwanglele/content/icons/dashboard/task-list.svg");
+}
+.zwl-dashboard-tab-prompts {
+  background-image: url("chrome://zotwanglele/content/icons/dashboard/sparkles.svg");
+}
+.zwl-dashboard-tab-advanced {
+  background-image: url("chrome://zotwanglele/content/icons/dashboard/settings.svg");
+}
 .zwl-dashboard-tab-selection {
-  background-image: url("chrome://zotwanglele/content/icons/preferences/profiles.svg");
+  background-image: url("chrome://zotwanglele/content/icons/dashboard/languages.svg");
+}
+.zwl-dashboard-tab-sync {
+  background-image: url("chrome://zotwanglele/content/icons/dashboard/sync.svg");
 }
 .zwl-dashboard-ai-root,
 .zwl-dashboard-selection-root {
@@ -3249,6 +3334,175 @@
   border-top: 1px solid var(--zwl-rule-soft);
   gap: 18px 24px;
 }
+
+.zwl-sync-root {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+  padding: 24px 28px;
+  color: var(--zwl-ink);
+}
+
+.zwl-sync-heading {
+  margin: 0;
+  color: var(--zwl-ink);
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.zwl-sync-description {
+  max-width: 760px;
+  margin: 8px 0 20px;
+  color: var(--zwl-ink-soft);
+  line-height: 1.65;
+}
+
+.zwl-sync-section {
+  max-width: 820px;
+  margin: 0;
+  padding: 18px 20px 20px;
+  border: 1px solid var(--zwl-rule);
+  border-radius: 8px;
+  background: var(--zwl-paper-soft);
+}
+
+.zwl-sync-legend {
+  padding: 0 8px;
+  color: var(--zwl-red-deep);
+  font-weight: 800;
+}
+
+.zwl-sync-grid {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 12px 18px;
+  align-items: center;
+}
+
+.zwl-sync-grid label {
+  color: var(--zwl-ink-soft);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.zwl-sync-grid input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 1px solid #d2c1a9;
+  border-radius: 6px;
+  color: var(--zwl-ink);
+  background: #fffdf8;
+  font: inherit;
+}
+
+.zwl-sync-grid input:focus-visible {
+  border-color: #c87968;
+  outline: 2px solid #f1d4ca;
+  outline-offset: 1px;
+}
+
+.zwl-sync-secret-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  color: var(--zwl-ink);
+  font-weight: 700;
+}
+
+.zwl-sync-secret-option input {
+  accent-color: var(--zwl-red);
+}
+
+.zwl-sync-secret-note {
+  max-width: 720px;
+  margin: 8px 0 0 24px;
+  color: var(--zwl-ink-soft);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.zwl-sync-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  max-width: 860px;
+  margin-top: 18px;
+}
+
+.zwl-sync-actions button {
+  min-height: 32px;
+  padding: 5px 13px;
+  border: 1px solid #cbb99f;
+  border-radius: 6px;
+  color: var(--zwl-ink);
+  background: var(--zwl-paper-soft);
+  font: inherit;
+  cursor: pointer;
+}
+
+.zwl-sync-actions button:hover {
+  border-color: #c87968;
+  color: var(--zwl-red-deep);
+  background: #f9e9e2;
+}
+
+.zwl-sync-actions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.zwl-sync-actions .zwl-sync-button-primary {
+  border-color: var(--zwl-red);
+  color: #fffaf2;
+  background: var(--zwl-red);
+  box-shadow: 0 2px 0 #8e382a;
+  font-weight: 800;
+}
+
+.zwl-sync-actions .zwl-sync-button-primary:hover {
+  border-color: var(--zwl-red-deep);
+  color: #ffffff;
+  background: var(--zwl-red-deep);
+}
+
+.zwl-sync-status {
+  min-width: 180px;
+  color: var(--zwl-ink-soft);
+  font-size: 13px;
+}
+
+.zwl-sync-status[data-state="checking"] {
+  color: var(--zwl-amber, #ac762a);
+}
+
+.zwl-sync-status[data-state="success"] {
+  color: var(--zwl-green, #3d6b55);
+}
+
+.zwl-sync-status[data-state="error"] {
+  color: var(--zwl-red-deep);
+}
+
+@media (max-width: 760px) {
+  .zwl-sync-root {
+    padding: 18px;
+  }
+
+  .zwl-sync-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .zwl-sync-grid input {
+    margin-bottom: 7px;
+  }
+}
+
 @media (max-width: 880px) {
   .zwl-dashboard-tabs tab {
     padding-inline: 8px;

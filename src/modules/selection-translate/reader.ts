@@ -6,6 +6,7 @@ import { mountTranslationView, element } from "./view";
 import { removeSelectionStyles } from "./styles";
 import { unmountSelectionPreferences } from "./preferences";
 import { translationHistory } from "./history";
+import { addSelectionToAgentContext, openAgentChatWindow } from "../agent";
 
 type Reader = _ZoteroTypes.ReaderInstance;
 interface ReaderSession {
@@ -54,13 +55,38 @@ function disposeSection(body: HTMLElement): void {
   sections.delete(body);
 }
 
+/** 从划词弹层事件中尽量取出选区文本（兼容不同 Zotero 字段与未建批注的情况） */
+function readPopupSelectionText(params: any, reader: any): string {
+  const candidates = [
+    params?.annotation?.text,
+    params?.annotation?.comment,
+    params?.text,
+    params?.selectedText,
+    params?.selection?.text,
+  ];
+  for (const value of candidates) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  try {
+    const win = reader?._iframeWindow;
+    const selected = win?.getSelection?.()?.toString?.() ?? "";
+    if (selected.trim()) return selected.trim();
+  } catch {
+    // ignore
+  }
+  return "";
+}
+
 export function onSelectionPopup(
   event: _ZoteroTypes.Reader.EventParams<"renderTextSelectionPopup">,
 ): void {
   const { reader, doc, params, append } = event;
-  if (!getSettings().enabled || reader.type !== "pdf") return;
-  const text = params.annotation?.text ?? "";
-  if (!text.trim()) return;
+  if (reader.type !== "pdf") return;
+  const text = readPopupSelectionText(params, reader);
+  if (!text) return;
+
+  // 划词翻译视图仍受自身开关控制
+  if (!getSettings().enabled) return;
   const record = sessionFor(reader);
   record.session.setSelection(text);
   const host = element(doc, "div");
@@ -83,6 +109,22 @@ export function onSelectionPopup(
   record.session.scheduleAutomatic(
     () => host.isConnected && sessions.has(reader),
   );
+}
+
+function onSelectorContextMenu(
+  event: _ZoteroTypes.Reader.EventParams<"createSelectorContextMenu">,
+): void {
+  const { reader, append } = event;
+  if (reader.type !== "pdf") return;
+  const text = readPopupSelectionText({}, reader);
+  if (!text) return;
+  append({
+    label: "添加至对话",
+    onCommand: () => {
+      addSelectionToAgentContext(text);
+      openAgentChatWindow(reader._window ?? Zotero.getMainWindow());
+    },
+  });
 }
 
 function renderSection({ body, tabType, setEnabled }: any): void {
@@ -126,16 +168,21 @@ export function registerSelectionTranslation(): void {
     onSelectionPopup,
     config.addonID,
   );
+  Zotero.Reader.registerEventListener(
+    "createSelectorContextMenu",
+    onSelectorContextMenu,
+    config.addonID,
+  );
   const id = Zotero.ItemPaneManager.registerSection({
     paneID: "zotwanglele-selection-translation",
     pluginID: config.addonID,
     header: {
       l10nID: getLocaleID("selection-section-header" as any),
-      icon: `chrome://${config.addonRef}/content/icons/toolbar.png`,
+      icon: `chrome://${config.addonRef}/content/icons/sidebar-selection.svg`,
     },
     sidenav: {
       l10nID: getLocaleID("selection-section-header" as any),
-      icon: `chrome://${config.addonRef}/content/icons/toolbar.png`,
+      icon: `chrome://${config.addonRef}/content/icons/sidebar-selection.svg`,
     },
     onRender: renderSection,
     onItemChange: renderSection,
@@ -194,6 +241,10 @@ export function unregisterSelectionTranslation(): void {
   Zotero.Reader.unregisterEventListener(
     "renderTextSelectionPopup",
     onSelectionPopup,
+  );
+  Zotero.Reader.unregisterEventListener(
+    "createSelectorContextMenu",
+    onSelectorContextMenu,
   );
   if (sectionId) Zotero.ItemPaneManager.unregisterSection(sectionId);
   sectionId = undefined;

@@ -1,6 +1,7 @@
 import { assert } from "chai";
 import {
   getSupplierName,
+  isValidBaseUrl,
   groupProfilesBySupplier,
   listProfiles,
   moveProfile,
@@ -69,6 +70,20 @@ describe("profile suppliers", function () {
     assert.deepEqual(listProfiles(), [
       { ...originalProfile, supplier: "供应商乙" },
     ]);
+  });
+
+  it("requires the Base URL to end with /v1 and migrates legacy roots", function () {
+    assert.isTrue(isValidBaseUrl("https://example.com/v1"));
+    assert.isTrue(isValidBaseUrl("http://localhost:11434/v1/"));
+    assert.isFalse(isValidBaseUrl("https://example.com"));
+    assert.isFalse(isValidBaseUrl("https://example.com/v1/models"));
+
+    const legacy = profile("legacy");
+    (legacy as any).baseUrl = "https://legacy.example";
+    Zotero.Prefs.set(prefKey, JSON.stringify([legacy]), true);
+    assert.equal(listProfiles()[0].baseUrl, "https://legacy.example/v1");
+    const stored = JSON.parse(Zotero.Prefs.get(prefKey, true) as string);
+    assert.equal(stored[0].baseUrl, "https://legacy.example/v1");
   });
 
   it("moves within a supplier group across interleaved profiles", function () {

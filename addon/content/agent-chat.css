@@ -1,0 +1,63 @@
+:root {
+  background: var(--zwl-paper-canvas);
+  color: var(--zwl-ink);
+}
+
+.zwl-agent-window-shell {
+  display: flex;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  padding: 14px 16px 12px;
+  background: var(--zwl-paper-canvas);
+  font-family: var(--zwl-serif);
+}
+
+.zwl-agent-window-header {
+  display: flex;
+  flex: none;
+  gap: 12px;
+  align-items: center;
+  padding: 0 2px 12px;
+  border-bottom: 1px solid #d9c9b2;
+}
+
+.zwl-agent-window-mark {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #c7b59b;
+  border-radius: 4px;
+  background: var(--zwl-paper-soft);
+  box-shadow: 0 4px 10px rgba(73, 53, 29, 0.12);
+  object-fit: contain;
+}
+
+.zwl-agent-window-heading h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.zwl-agent-window-heading p {
+  margin: 4px 0 0;
+  color: var(--zwl-ink-soft);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.zwl-agent-window-host {
+  flex: 1;
+  min-height: 0;
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid var(--zwl-rule);
+  border-radius: 8px;
+  background: var(--zwl-paper);
+  box-shadow: 0 4px 12px rgba(73, 53, 29, 0.08);
+}
+
+.zwl-agent-window-host .zwl-agent-shell {
+  height: 100%;
+}

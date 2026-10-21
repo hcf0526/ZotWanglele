@@ -29,11 +29,45 @@ export interface ApiProfile {
   maxTokens: number;
 }
 
+/** Remove trailing slashes before storing or composing an API endpoint. */
+export function normalizeBaseUrl(value: string): string {
+  return String(value ?? "")
+    .trim()
+    .replace(/\/+$/, "");
+}
+
+/** Keep legacy profiles usable while making the stored endpoint end in /v1. */
+export function ensureV1BaseUrl(value: string): string {
+  const normalized = normalizeBaseUrl(value);
+  if (!normalized || /\/v1$/i.test(normalized)) return normalized;
+  if (!/^https?:\/\//i.test(normalized)) return normalized;
+  return `${normalized}/v1`;
+}
+
+/** New Base URL values must point at an OpenAI-compatible /v1 endpoint. */
+export function isValidBaseUrl(value: string): boolean {
+  const normalized = normalizeBaseUrl(value);
+  if (!/^https?:\/\//i.test(normalized)) return false;
+  try {
+    const url = new URL(normalized);
+    return (
+      (url.protocol === "http:" || url.protocol === "https:") &&
+      !!url.hostname &&
+      !url.search &&
+      !url.hash &&
+      /\/v1$/i.test(url.pathname)
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** 根据 baseUrl 推断 provider（迁移旧数据用） */
 export function inferProvider(baseUrl: string): string {
   if (!baseUrl) return "custom";
+  const normalized = ensureV1BaseUrl(baseUrl);
   for (const [key, preset] of Object.entries(BUILTIN_PRESETS)) {
-    if (baseUrl.startsWith(preset.baseUrl)) return key;
+    if (normalized.startsWith(preset.baseUrl)) return key;
   }
   return "custom";
 }
@@ -43,7 +77,8 @@ export type ApiProfileDraft = Omit<ApiProfile, "id">;
 export interface SupplierKey {
   apiKey: string;
   baseUrl: string;
-  format: ApiFormat;
+  /** 该端点支持的 API 格式，可多选 */
+  formats: ApiFormat[];
   models: string[];
 }
 
@@ -54,24 +89,77 @@ export interface SupplierDraft {
   maxTokens: number;
 }
 
+const FORMAT_ORDER: ApiFormat[] = ["chat-completions", "responses"];
+
+function normalizeFormats(formats: ApiFormat[] | undefined): ApiFormat[] {
+  const list = (formats ?? []).filter((format): format is ApiFormat =>
+    FORMAT_ORDER.includes(format as ApiFormat),
+  );
+  const unique = [...new Set(list)];
+  if (!unique.length) return ["chat-completions"];
+  return FORMAT_ORDER.filter((format) => unique.includes(format));
+}
+
+function supplierModelKey(profile: ApiProfileDraft): string {
+  return JSON.stringify([getSupplierName(profile), profile.model]);
+}
+
+function skipUnnamedModel(
+  profile: ApiProfile,
+  profiles: ApiProfile[],
+): boolean {
+  return (
+    !profile.model &&
+    profiles.some(
+      (p) => getSupplierName(p) === getSupplierName(profile) && p.model,
+    )
+  );
+}
+
 /** Keep every key/model route in storage; expose each supplier/model once. */
 export function listModelProfiles(format?: ApiFormat): ApiProfile[] {
-  const seen = new Set<string>();
   const profiles = listProfiles();
-  return profiles.filter((profile) => {
+  const eligible = (profile: ApiProfile) => {
     if (format && profile.format !== format) return false;
+    return !skipUnnamedModel(profile, profiles);
+  };
+  const preferred = new Map<string, ApiProfile>();
+  for (const profile of profiles) {
+    if (!eligible(profile)) continue;
+    const key = supplierModelKey(profile);
+    const current = preferred.get(key);
     if (
-      !profile.model &&
-      profiles.some(
-        (p) => getSupplierName(p) === getSupplierName(profile) && p.model,
-      )
-    )
-      return false;
-    const key = JSON.stringify([getSupplierName(profile), profile.model]);
-    if (seen.has(key)) return false;
+      !current ||
+      (profile.format === "responses" && current.format !== "responses")
+    ) {
+      preferred.set(key, profile);
+    }
+  }
+  const seen = new Set<string>();
+  const result: ApiProfile[] = [];
+  for (const profile of profiles) {
+    if (!eligible(profile)) continue;
+    const key = supplierModelKey(profile);
+    if (seen.has(key)) continue;
+    const chosen = preferred.get(key);
+    if (!chosen) continue;
     seen.add(key);
-    return true;
-  });
+    result.push(chosen);
+  }
+  return result;
+}
+
+/** 文件上传场景优先 Responses；同一 Key 若同时支持两种格式则选用 Responses。 */
+export function resolveFileUploadProfile(profile: ApiProfile): ApiProfile {
+  if (profile.format === "responses") return profile;
+  const sibling = listProfiles().find(
+    (p) =>
+      p.baseUrl === profile.baseUrl &&
+      p.apiKey === profile.apiKey &&
+      p.model === profile.model &&
+      p.format === "responses",
+  );
+  return sibling ?? profile;
 }
 
 export function getSupplierDraft(profile: ApiProfile): SupplierDraft {
@@ -80,21 +168,28 @@ export function getSupplierDraft(profile: ApiProfile): SupplierDraft {
   for (const item of listProfiles().filter(
     (p) => getSupplierName(p) === supplier,
   )) {
-    const id = JSON.stringify([item.baseUrl, item.apiKey, item.format]);
+    const id = JSON.stringify([item.baseUrl, item.apiKey]);
     if (!keys.has(id)) {
       keys.set(id, {
         baseUrl: item.baseUrl,
         apiKey: item.apiKey,
-        format: item.format,
+        formats: [],
         models: [],
       });
     }
-    const models = keys.get(id)!.models;
+    const key = keys.get(id)!;
+    if (item.format && !key.formats.includes(item.format)) {
+      key.formats.push(item.format);
+    }
+    const models = key.models;
     if (item.model && !models.includes(item.model)) models.push(item.model);
   }
   return {
     supplier,
-    keys: [...keys.values()],
+    keys: [...keys.values()].map((key) => ({
+      ...key,
+      formats: normalizeFormats(key.formats),
+    })),
     temperature: profile.temperature,
     maxTokens: profile.maxTokens,
   };
@@ -123,23 +218,26 @@ export function saveSupplier(
     const models = [
       ...new Set(key.models.map((model) => model.trim()).filter(Boolean)),
     ];
-    for (const model of models.length ? models : [""]) {
-      const value = {
-        baseUrl: key.baseUrl.trim(),
-        apiKey: key.apiKey.trim(),
-        format: key.format,
-        model,
-      };
-      const old = prior.get(route(value));
-      replacements.set(route(value), {
-        ...value,
-        id: old?.id ?? generateId(),
-        name: model || supplier,
-        supplier,
-        provider: old?.provider ?? "custom",
-        temperature: draft.temperature,
-        maxTokens: draft.maxTokens,
-      });
+    const formats = normalizeFormats(key.formats);
+    for (const format of formats) {
+      for (const model of models.length ? models : [""]) {
+        const value = {
+          baseUrl: ensureV1BaseUrl(key.baseUrl),
+          apiKey: key.apiKey.trim(),
+          format,
+          model,
+        };
+        const old = prior.get(route(value));
+        replacements.set(route(value), {
+          ...value,
+          id: old?.id ?? generateId(),
+          name: model || supplier,
+          supplier,
+          provider: old?.provider ?? "custom",
+          temperature: draft.temperature,
+          maxTokens: draft.maxTokens,
+        });
+      }
     }
   }
   const inserted = [...replacements.values()];
@@ -236,9 +334,12 @@ export function listProfiles(): ApiProfile[] {
     // 迁移：为旧 profile 补全 provider 字段
     let mutated = false;
     const migrated = arr.map((p: any) => {
-      if (typeof p.provider === "string") return p as ApiProfile;
+      const baseUrl = ensureV1BaseUrl(p.baseUrl ?? "");
+      const next = { ...p, baseUrl };
+      if (baseUrl !== p.baseUrl) mutated = true;
+      if (typeof p.provider === "string") return next as ApiProfile;
       mutated = true;
-      return { ...p, provider: inferProvider(p.baseUrl ?? "") } as ApiProfile;
+      return { ...next, provider: inferProvider(baseUrl) } as ApiProfile;
     });
     if (mutated) saveProfiles(migrated);
     return migrated;
@@ -248,7 +349,15 @@ export function listProfiles(): ApiProfile[] {
 }
 
 export function saveProfiles(profiles: ApiProfile[]) {
-  setPref(PREF_PROFILES, JSON.stringify(profiles));
+  setPref(
+    PREF_PROFILES,
+    JSON.stringify(
+      profiles.map((profile) => ({
+        ...profile,
+        baseUrl: ensureV1BaseUrl(profile.baseUrl),
+      })),
+    ),
+  );
 }
 
 export function getActiveId(): string {
@@ -301,7 +410,7 @@ function readLegacyAiPrefs(): ApiProfileDraft {
   return {
     name: "默认",
     provider: inferProvider(baseUrl),
-    baseUrl,
+    baseUrl: ensureV1BaseUrl(baseUrl),
     apiKey: getPref<string>("ai.apiKey", ""),
     model: getPref<string>("ai.model", ""),
     format: getPref<ApiFormat>("ai.format", "chat-completions"),
@@ -312,7 +421,11 @@ function readLegacyAiPrefs(): ApiProfileDraft {
 
 /** 添加一个新 profile，返回创建的实例 */
 export function addProfile(draft: ApiProfileDraft): ApiProfile {
-  const newProfile: ApiProfile = { id: generateId(), ...draft };
+  const newProfile: ApiProfile = {
+    id: generateId(),
+    ...draft,
+    baseUrl: ensureV1BaseUrl(draft.baseUrl),
+  };
   const profiles = listProfiles();
   profiles.push(newProfile);
   saveProfiles(profiles);
@@ -329,7 +442,11 @@ export function updateProfile(
   const profiles = listProfiles();
   const idx = profiles.findIndex((p) => p.id === id);
   if (idx === -1) return false;
-  profiles[idx] = { ...profiles[idx], ...draft };
+  profiles[idx] = {
+    ...profiles[idx],
+    ...draft,
+    baseUrl: ensureV1BaseUrl(draft.baseUrl ?? profiles[idx].baseUrl),
+  };
   saveProfiles(profiles);
   return true;
 }

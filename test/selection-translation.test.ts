@@ -386,6 +386,34 @@ describe("selection translation", function () {
       ).length,
       1,
     );
+    assert.equal(
+      listeners.filter(
+        (entry: any) =>
+          entry.type === "createSelectorContextMenu" &&
+          entry.pluginID === config.addonID,
+      ).length,
+      1,
+    );
+    const selectorListener = listeners.find(
+      (entry: any) =>
+        entry.type === "createSelectorContextMenu" &&
+        entry.pluginID === config.addonID,
+    ).handler;
+    let selectorMenu: any;
+    selectorListener({
+      reader: {
+        type: "pdf",
+        _iframeWindow: {
+          getSelection: () => ({ toString: () => "selected passage" }),
+        },
+      },
+      params: { x: 0, y: 0 },
+      append: (entry: any) => {
+        selectorMenu = entry;
+      },
+    });
+    assert.equal(selectorMenu?.label, "添加至对话");
+    assert.isFunction(selectorMenu?.onCommand);
     const sections = (Zotero.ItemPaneManager as any).customSectionData.options;
     assert.isTrue(
       sections.some((entry: any) =>
@@ -474,7 +502,10 @@ describe("selection translation", function () {
           params: { annotation: { text: `source ${reader.itemID}` } },
           append: (node: HTMLElement) => {
             host.appendChild(node);
-            popupHosts.push(node);
+            // 仅收集翻译浮层宿主；AGENT 按钮使用独立 class
+            if (node.classList?.contains("zwl-selection-popup-host")) {
+              popupHosts.push(node);
+            }
           },
         });
         (

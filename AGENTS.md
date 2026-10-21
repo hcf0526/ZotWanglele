@@ -12,20 +12,21 @@ AI 调用采用 OpenAI 兼容协议。PDF 翻译采用 PDFMathTranslate 系列�
 
 ## 当前状态
 
-| 模块      | 状态   | 说明                                                   |
-| --------- | ------ | ------------------------------------------------------ |
-| 项目骨架  | 已实现 | 启动、关闭、偏好设置注册和本地化                       |
-| AI 配置档 | 已实现 | 多配置档、编辑器、排序、当前配置与连通性检测           |
-| AI 客户端 | 已实现 | Chat Completions、Responses、SSE 和重试                |
-| PDF 精读  | 基础版 | 索引文本、单轮生成、子笔记和串行批处理                 |
-| PDF 翻译  | 基础版 | 子进程、服务端、逐篇任务记录和结果附件                 |
-| 划词翻译  | 已实现 | 四类服务、持久历史、多方案对比、长度规则、浮层与工具栏 |
-| 仪表盘    | 已实现 | 概览、AI 配置、任务记录、提示词管理与两类翻译设置      |
-| 文献综述  | 基础版 | 多条目上下文、AI 生成与独立笔记                        |
-| 标题翻译  | 已实现 | 批量翻译、Extra 存储与 Zotero 自定义列                 |
-| 管理工具  | 待开发 | `src/modules/tools/` 仅含 `.gitkeep`                   |
-| 思维导图  | 待开发 | `src/modules/mindmap/` 仅含 `.gitkeep`                 |
-| 阅读侧栏  | 已实现 | Zotero 条目面板中的 AI 笔记预览、生成、刷新和打开      |
+| 模块       | 状态   | 说明                                                    |
+| ---------- | ------ | ------------------------------------------------------- |
+| 项目骨架   | 已实现 | 启动、关闭、偏好设置注册和本地化                        |
+| AI 配置档  | 已实现 | 多配置档、编辑器、Key 级 API 格式多选、排序与连通性检测 |
+| AI 客户端  | 已实现 | Chat Completions、Responses、文件上传消息、SSE 和重试   |
+| PDF 精读   | 已实现 | PDF 附件上传、单轮生成、子笔记和串行批处理              |
+| PDF 翻译   | 基础版 | 子进程、服务端、逐篇任务记录和结果附件                  |
+| 划词翻译   | 已实现 | 四类服务、持久历史、多方案对比、长度规则、浮层与工具栏  |
+| 仪表盘     | 已实现 | 概览、AI 配置、任务记录、提示词管理、两类翻译设置与 WebDAV 设置同步 |
+| 文献综述   | 基础版 | 题录上下文、缺摘要时 PDF 附件上传、AI 生成与独立笔记    |
+| AGENT 对话 | 已实现 | 工具栏/侧栏聊天、提示词管理、多轮上下文与右键加入       |
+| 标题翻译   | 已实现 | 批量翻译、Extra 存储与 Zotero 自定义列                  |
+| 管理工具   | 待开发 | `src/modules/tools/` 仅含 `.gitkeep`                    |
+| 思维导图   | 待开发 | `src/modules/mindmap/` 仅含 `.gitkeep`                  |
+| 阅读侧栏   | 已实现 | Zotero 条目面板中的 AI 笔记预览、生成、刷新和打开       |
 
 ## 代码结构
 
@@ -46,6 +47,7 @@ src/modules/review/              多文献综述生成与笔记保存
 src/modules/title-translate/     标题翻译、Extra 存储与条目列表列
 src/modules/tasks/                统一任务记录、订阅与清理
 src/modules/translate/           翻译配置、环境、子进程与执行器
+src/modules/sync/                WebDAV 设置同步与偏好范围管理
 src/modules/dashboard/           仪表盘窗口、任务记录页与高级设置
 src/modules/ui/toolbar.ts        主窗口工具栏入口
 addon/content/                   XUL/XHTML 界面与样式
@@ -63,10 +65,10 @@ test/                            启动测试、翻译流程测试与 PDF 样例
 | `src/modules/preferenceScript.ts`         | 插件设置页面逻辑：AI 配置档列表、增删改排序、注入 `preferences.css`（`injectPrefsStylesheet`，偏好面板会丢弃 XHTML 顶部 `xml-stylesheet`，样式表只能运行时注入）。                                                                                                                        |
 | `src/modules/ai/ai-client.ts`             | 全部 AI 网络调用的唯一出口：Chat Completions、Responses、SSE 流式、重试。                                                                                                                                                                                                                 |
 | `src/modules/ai/profiles.ts`              | AI 配置档的持久化（Zotero prefs 中的 JSON）、当前配置切换。                                                                                                                                                                                                                               |
-| `src/modules/ai/profile-editor.ts`        | 配置档编辑窗口逻辑与 API 连通性检测。                                                                                                                                                                                                                                                     |
+| `src/modules/ai/profile-editor.ts`        | 配置档编辑窗口：供应商、多 Key、API 格式多选、模型列表与保存。                                                                                                                                                                                                                            |
 | `src/modules/ai/prompts.ts`               | 内置提示词与自定义模板管理，仪表盘提示词页的数据来源。                                                                                                                                                                                                                                    |
 | `src/modules/reader/note-preview.ts`      | 条目面板“AI 笔记预览”区块：论文精读/快速摘要的自定义下拉切换、生成、刷新、打开笔记、字号与高度调整。样式内嵌于 `ensurePreviewStyles`；内容容器使用 `contain: inline-size` 让 Zotero 决定侧栏宽度，避免 JS 测宽循环与长内容撑破面板；笔记 HTML 经 `sanitizePreviewHtml` 白名单清理后渲染。 |
-| `src/modules/reader/note-generator.ts`    | 精读/摘要生成流程：全文索引读取、任务记录联动、子笔记写入。                                                                                                                                                                                                                               |
+| `src/modules/reader/note-generator.ts`    | 精读/摘要生成流程：PDF 附件上传、任务记录联动、子笔记写入。                                                                                                                                                                                                                               |
 | `src/modules/reader/reading-notes.ts`     | 精读与摘要子笔记的定义、查找与归属（附件映射父文献）。                                                                                                                                                                                                                                    |
 | `src/modules/reader/menu.ts`              | 条目右键菜单注册（精读、摘要、翻译、综述、标题翻译、文献信息更新）。                                                                                                                                                                                                                      |
 | `src/modules/review/`                     | 多文献综述生成、上下文构建与独立笔记保存。                                                                                                                                                                                                                                                |
@@ -79,6 +81,8 @@ test/                            启动测试、翻译流程测试与 PDF 样例
 | `src/modules/dashboard/advanced-panel.ts` | 文献翻译设置页：翻译环境、引擎、输出与语言。                                                                                                                                                                                                                                              |
 | `src/modules/dashboard/prompts-panel.ts`  | 提示词管理页：按功能列出内置能力，中间管理该功能的模板，右侧编辑提示词。                                                                                                                                                                                                                  |
 | `src/modules/dashboard/overview-panel.ts` | 工作概览页：配置、模板、任务统计与常用操作。                                                                                                                                                                                                                                              |
+| `src/modules/dashboard/sync-panel.ts`     | 设置同步页：WebDAV 配置、上传、下载和服务测试。                                                                                                                                                                                                                                          |
+| `src/modules/sync/webdav.ts`              | WebDAV 设置快照、远程文件读写与 API Key 同步范围管理。                                                                                                                                                                                                                                   |
 | `src/modules/ui/confirm-dialog.ts`        | 统一操作确认窗口：删除供应商、删除自定义模板与恢复内置模板。                                                                                                                                                                                                                              |
 | `src/modules/ui/toolbar.ts`               | Zotero 主工具栏的仪表盘按钮。                                                                                                                                                                                                                                                             |
 | `addon/content/paper-theme.css`           | 全插件纸感主题变量：纸面、文字、分隔线、功能色、字体与焦点色。                                                                                                                                                                                                                            |
@@ -91,7 +95,7 @@ test/                            启动测试、翻译流程测试与 PDF 样例
 AI 配置由 `src/modules/ai/profile-manager.ts` 在插件设置页面与仪表盘共用，
 样式位于 `addon/content/ai-config.css`。供应商及当前模型变化通过偏好观察器同步，
 窗口卸载时清理观察器与事件。仪表盘页签顺序为概览、AI 配置、任务记录、提示词管理、
-文献翻译设置和划词翻译设置；划词翻译设置仅在仪表盘挂载，继续使用 `selectionTranslate.*`。
+文献翻译设置、划词翻译设置和设置同步；划词翻译设置仅在仪表盘挂载，继续使用 `selectionTranslate.*`。
 
 ## 界面区域称呼
 
@@ -271,7 +275,7 @@ npm test
 <claude-mem-context>
 # Memory Context
 
-# [ZotWanglele] recent context, 2026-09-10 11:36pm GMT+8
+# [ZotWanglele] recent context, 2026-10-06 12:03am GMT+8
 
 No previous sessions found.
 </claude-mem-context>

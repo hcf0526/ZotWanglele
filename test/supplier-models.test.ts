@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import { AiClient } from "../src/modules/ai/ai-client";
+import { splitModelGroups } from "../src/modules/ui/model-picker";
 import {
   getActiveId,
   getSupplierDraft,
@@ -26,13 +27,13 @@ const draft = (): SupplierDraft => ({
     {
       baseUrl: "https://example.com/v1",
       apiKey: "key-a",
-      format: "chat-completions",
+      formats: ["chat-completions"],
       models: ["alpha", "shared"],
     },
     {
       baseUrl: "https://example.com/v1",
       apiKey: "key-b",
-      format: "chat-completions",
+      formats: ["chat-completions"],
       models: ["beta", "shared"],
     },
   ],
@@ -56,6 +57,19 @@ describe("supplier models", function () {
       else (Zotero.Prefs as any).set(prefix + key, prefs[index], true);
     });
     Zotero.HTTP.request = request;
+  });
+
+  it("separates fetched models from the models already added to a key", function () {
+    assert.deepEqual(
+      splitModelGroups({
+        fetchedModels: [" alpha ", "gamma", "delta", "gamma"],
+        currentModels: ["beta", "alpha", "beta"],
+      }),
+      {
+        available: ["gamma", "delta"],
+        existing: ["beta", "alpha"],
+      },
+    );
   });
 
   it("merges model display while preserving each key's routes on save and reopen", function () {
@@ -110,7 +124,7 @@ describe("supplier models", function () {
 
   it("filters translation-compatible routes before merging duplicate model names", function () {
     const value = draft();
-    value.keys[0].format = "responses";
+    value.keys[0].formats = ["responses"];
     saveSupplier(value);
     assert.deepEqual(
       getChatProfilesForTranslation().map((p) => p.model),
@@ -118,6 +132,29 @@ describe("supplier models", function () {
     );
     assert.isTrue(
       getChatProfilesForTranslation().every((p) => p.apiKey === "key-b"),
+    );
+  });
+
+  it("expands multi-selected endpoint formats into separate routes", function () {
+    const value = draft();
+    value.keys[0].formats = ["chat-completions", "responses"];
+    value.keys[0].models = ["alpha"];
+    value.keys[1].models = ["beta"];
+    saveSupplier(value);
+    const alphaRoutes = listProfiles().filter((p) => p.model === "alpha");
+    assert.deepEqual(alphaRoutes.map((p) => p.format).sort(), [
+      "chat-completions",
+      "responses",
+    ]);
+    assert.deepEqual(
+      listModelProfiles().find((p) => p.model === "alpha")?.format,
+      "responses",
+      "display prefers Responses when both formats exist",
+    );
+    const reopened = getSupplierDraft(listProfiles()[0]);
+    assert.deepEqual(
+      reopened.keys.map((key) => key.formats),
+      [["chat-completions", "responses"], ["chat-completions"]],
     );
   });
 
@@ -157,8 +194,8 @@ describe("supplier models", function () {
       };
     };
     for (const baseUrl of [
-      "https://example.com",
       "https://example.com/v1",
+      "https://example.com",
       "https://example.com/v1/",
     ]) {
       const client = new AiClient({
@@ -181,7 +218,7 @@ describe("supplier models", function () {
 
   it("rejects authentication failures and malformed responses", async function () {
     const client = new AiClient({
-      baseUrl: "https://example.com",
+      baseUrl: "https://example.com/v1",
       apiKey: "test-only",
       model: "",
       format: "chat-completions",

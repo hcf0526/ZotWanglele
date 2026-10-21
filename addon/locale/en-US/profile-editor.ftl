@@ -1,10 +1,10 @@
-editor-title = Edit Provider
+editor-title = Configuration
 editor-subtitle = Configure the API connection, model, and generation settings
 editor-section-connection = Connection
 editor-section-generation = Generation settings
 editor-field-name = Name
 editor-field-supplier = Provider
-editor-field-format = API Format
+editor-field-format = API Formats (multi-select)
 editor-field-baseurl = Base URL
 editor-field-apikey = API Key
 editor-field-model = Model

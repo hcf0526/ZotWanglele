@@ -165,6 +165,77 @@ describe("AI configuration surfaces", function () {
     }
   });
 
+  it("tests the selected model and reports request latency", async function () {
+    this.timeout(10_000);
+    const keys = ["ai.profiles", "ai.activeProfileId"].map(
+      (key) => `${config.prefsPrefix}.${key}`,
+    );
+    const originalPrefs = keys.map((key) => Zotero.Prefs.get(key, true));
+    const originalRequest = Zotero.HTTP.request;
+    const profile: ApiProfile = {
+      id: "connection-test",
+      supplier: "测试供应商",
+      name: "测试模型",
+      model: "test-model",
+      provider: "custom",
+      baseUrl: "https://example.com/v1",
+      apiKey: "test-only",
+      format: "chat-completions",
+      temperature: 70,
+      maxTokens: 4096,
+    };
+    saveProfiles([profile]);
+    setActiveId(profile.id);
+    let requestBody: any;
+    Zotero.HTTP.request = (async (
+      _method: string,
+      _url: string,
+      options: any,
+    ) => {
+      requestBody = JSON.parse(options.body);
+      return {
+        status: 200,
+        responseText: JSON.stringify({
+          choices: [{ message: { content: "hello" }, finish_reason: "stop" }],
+        }),
+      };
+    }) as any;
+    const main = Zotero.getMainWindow();
+    const host = main.document.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "div",
+    );
+    main.document.documentElement!.appendChild(host);
+    const cleanup = mountProfileManager(main, host);
+    try {
+      await waitFor(() => host.querySelectorAll(".zwl-ai-model").length === 1);
+      const list = host.querySelector(".zwl-ai-list") as any;
+      list.selectedItem = host.querySelector('[value="connection-test"]');
+      const testButton = host.querySelector('[id$="-profile-test"]') as any;
+      assert.isFalse(testButton.disabled);
+      testButton.doCommand();
+      await waitFor(() =>
+        host.querySelector(".zwl-ai-status")?.textContent?.includes("连接成功")
+          ? true
+          : false,
+      );
+      assert.equal(requestBody.messages[0].content, "hi");
+      assert.match(
+        host.querySelector(".zwl-ai-status")!.textContent!,
+        /延迟 \d+ ms/,
+      );
+    } finally {
+      cleanup();
+      host.remove();
+      Zotero.HTTP.request = originalRequest;
+      keys.forEach((key, index) => {
+        const value = originalPrefs[index];
+        if (value === undefined) Zotero.Prefs.clear(key, true);
+        else Zotero.Prefs.set(key, value, true);
+      });
+    }
+  });
+
   for (const surface of ["dashboard", "preferences"] as const) {
     // Each case uses the native window and its actual modal commands.
     it(`loads and preserves saved keys through the ${surface} supplier dialogs`, async function () {
@@ -237,10 +308,14 @@ describe("AI configuration surfaces", function () {
               'input[type="password"]',
             )!;
             assert.equal(secret.value, profile.apiKey);
-            assert.equal(
-              cards[index].querySelector("select")!.value,
-              profile.format,
-            );
+            const checkedFormats = [
+              ...cards[index].querySelectorAll<HTMLInputElement>(
+                'input[type="checkbox"][data-format]',
+              ),
+            ]
+              .filter((box) => box.checked)
+              .map((box) => box.dataset.format);
+            assert.deepEqual(checkedFormats, [profile.format]);
             assert.equal(
               cards[index].querySelector("textarea")!.value,
               index === 0 ? "alpha\nbeta" : "gamma",
@@ -270,13 +345,13 @@ describe("AI configuration surfaces", function () {
           {
             apiKey: first.apiKey,
             baseUrl: first.baseUrl,
-            format: first.format,
+            formats: [first.format],
             models: ["alpha", "beta", "delta"],
           },
           {
             apiKey: second.apiKey,
             baseUrl: second.baseUrl,
-            format: second.format,
+            formats: [second.format],
             models: ["gamma"],
           },
         ]);
@@ -290,7 +365,7 @@ describe("AI configuration surfaces", function () {
         commandWithDialog(parent, "delete", "confirm-dialog", (win) => {
           assert.match(
             win.document.getElementById("zwl-confirm-title")!.textContent!,
-            /删除供应商|Delete provider/,
+            /删除配置|Delete configuration/,
           );
           (
             win.document.getElementById("zwl-confirm-cancel") as any

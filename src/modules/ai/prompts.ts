@@ -196,6 +196,28 @@ const BUILTIN_TEMPLATES: PromptTemplate[] = [
     builtin: true,
     featureId: "selection-translate",
   },
+  {
+    id: "agent-chat",
+    name: "AGENT 对话",
+    description: "多轮学术对话，可引用文献与划词上下文",
+    systemPrompt: `你是 ZotWanglele 的学术研究对话助手，面向文献阅读与论文分析。
+要求：
+- 使用中文回答，结构清晰，必要时用 Markdown 列表或小标题；
+- 优先依据用户提供的「对话上下文」（文献题录、摘要、PDF 附件、划词原文）作答；
+- 上下文未覆盖的内容应明确说明依据不足，避免编造数据、引用或结论；
+- 用户可随时增删上下文；回答时对应当时已挂载的材料；
+- 涉及方法、实验或结论时，尽量指出信息来自哪条上下文条目；
+- 保持对话连贯，可追问、对比多篇文献或总结研究脉络。`,
+    userPrompt: `请结合当前对话上下文回答用户问题。
+
+对话上下文：
+{{context}}
+
+用户消息：
+{{message}}`,
+    builtin: true,
+    featureId: "agent-chat",
+  },
 ];
 
 // ============================================================
@@ -213,6 +235,13 @@ type BuiltinPromptOverride = Partial<
 let customTemplates: PromptTemplate[] | null = null;
 let builtinOverrides: Record<string, BuiltinPromptOverride> | null = null;
 let activeTemplateIds: Record<string, string> | null = null;
+
+/** Clear in-memory prompt data after settings are restored from another device. */
+export function resetPromptCaches(): void {
+  customTemplates = null;
+  builtinOverrides = null;
+  activeTemplateIds = null;
+}
 
 const BUILTIN_FEATURE_IDS = new Set(
   BUILTIN_TEMPLATES.map((template) => template.id),

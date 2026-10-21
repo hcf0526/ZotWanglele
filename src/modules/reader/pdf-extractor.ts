@@ -1,10 +1,13 @@
 /**
  * PDF 提取器：从 Zotero 条目中拿到 PDF 内容。
  *
- * 两种方式：
- * - Base64：整个 PDF 文件 → Base64，可作为多模态附件发送
- * - 文本：Zotero 已索引的 PDF 全文，纯文本兜底
+ * 精读、摘要与综述统一走文件上传：
+ * - Base64：整个 PDF 文件 → Base64，按 API 格式作为文件块发送
+ * - 文本：仅作兼容保留，不再作为 PDF 相关任务的主路径
  */
+
+/** 单个 PDF 上传体积上限（字节），避免请求体或上下文被撑爆 */
+export const MAX_PDF_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 export interface PdfAttachmentRef {
   /** 附件 itemID */
@@ -66,7 +69,7 @@ export async function getPdfText(
 /**
  * 把 PDF 整个读出来转成 Base64 字符串（不含 data: 前缀）。
  *
- * 用于多模态模型作为 image_url/file 输入。注意大文件会很慢/很大。
+ * 用于 Chat Completions 的 file 块与 Responses 的 input_file。
  */
 export async function getPdfBase64(item: Zotero.Item): Promise<string | null> {
   const ref = await getFirstPdfAttachment(item);
@@ -78,6 +81,21 @@ export async function getPdfBase64(item: Zotero.Item): Promise<string | null> {
     ztoolkit.log("[PdfExtractor] getPdfBase64 error:", e);
     return null;
   }
+}
+
+/** 估算 Base64 字符串对应的原始字节数 */
+export function estimateBase64Bytes(base64: string): number {
+  const clean = base64.replace(/^data:[^,]+,/, "").replace(/\s+/g, "");
+  if (!clean) return 0;
+  const padding = clean.endsWith("==") ? 2 : clean.endsWith("=") ? 1 : 0;
+  return Math.max(0, Math.floor((clean.length * 3) / 4) - padding);
+}
+
+/** 为附件生成可上传的文件名 */
+export function buildPdfFileName(title: string, fallback = "paper"): string {
+  const base = (title || fallback).trim().slice(0, 48).replace(/\s+/g, " ");
+  const safe = base.replace(/[\\/:*?"<>|]/g, "_") || fallback;
+  return safe.toLowerCase().endsWith(".pdf") ? safe : `${safe}.pdf`;
 }
 
 /**
