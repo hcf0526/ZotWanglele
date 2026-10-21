@@ -45,7 +45,7 @@ class TestClient extends AiClient {
 const messages = [{ role: "user" as const, content: "Translate this text" }];
 const client = (format: "chat-completions" | "responses", maxRetries = 0) =>
   new TestClient({
-    baseUrl: "https://example.invalid",
+    baseUrl: "https://example.invalid/v1",
     apiKey: "test-key",
     model: "test-model",
     format,
@@ -224,6 +224,29 @@ describe("AI transport", function () {
       (await failure(client("chat-completions").chat(messages))).message,
       "invalid",
     );
+  });
+
+  it("tests a connection with hi and records request latency", async function () {
+    let body: any;
+    Zotero.HTTP.request = (async (
+      _method: string,
+      _url: string,
+      options: any,
+    ) => {
+      body = JSON.parse(options.body);
+      return {
+        status: 200,
+        responseText: JSON.stringify({
+          choices: [{ message: { content: "hello" }, finish_reason: "stop" }],
+        }),
+      };
+    }) as any;
+    const result = await client("chat-completions").testConnection();
+    assert.isTrue(result.ok);
+    assert.equal(result.message, "hello");
+    assert.isAtLeast(result.latencyMs, 0);
+    assert.equal(body.messages[0].role, "user");
+    assert.equal(body.messages[0].content, "hi");
   });
 
   it("cancels non-stream HTTP and retry backoff and maps Zotero timeouts", async function () {

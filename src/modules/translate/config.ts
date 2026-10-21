@@ -9,6 +9,7 @@ import {
   getProfile,
   getSupplierName,
   listModelProfiles,
+  ensureV1BaseUrl,
 } from "../ai/profiles";
 
 const PREF_PREFIX = `extensions.zotero.${pkg.addonRef}.`;
@@ -118,7 +119,8 @@ export function loadTranslateConfig(): TranslateConfig {
     service: getPref<string>("translate.service", "openailiked"),
     aiProfileId: selectedProfile?.id ?? storedProfileId,
     aiBaseUrl:
-      selectedProfile?.baseUrl ?? getPref<string>("translate.aiBaseUrl", ""),
+      selectedProfile?.baseUrl ??
+      ensureV1BaseUrl(getPref<string>("translate.aiBaseUrl", "")),
     aiApiKey:
       selectedProfile?.apiKey ?? getPref<string>("translate.aiApiKey", ""),
     aiModel: selectedProfile?.model ?? getPref<string>("translate.aiModel", ""),
@@ -146,7 +148,7 @@ export function saveTranslateConfig(cfg: Partial<TranslateConfig>): void {
   if (cfg.aiProfileId !== undefined)
     setPref("translate.aiProfileId", cfg.aiProfileId);
   if (cfg.aiBaseUrl !== undefined)
-    setPref("translate.aiBaseUrl", cfg.aiBaseUrl);
+    setPref("translate.aiBaseUrl", ensureV1BaseUrl(cfg.aiBaseUrl));
   if (cfg.aiApiKey !== undefined) setPref("translate.aiApiKey", cfg.aiApiKey);
   if (cfg.aiModel !== undefined) setPref("translate.aiModel", cfg.aiModel);
   if (cfg.qps !== undefined) setPref("translate.qps", cfg.qps);

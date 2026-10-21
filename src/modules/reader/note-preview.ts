@@ -45,11 +45,11 @@ export function registerNotePreviewSection(): void {
     pluginID: config.addonID,
     header: {
       l10nID: getLocaleID("sidebar-ai-section-header" as any),
-      icon: `${rootURI}icons/toolbar.png`,
+      icon: `${rootURI}icons/sidebar-ai-notes.svg`,
     },
     sidenav: {
       l10nID: getLocaleID("sidebar-ai-section-sidenav" as any),
-      icon: `${rootURI}icons/toolbar.png`,
+      icon: `${rootURI}icons/sidebar-ai-notes.svg`,
     },
     onRender: ({ body, item }: any) => {
       renderNotePreviewSection(body, item);

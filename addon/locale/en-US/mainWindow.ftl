@@ -6,3 +6,6 @@ sidebar-ai-section-sidenav =
 selection-section-header =
     .label = Selection translation
     .tooltiptext = Selection translation
+agent-section-header =
+    .label = AGENT chat
+    .tooltiptext = AGENT chat

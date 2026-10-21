@@ -20,6 +20,7 @@ import {
   loadTranslateConfig,
   getActiveChatProfile,
 } from "./config";
+import { ensureV1BaseUrl } from "../ai/profiles";
 import { ResolvedEnv, resolveEnv } from "./uv-manager";
 import { spawn } from "./subprocess";
 import { TranslateTask, addTask, updateTask } from "./task-store";
@@ -464,7 +465,7 @@ function buildServerPayload(
     service: cfg.service,
     llm_api: {
       apiKey: cfg.aiApiKey,
-      apiUrl: cfg.aiBaseUrl,
+      apiUrl: normalizeServerAiBaseUrl(cfg),
       model: cfg.aiModel,
       threadNum: cfg.threads,
     },
@@ -595,6 +596,12 @@ async function getBinary(url: string): Promise<Uint8Array | null> {
 
 function normalizeServerUrl(url: string): string {
   return url.trim().replace(/\/+$/, "");
+}
+
+export function normalizeServerAiBaseUrl(
+  cfg: Pick<ReturnType<typeof loadTranslateConfig>, "aiBaseUrl">,
+): string {
+  return ensureV1BaseUrl(normalizeServerUrl(cfg.aiBaseUrl));
 }
 
 function normalizeTargetLang(langOut: string): string {

@@ -17,3 +17,6 @@ logs
 
 # DeepSeek Harness
 .dsh/
+# Local archives and screenshots
+archive/
+output/

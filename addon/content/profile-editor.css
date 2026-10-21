@@ -235,6 +235,32 @@
   resize: vertical;
 }
 
+.zwl-key-formats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 0;
+}
+
+.zwl-key-format-option {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--zwl-ink);
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.zwl-key-format-option input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--zwl-moss);
+}
+
 .zwl-key-header span {
   min-width: 0;
   overflow: hidden;

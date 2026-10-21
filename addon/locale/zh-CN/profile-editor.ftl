@@ -1,10 +1,10 @@
-editor-title = 编辑供应商
-editor-subtitle = 管理供应商的 API Key、可用模型和生成参数
+editor-title = 配置编辑
+editor-subtitle = 管理 API Key、可用模型和生成参数
 editor-section-connection = 连接信息
 editor-section-generation = 生成参数
 editor-field-name = 名称
 editor-field-supplier = 供应商
-editor-field-format = API 格式
+editor-field-format = API 格式（可多选）
 editor-field-baseurl = Base URL
 editor-field-apikey = API Key
 editor-field-model = 模型名称

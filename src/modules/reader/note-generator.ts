@@ -1,14 +1,24 @@
 /**
- * 笔记生成器：把 PDF + 模板 → AI → 保存为 Zotero 子笔记。
+ * 笔记生成器：把 PDF 附件 + 模板 → AI → 保存为 Zotero 子笔记。
  *
- * 第一版采用纯文本提取（attachmentText），把全文塞进 user 消息。
- * 多模态 Base64 流后续接入。
+ * PDF 相关任务统一以文件上传方式提交；Chat Completions 使用 file 块，
+ * Responses 使用 input_file。同一 Key 同时支持两种格式时优先 Responses。
  */
 
-import { AiClient, ChatMessage } from "../ai/ai-client";
+import { AiClient, ChatMessage, fileUploadMessage } from "../ai/ai-client";
 import { ApiFormat } from "../ai/presets";
-import { getActiveProfile, getModelLabel } from "../ai/profiles";
-import { getPdfText, getItemMeta } from "./pdf-extractor";
+import {
+  getActiveProfile,
+  getModelLabel,
+  resolveFileUploadProfile,
+} from "../ai/profiles";
+import {
+  MAX_PDF_UPLOAD_BYTES,
+  buildPdfFileName,
+  estimateBase64Bytes,
+  getPdfBase64,
+  getItemMeta,
+} from "./pdf-extractor";
 import { getActiveTemplate, renderPrompt } from "../ai/prompts";
 import { getGeneratedNoteTag } from "./reading-notes";
 
@@ -30,8 +40,8 @@ export interface GenerateResult {
  *
  * 流程：
  * 1. 校验：必须是常规条目（非笔记/附件），且要有可用 AI Profile
- * 2. 拿元数据 + PDF 全文（attachmentText）
- * 3. 构造消息 → 调 AI
+ * 2. 拿元数据 + PDF 附件 Base64
+ * 3. 构造文件上传消息 → 调 AI
  * 4. 把返回的 Markdown 存为子笔记
  */
 export async function generateNoteForItem(
@@ -48,10 +58,11 @@ export async function generateNoteForItem(
   if (!item || !item.isRegularItem?.()) {
     return { ok: false, message: "请选择一篇常规文献条目（不是笔记或附件）" };
   }
-  const profile = getActiveProfile();
-  if (!profile) {
+  const activeProfile = getActiveProfile();
+  if (!activeProfile) {
     return { ok: false, message: "请先在偏好设置里配置一个 AI 配置档" };
   }
+  const profile = resolveFileUploadProfile(activeProfile);
   if (!profile.baseUrl || !profile.apiKey || !profile.model) {
     return {
       ok: false,
@@ -67,18 +78,26 @@ export async function generateNoteForItem(
     };
   }
 
-  log("正在提取元数据与全文…");
+  log("正在读取 PDF 附件…");
   const meta = getItemMeta(item);
-  const fullText = await getPdfText(item, 60_000);
-  if (!fullText) {
+  const pdfBase64 = await getPdfBase64(item);
+  if (!pdfBase64) {
     return {
       ok: false,
-      message: "找不到可用的 PDF 全文。请先在 Zotero 中打开 PDF 让其完成索引。",
+      message: "找不到可用的 PDF 附件。请确认条目下已挂载 PDF 文件。",
+    };
+  }
+  const pdfBytes = estimateBase64Bytes(pdfBase64);
+  if (pdfBytes > MAX_PDF_UPLOAD_BYTES) {
+    return {
+      ok: false,
+      message: `PDF 约 ${Math.round(pdfBytes / (1024 * 1024))} MB，超过上传上限 ${Math.round(
+        MAX_PDF_UPLOAD_BYTES / (1024 * 1024),
+      )} MB。请先压缩或拆分 PDF。`,
     };
   }
 
-  // 3. 构造消息
-  const userPart = [
+  const userText = [
     renderPrompt(template.userPrompt, {
       title: meta.title || "（未填）",
       authors: meta.authors || "（未填）",
@@ -88,18 +107,19 @@ export async function generateNoteForItem(
     }),
     "",
     "---",
-    "**正文**（已索引文本，可能不完整）：",
-    "",
-    fullText,
+    "请阅读随附的 PDF 文件原文后完成任务；正文内容以附件为准。",
   ].join("\n");
 
   const messages: ChatMessage[] = [
     { role: "system", content: template.systemPrompt },
-    { role: "user", content: userPart },
+    fileUploadMessage("user", userText, {
+      filename: buildPdfFileName(meta.title),
+      base64: pdfBase64,
+      mimeType: "application/pdf",
+    }),
   ];
 
-  // 4. 调 AI
-  log(`正在调用 ${getModelLabel(profile)}…`);
+  log(`正在以文件上传方式调用 ${getModelLabel(profile)}…`);
   const client = new AiClient({
     baseUrl: profile.baseUrl,
     apiKey: profile.apiKey,
@@ -121,7 +141,6 @@ export async function generateNoteForItem(
     return { ok: false, message: "AI 返回空内容" };
   }
 
-  // 5. 保存为子笔记
   log("正在保存笔记…");
   const noteId = await saveAsChildNote(
     item,

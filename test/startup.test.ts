@@ -20,6 +20,14 @@ describe("startup", function () {
     const doc = Zotero.getMainWindow().document;
     assert.isNotNull(doc.getElementById("zotwanglele-itemmenu-translate"));
     assert.isNotNull(doc.getElementById("zotwanglele-itemmenu-review"));
+    assert.isNull(doc.getElementById("zotwanglele-itemmenu-agent-chat"));
+    assert.isNotNull(doc.getElementById("zotwanglele-itemmenu-agent-context"));
+    assert.equal(
+      doc
+        .getElementById("zotwanglele-itemmenu-agent-context")
+        ?.getAttribute("label"),
+      "添加至 Agent",
+    );
     assert.isNotNull(
       doc.getElementById("zotwanglele-itemmenu-title-translate"),
     );
@@ -27,6 +35,41 @@ describe("startup", function () {
       doc.getElementById("zotwanglele-itemmenu-metadata-update"),
     );
     assert.isNotNull(doc.getElementById("zotwanglele-tb-dashboard"));
+    assert.isNotNull(doc.getElementById("zotwanglele-tb-agent-chat"));
+    assert.notEqual(
+      doc.getElementById("zotwanglele-tb-dashboard")?.getAttribute("image"),
+      doc.getElementById("zotwanglele-tb-agent-chat")?.getAttribute("image"),
+    );
+    assert.include(
+      doc.getElementById("zotwanglele-tb-dashboard")?.getAttribute("image") ??
+        "",
+      "dashboard-toolbar.svg",
+    );
+    assert.include(
+      doc.getElementById("zotwanglele-tb-agent-chat")?.getAttribute("image") ??
+        "",
+      "agent-toolbar.svg",
+    );
+    const paneSections = ((Zotero.ItemPaneManager as any).customSectionData
+      ?.options ?? []) as Array<{
+      paneID?: string;
+      pluginID?: string;
+      header?: { icon?: string };
+    }>;
+    const sidebarIcons = [
+      "zotwanglele-ai-notes",
+      "zotwanglele-selection-translation",
+      "zotwanglele-agent-chat",
+    ].map(
+      (paneID) =>
+        paneSections.find(
+          (section) =>
+            section.pluginID === config.addonID &&
+            String(section.paneID).includes(paneID),
+        )?.header?.icon,
+    );
+    assert.isTrue(sidebarIcons.every((icon) => Boolean(icon)));
+    assert.equal(new Set(sidebarIcons).size, sidebarIcons.length);
     assert.exists(getNotePreviewSection());
     const columns = (Zotero.ItemTreeManager as any).getCustomColumns(
       undefined,
@@ -171,6 +214,7 @@ describe("startup", function () {
       assert.isNotNull(doc.getElementById("zotwanglele-queue-root"));
       assert.isNotNull(doc.getElementById("zwl-prompt-form"));
       assert.isNotNull(doc.getElementById("zotwanglele-adv-root"));
+      assert.isNotNull(doc.getElementById("zotwanglele-sync-root"));
       assert.isNotNull(
         doc.querySelector("#zotwanglele-dashboard-ai-root .zwl-ai-manager"),
       );
@@ -190,12 +234,14 @@ describe("startup", function () {
           "zotwanglele-dashboard-prompts",
           "zotwanglele-dashboard-advanced",
           "zotwanglele-dashboard-selection",
+          "zotwanglele-dashboard-sync",
         ],
       );
       for (const [tab, index] of [
         ["ai", 1],
         ["queue", 2],
         ["selection", 5],
+        ["sync", 6],
       ] as const) {
         openDashboard(Zotero.getMainWindow(), tab);
         assert.equal((doc.querySelector("tabbox") as any).selectedIndex, index);

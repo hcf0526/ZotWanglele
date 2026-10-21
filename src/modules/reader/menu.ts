@@ -13,6 +13,7 @@ import { startTranslate } from "../translate/translator";
 import { openDashboard } from "../dashboard/dashboard";
 import { runLiteratureReviewOnSelected } from "../review/review-generator";
 import { runTitleTranslationOnSelected } from "../title-translate/title-translation";
+import { addItemsToAgentContextAndOpen } from "../agent";
 import {
   addTask,
   createTaskItems,
@@ -110,6 +111,18 @@ export function registerReaderMenu() {
             runLiteratureReviewOnSelected().catch((e) =>
               ztoolkit.log("[ReaderMenu] review error:", e),
             );
+          },
+        },
+        { tag: "menuseparator" },
+        {
+          tag: "menuitem",
+          id: "zotwanglele-itemmenu-agent-context",
+          label: "添加至 Agent",
+          commandListener: () => {
+            const pane = (Zotero as any).getActiveZoteroPane?.();
+            const items: Zotero.Item[] = pane?.getSelectedItems?.() ?? [];
+            const win = pane?.document?.defaultView ?? Zotero.getMainWindow();
+            addItemsToAgentContextAndOpen(items, win);
           },
         },
       ],

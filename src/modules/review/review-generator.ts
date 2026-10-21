@@ -1,8 +1,24 @@
-import { AiClient, ChatMessage } from "../ai/ai-client";
+import {
+  AiClient,
+  ChatMessage,
+  MessageContent,
+  fileUploadMessage,
+} from "../ai/ai-client";
 import { getActiveTemplate, renderPrompt } from "../ai/prompts";
-import { ApiProfile, getActiveProfile, getModelLabel } from "../ai/profiles";
+import {
+  ApiProfile,
+  getActiveProfile,
+  getModelLabel,
+  resolveFileUploadProfile,
+} from "../ai/profiles";
 import { markdownToHtmlMinimal } from "../reader/note-generator";
-import { getItemMeta, getPdfText } from "../reader/pdf-extractor";
+import {
+  MAX_PDF_UPLOAD_BYTES,
+  buildPdfFileName,
+  estimateBase64Bytes,
+  getPdfBase64,
+  getItemMeta,
+} from "../reader/pdf-extractor";
 import {
   addTask,
   createTaskItems,
@@ -38,43 +54,78 @@ export async function generateLiteratureReview(
     };
   }
 
-  const profile = getActiveProfile();
-  const profileError = validateProfile(profile);
+  const activeProfile = getActiveProfile();
+  const profileError = validateProfile(activeProfile);
   if (profileError) return { ok: false, message: profileError };
+  const profile = resolveFileUploadProfile(activeProfile!);
 
   const template = getActiveTemplate("literature-review");
   if (!template) return { ok: false, message: "文献综述模板缺失" };
 
-  options.onProgress?.("正在整理题录与摘要");
+  options.onProgress?.("正在整理题录与 PDF 附件");
   const sources: string[] = [];
+  const fileParts: MessageContent[] = [];
+  let pendingPdfBytes = 0;
   for (let index = 0; index < targets.length; index++) {
     const item = targets[index];
     const meta = getItemMeta(item);
     let abstract = meta.abstract.trim();
+    let attachmentNote = "";
     if (!abstract) {
-      abstract = (await getPdfText(item, 8_000)).trim();
+      const pdfBase64 = await getPdfBase64(item);
+      const pdfBytes = pdfBase64 ? estimateBase64Bytes(pdfBase64) : 0;
+      if (
+        pdfBase64 &&
+        pdfBytes > 0 &&
+        pendingPdfBytes + pdfBytes <= MAX_PDF_UPLOAD_BYTES
+      ) {
+        const filename = buildPdfFileName(meta.title, `paper-${index + 1}`);
+        const upload = fileUploadMessage("user", "", {
+          filename,
+          base64: pdfBase64,
+          mimeType: "application/pdf",
+        });
+        const part = Array.isArray(upload.content)
+          ? upload.content.find((c) => c.type === "file")
+          : undefined;
+        if (part) {
+          fileParts.push(part);
+          pendingPdfBytes += pdfBytes;
+          attachmentNote = `PDF 附件：${filename}`;
+          abstract = "（摘要缺失，正文见随附 PDF）";
+        } else {
+          abstract = "未提供摘要或可用 PDF";
+        }
+      } else if (pdfBase64) {
+        abstract = `未提供摘要；PDF 过大（约 ${Math.round(pdfBytes / (1024 * 1024))} MB）未上传`;
+      } else {
+        abstract = "未提供摘要或可用 PDF";
+      }
     }
     sources.push(
       formatReviewSource(index + 1, {
         ...meta,
-        abstract: abstract || "未提供摘要或索引文本",
+        abstract: abstract || "未提供摘要或可用 PDF",
+        attachmentNote,
       }),
     );
     options.onProgress?.(`已整理 ${index + 1}/${targets.length} 篇文献`);
   }
 
+  const userText = renderPrompt(template.userPrompt, {
+    abstract: sources.join("\n\n---\n\n"),
+  });
+  const userContent: string | MessageContent[] = fileParts.length
+    ? [{ type: "text", text: userText }, ...fileParts]
+    : userText;
+
   const messages: ChatMessage[] = [
     { role: "system", content: template.systemPrompt },
-    {
-      role: "user",
-      content: renderPrompt(template.userPrompt, {
-        abstract: sources.join("\n\n---\n\n"),
-      }),
-    },
+    { role: "user", content: userContent },
   ];
 
-  options.onProgress?.(`正在调用 ${getModelLabel(profile!)}`);
-  const client = createClient(profile!);
+  options.onProgress?.(`正在调用 ${getModelLabel(profile)}`);
+  const client = createClient(profile);
   let response;
   try {
     response = await client.chat(messages);
@@ -200,6 +251,7 @@ export function formatReviewSource(
     year: string;
     abstract: string;
     doi: string;
+    attachmentNote?: string;
   },
 ): string {
   return [
@@ -208,7 +260,8 @@ export function formatReviewSource(
     `作者：${meta.authors || "未填写"}`,
     `年份：${meta.year || "未填写"}`,
     meta.doi ? `DOI：${meta.doi}` : "",
-    `摘要或正文节选：\n${meta.abstract}`,
+    meta.attachmentNote ? `附件：${meta.attachmentNote}` : "",
+    `摘要或正文说明：\n${meta.abstract}`,
   ]
     .filter(Boolean)
     .join("\n");

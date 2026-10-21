@@ -58,6 +58,10 @@ href="chrome://zotwanglele/content/ai-config.css"?>
           class="zwl-dashboard-tab zwl-dashboard-tab-selection"
           data-l10n-id="dashboard-tab-selection"
         />
+        <tab
+          class="zwl-dashboard-tab zwl-dashboard-tab-sync"
+          data-l10n-id="dashboard-tab-sync"
+        />
       </tabs>
       <tabpanels flex="1">
         <!-- 概览 -->
@@ -521,6 +525,95 @@ href="chrome://zotwanglele/content/ai-config.css"?>
             id="zotwanglele-dashboard-selection-root"
             class="zwl-dashboard-selection-root"
           />
+        </tabpanel>
+        <tabpanel
+          id="zotwanglele-dashboard-sync"
+          class="zwl-dashboard-panel"
+          orient="vertical"
+          flex="1"
+        >
+          <html:div id="zotwanglele-sync-root" class="zwl-sync-root">
+            <html:h3
+              class="zwl-sync-heading"
+              data-l10n-id="dashboard-sync-heading"
+            />
+            <html:p
+              class="zwl-sync-description"
+              data-l10n-id="dashboard-sync-description"
+            />
+            <html:fieldset class="zwl-sync-section">
+              <html:legend
+                class="zwl-sync-legend"
+                data-l10n-id="dashboard-sync-webdav"
+              />
+              <html:div class="zwl-sync-grid">
+                <html:label
+                  for="zwl-sync-url"
+                  data-l10n-id="dashboard-sync-url"
+                />
+                <html:input
+                  id="zwl-sync-url"
+                  type="url"
+                  placeholder="https://dav.example.com/remote.php/dav/files/user"
+                  autocomplete="url"
+                />
+                <html:label
+                  for="zwl-sync-username"
+                  data-l10n-id="dashboard-sync-username"
+                />
+                <html:input
+                  id="zwl-sync-username"
+                  type="text"
+                  autocomplete="username"
+                />
+                <html:label
+                  for="zwl-sync-password"
+                  data-l10n-id="dashboard-sync-password"
+                />
+                <html:input
+                  id="zwl-sync-password"
+                  type="password"
+                  autocomplete="current-password"
+                />
+                <html:label
+                  for="zwl-sync-remote-path"
+                  data-l10n-id="dashboard-sync-path"
+                />
+                <html:input
+                  id="zwl-sync-remote-path"
+                  type="text"
+                  placeholder="zotwanglele-settings.json"
+                />
+              </html:div>
+              <html:label class="zwl-sync-secret-option">
+                <html:input id="zwl-sync-include-secrets" type="checkbox" />
+                <html:span data-l10n-id="dashboard-sync-include-secrets" />
+              </html:label>
+              <html:p
+                class="zwl-sync-secret-note"
+                data-l10n-id="dashboard-sync-secret-note"
+              />
+            </html:fieldset>
+            <html:div class="zwl-sync-actions">
+              <html:button
+                id="zwl-sync-test"
+                type="button"
+                data-l10n-id="dashboard-sync-test"
+              />
+              <html:button
+                id="zwl-sync-upload"
+                type="button"
+                class="zwl-sync-button-primary"
+                data-l10n-id="dashboard-sync-upload"
+              />
+              <html:button
+                id="zwl-sync-download"
+                type="button"
+                data-l10n-id="dashboard-sync-download"
+              />
+              <html:span id="zwl-sync-status" class="zwl-sync-status" />
+            </html:div>
+          </html:div>
         </tabpanel>
       </tabpanels>
     </tabbox>

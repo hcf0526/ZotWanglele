@@ -6,3 +6,6 @@ sidebar-ai-section-sidenav =
 selection-section-header =
     .label = 划词翻译
     .tooltiptext = 划词翻译
+agent-section-header =
+    .label = AGENT 对话
+    .tooltiptext = AGENT 对话

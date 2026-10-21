@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="chrome://global/skin/global.css"?> <?xml-stylesheet
 href="chrome://zotwanglele/content/paper-theme.css"?> <?xml-stylesheet
-href="chrome://zotwanglele/content/profile-editor.css"?>
+href="chrome://zotwanglele/content/profile-editor.css"?> <?xml-stylesheet
+href="chrome://zotwanglele/content/model-picker.css"?>
 <window
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
-  title="ZotWanglele - 编辑供应商"
+  title="ZotWanglele - 配置编辑"
   windowtype="zotwanglele:profile-editor"
   width="720"
   height="740"
@@ -18,6 +19,7 @@ href="chrome://zotwanglele/content/profile-editor.css"?>
 >
   <linkset>
     <html:link rel="localization" href="__addonRef__-profile-editor.ftl" />
+    <html:link rel="localization" href="__addonRef__-model-picker.ftl" />
   </linkset>
 
   <vbox class="zwl-profile-editor-shell" flex="1">
@@ -113,5 +115,104 @@ href="chrome://zotwanglele/content/profile-editor.css"?>
         oncommand="window.zwlEditorSave()"
       />
     </hbox>
+  </vbox>
+
+  <vbox flex="1" id="zwl-model-picker-shell-root" hidden="true">
+    <html:div class="zwl-model-picker-shell">
+      <html:div class="zwl-dialog-header">
+        <html:img
+          class="zwl-dialog-brand-mark"
+          src="chrome://zotwanglele/content/icons/icon@32.png"
+          alt=""
+        />
+        <html:div class="zwl-dialog-heading-copy">
+          <html:h1
+            class="zwl-model-picker-title"
+            data-l10n-id="model-picker-title"
+          >
+            选择模型
+          </html:h1>
+          <html:p
+            class="zwl-model-picker-subtitle"
+            data-l10n-id="model-picker-subtitle"
+          >
+            选择需要添加到当前 API Key 的模型
+          </html:p>
+        </html:div>
+      </html:div>
+
+      <html:div class="zwl-model-picker-groups">
+        <html:div class="zwl-model-picker-group">
+          <html:div class="zwl-model-picker-group-heading">
+            <html:strong data-l10n-id="model-picker-available">
+              未添加模型
+            </html:strong>
+            <html:span class="zwl-model-picker-group-mark" aria-hidden="true"
+              >＋</html:span
+            >
+          </html:div>
+          <html:div
+            id="zwl-model-picker-available"
+            class="zwl-model-picker-list"
+          ></html:div>
+          <html:p
+            id="zwl-model-picker-available-empty"
+            class="zwl-model-picker-empty"
+            data-l10n-id="model-picker-empty-available"
+          >
+            暂无未添加模型
+          </html:p>
+        </html:div>
+
+        <html:div
+          class="zwl-model-picker-group zwl-model-picker-group-existing"
+        >
+          <html:div class="zwl-model-picker-group-heading">
+            <html:strong data-l10n-id="model-picker-existing">
+              已添加模型
+            </html:strong>
+            <html:span
+              class="zwl-model-picker-group-mark zwl-model-picker-group-mark-existing"
+              aria-hidden="true"
+              >✓</html:span
+            >
+          </html:div>
+          <html:div
+            id="zwl-model-picker-existing"
+            class="zwl-model-picker-list"
+          ></html:div>
+          <html:p
+            id="zwl-model-picker-existing-empty"
+            class="zwl-model-picker-empty"
+            data-l10n-id="model-picker-empty-existing"
+          >
+            暂无已添加模型
+          </html:p>
+        </html:div>
+      </html:div>
+
+      <html:div class="zwl-model-picker-footer">
+        <html:p class="zwl-model-picker-hint" data-l10n-id="model-picker-hint">
+          已添加模型默认保持选中，确认后将按当前选择更新列表
+        </html:p>
+        <html:div class="zwl-model-picker-actions">
+          <button
+            id="zwl-model-picker-cancel"
+            class="zwl-dialog-button"
+            data-l10n-id="model-picker-cancel"
+            label="取消"
+            oncommand="window.zwlModelPickerCancel()"
+          />
+          <button
+            id="zwl-model-picker-apply"
+            class="zwl-dialog-button zwl-dialog-button-brand"
+            data-l10n-id="model-picker-apply"
+            label="应用选择"
+            default="true"
+            oncommand="window.zwlModelPickerApply()"
+          />
+        </html:div>
+      </html:div>
+    </html:div>
   </vbox>
 </window>

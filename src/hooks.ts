@@ -17,6 +17,7 @@ import {
 } from "./modules/reader/note-preview";
 import { registerDashboardToolbarButton } from "./modules/ui/toolbar";
 import { onConfirmDialogLoad } from "./modules/ui/confirm-dialog";
+import { onModelPickerLoad } from "./modules/ui/model-picker";
 import {
   registerTitleTranslationColumn,
   unregisterTitleTranslationColumn,
@@ -28,6 +29,11 @@ import {
   unregisterSelectionTranslation,
   disposeSelectionWindow,
 } from "./modules/selection-translate/reader";
+import {
+  registerAgentChatSection,
+  unregisterAgentChatSection,
+  onAgentChatLoad,
+} from "./modules/agent";
 
 async function onStartup() {
   await Promise.all([
@@ -60,6 +66,12 @@ async function onStartup() {
     registerNotePreviewSection();
   } catch (error) {
     ztoolkit.log("[Hooks] note preview registration failed:", error);
+  }
+
+  try {
+    registerAgentChatSection();
+  } catch (error) {
+    ztoolkit.log("[Hooks] agent chat section registration failed:", error);
   }
 
   addon.data.initialized = true;
@@ -118,6 +130,7 @@ function onShutdown(): void {
   unregisterSelectionTranslation();
   unregisterNotePreviewSection();
   unregisterTitleTranslationColumn();
+  unregisterAgentChatSection();
   ztoolkit.unregisterAll();
   addon.data.alive = false;
   // @ts-expect-error - Plugin instance is not typed
@@ -165,4 +178,6 @@ export default {
   onMetadataCandidateDialogLoad,
   onMetadataResultDialogLoad,
   onConfirmDialogLoad,
+  onModelPickerLoad,
+  onAgentChatLoad,
 };

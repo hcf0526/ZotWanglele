@@ -17,10 +17,11 @@ TypeScript, zotero-plugin-scaffold et zotero-plugin-toolkit.
 - Service de traduction `google` de PDFMathTranslate par défaut, indépendant
   des profils d'IA.
 - Tableau des tâches et réglages distincts pour la traduction des documents et du texte sélectionné.
+- Synchronisation des préférences via WebDAV avec une option pour inclure les clés API.
 
 ## État du projet
 
-La version actuelle est `0.1.7`. Le panneau latéral de notes IA, la gestion des
+La version actuelle est `0.2.0`. Le panneau latéral de notes IA, la gestion des
 prompts intégrés et les modèles personnalisés sont disponibles. L'analyse
 multimodale, le dialogue et les cartes mentales restent planifiés.
 

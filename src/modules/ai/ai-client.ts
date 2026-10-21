@@ -1,4 +1,5 @@
 import { ApiFormat } from "./presets";
+import { ensureV1BaseUrl } from "./profiles";
 import {
   abortError,
   cancellableDelay,
@@ -20,9 +21,15 @@ export interface ChatMessage {
 }
 
 export interface MessageContent {
-  type: "text" | "image_url";
+  type: "text" | "image_url" | "file";
   text?: string;
   image_url?: { url: string; detail?: "auto" | "low" | "high" };
+  file?: {
+    filename?: string;
+    /** data URL 或原始 Base64 */
+    file_data?: string;
+    file_id?: string;
+  };
 }
 
 export interface ChatRequest {
@@ -40,6 +47,12 @@ export interface ChatResult {
     completion_tokens: number;
     total_tokens: number;
   };
+}
+
+export interface ConnectionTestResult {
+  ok: boolean;
+  message: string;
+  latencyMs: number;
 }
 
 export type StreamCallback = (chunk: string) => void;
@@ -75,8 +88,8 @@ export class AiClient {
   }
 
   async listModels(): Promise<string[]> {
-    const baseUrl = this.normalizeBaseUrl().replace(/\/v1$/i, "");
-    const xhr = await Zotero.HTTP.request("GET", `${baseUrl}/v1/models`, {
+    const baseUrl = this.normalizeBaseUrl();
+    const xhr = await Zotero.HTTP.request("GET", `${baseUrl}/models`, {
       headers: this.config.apiKey
         ? { Authorization: `Bearer ${this.config.apiKey}` }
         : {},
@@ -151,19 +164,27 @@ export class AiClient {
     throw new Error("Unreachable");
   }
 
-  async testConnection(): Promise<{ ok: boolean; message: string }> {
+  async testConnection(): Promise<ConnectionTestResult> {
+    const startedAt = Date.now();
+    const latency = () => Math.max(0, Date.now() - startedAt);
     try {
-      const result = await this.chat([
-        { role: "user", content: "请回复：连接成功" },
-      ]);
-      return { ok: true, message: result.content.slice(0, 100) };
+      const result = await this.chat([{ role: "user", content: "hi" }]);
+      return {
+        ok: true,
+        message: result.content.slice(0, 100),
+        latencyMs: latency(),
+      };
     } catch (e: any) {
-      return { ok: false, message: e?.message ?? String(e) };
+      return {
+        ok: false,
+        message: e?.message ?? String(e),
+        latencyMs: latency(),
+      };
     }
   }
 
   // ============================================================
-  // Chat Completions API — /v1/chat/completions
+  // Chat Completions API — Base URL + /chat/completions
   // ============================================================
 
   private async callChatCompletionsApi(
@@ -172,7 +193,7 @@ export class AiClient {
     onStream?: StreamCallback,
     options: ChatOptions = {},
   ): Promise<ChatResult> {
-    const url = `${this.normalizeBaseUrl()}/v1/chat/completions`;
+    const url = `${this.normalizeBaseUrl()}/chat/completions`;
     const body = {
       model: this.config.model,
       messages,
@@ -234,7 +255,7 @@ export class AiClient {
   }
 
   // ============================================================
-  // Responses API — /v1/responses
+  // Responses API — Base URL + /responses
   // ============================================================
 
   private async callResponsesApi(
@@ -243,7 +264,7 @@ export class AiClient {
     onStream?: StreamCallback,
     options: ChatOptions = {},
   ): Promise<ChatResult> {
-    const url = `${this.normalizeBaseUrl()}/v1/responses`;
+    const url = `${this.normalizeBaseUrl()}/responses`;
     const input = this.messagesToResponsesInput(messages);
     const body: Record<string, any> = {
       model: this.config.model,
@@ -276,21 +297,36 @@ export class AiClient {
     messages: ChatMessage[],
   ): Record<string, any>[] {
     const input: Record<string, any>[] = [];
+    const mapParts = (content: string | MessageContent[]) => {
+      if (typeof content === "string") return content;
+      return content.map((part) => {
+        if (part.type === "text") {
+          return { type: "input_text", text: part.text ?? "" };
+        }
+        if (part.type === "image_url") {
+          return {
+            type: "input_image",
+            image_url: part.image_url?.url ?? "",
+            detail: part.image_url?.detail,
+          };
+        }
+        if (part.type === "file") {
+          return {
+            type: "input_file",
+            filename: part.file?.filename,
+            file_data: part.file?.file_data,
+            file_id: part.file?.file_id,
+          };
+        }
+        return { type: "input_text", text: "" };
+      });
+    };
     for (const msg of messages) {
-      if (msg.role === "system") {
-        input.push({
-          role: "developer",
-          content:
-            typeof msg.content === "string"
-              ? msg.content
-              : msg.content.map((c) => c).toString(),
-        });
-      } else {
-        input.push({
-          role: msg.role,
-          content: msg.content,
-        });
-      }
+      const role = msg.role === "system" ? "developer" : msg.role;
+      input.push({
+        role,
+        content: mapParts(msg.content),
+      });
     }
     return input;
   }
@@ -541,7 +577,7 @@ export class AiClient {
   }
 
   private normalizeBaseUrl(): string {
-    return this.config.baseUrl.replace(/\/+$/, "");
+    return ensureV1BaseUrl(this.config.baseUrl);
   }
 }
 
@@ -568,6 +604,29 @@ export function multimodalMessage(
       image_url: { url: `data:image/png;base64,${img}`, detail: "auto" },
     });
   }
+  return { role, content };
+}
+
+/** PDF 等文件以上传形式进入对话；Chat Completions / Responses 由客户端按 format 转换。 */
+export function fileUploadMessage(
+  role: ChatMessage["role"],
+  text: string,
+  file: { filename: string; base64: string; mimeType?: string },
+): ChatMessage {
+  const mime = file.mimeType || "application/pdf";
+  const fileData = file.base64.startsWith("data:")
+    ? file.base64
+    : `data:${mime};base64,${file.base64}`;
+  const content: MessageContent[] = [
+    { type: "text", text },
+    {
+      type: "file",
+      file: {
+        filename: file.filename,
+        file_data: fileData,
+      },
+    },
+  ];
   return { role, content };
 }
 
